@@ -18,6 +18,7 @@ const GameCard: React.FC = () => {
     attempts,
     revealedHints,
     streak,
+    flawlessStreak,
     currentGuess,
     setCurrentGuess,
     submitGuess,
@@ -217,10 +218,17 @@ const GameCard: React.FC = () => {
           {/* Using consistent Fusdle numbering across app */}
           <span>Fusdle #{calculateFusdleNumber(puzzle.date, undefined)}</span>
         </div>
-        <div className="flex items-center bg-secondary/10 rounded-full px-3 py-1">
-          <span className="text-sm font-medium text-secondary">
-            🔥 Streak: <span>{streak}</span>
-          </span>
+        <div className="flex items-center space-x-2">
+          <div className="flex items-center bg-secondary/10 rounded-full px-3 py-1">
+            <span className="text-sm font-medium text-secondary">
+              🔥 Streak: <span>{streak}</span>
+            </span>
+          </div>
+          <div className="flex items-center bg-amber-100 rounded-full px-3 py-1">
+            <span className="text-sm font-medium text-amber-700">
+              ✨ Flawless: <span>{flawlessStreak}</span>
+            </span>
+          </div>
         </div>
       </div>
       

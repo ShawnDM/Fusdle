@@ -454,10 +454,14 @@ export const useGameStore = create<GameState>((set, get) => ({
         // If this is a Normal mode puzzle, unlock Hard mode
         const hardModeUnlocked = difficultyMode === 'normal' || get().hardModeUnlocked;
         
+        // Get the updated flawless streak value
+        const newFlawlessStreak = getFlawlessStreak();
+        
         set({ 
           gameStatus: 'won', 
           puzzle: { ...puzzle, answer: data.answer },
           streak: newStreak,
+          flawlessStreak: newFlawlessStreak,
           hasCompleted: true,
           hardModeUnlocked
         });
@@ -1170,8 +1174,14 @@ export const useGameStore = create<GameState>((set, get) => ({
       resultLines.push('🎯 Normal Mode');
     }
     
-    // Add hints used info (simplified format)
+    // Add hints used info and flawless streak if applicable
     resultLines.push(`Hints used: ${hintsUsed}/${puzzle.hints?.length || 3}`);
+    
+    // Add flawless streak info if the player has one and didn't use hints
+    const currentFlawlessStreak = getFlawlessStreak();
+    if (currentFlawlessStreak > 0 && hintsUsed === 0 && gameStatus === 'won') {
+      resultLines.push(`✨ Flawless streak: ${currentFlawlessStreak}`);
+    }
     
     // Add URL at the end
     resultLines.push('Play at: fusdle.com');
