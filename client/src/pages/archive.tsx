@@ -99,14 +99,35 @@ const Archive: React.FC = () => {
   const getFilteredPuzzles = () => {
     if (!archivePuzzles) return [];
     
+    // Get current date to filter only past puzzles
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set to midnight for proper comparison
+    
+    // Filter puzzles to only include past puzzles first
+    const pastPuzzles = archivePuzzles.filter((puzzle: ArchivePuzzle) => {
+      try {
+        const puzzleDate = new Date(puzzle.date);
+        return puzzleDate < today;
+      } catch (err) {
+        console.error(`Invalid date format for puzzle ${puzzle.id}:`, err);
+        return false;
+      }
+    });
+    
+    console.log(`Found ${pastPuzzles.length} past puzzles out of ${archivePuzzles.length} total`);
+    
     if (activeTab === 'fusion') {
       // Show all fusion puzzles regardless of difficulty
-      return archivePuzzles.filter((puzzle: ArchivePuzzle) => puzzle.isFusionTwist === 1);
+      const fusionPuzzles = pastPuzzles.filter((puzzle: ArchivePuzzle) => puzzle.isFusionTwist === 1);
+      console.log(`Filtered to ${fusionPuzzles.length} fusion puzzles`);
+      return fusionPuzzles;
     } else {
       // Show regular puzzles of the selected difficulty
-      return archivePuzzles.filter((puzzle: ArchivePuzzle) => 
-        puzzle.difficulty === activeTab && puzzle.isFusionTwist === 0
+      const filteredByDifficulty = pastPuzzles.filter((puzzle: ArchivePuzzle) => 
+        puzzle.difficulty === activeTab && (puzzle.isFusionTwist === 0 || puzzle.isFusionTwist === undefined)
       );
+      console.log(`Filtered to ${filteredByDifficulty.length} ${activeTab} puzzles`);
+      return filteredByDifficulty;
     }
   };
   

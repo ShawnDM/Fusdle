@@ -345,16 +345,39 @@ export class FirestoreService {
       const allPuzzles = allPuzzlesSnapshot.docs.map(puzzleFromFirestore);
       console.log(`Found ${allPuzzles.length} total puzzles`);
       
+      // Log puzzle counts by difficulty for debugging
+      const normalPuzzles = allPuzzles.filter(p => p.difficulty === 'normal');
+      const hardPuzzles = allPuzzles.filter(p => p.difficulty === 'hard');
+      const fusionPuzzles = allPuzzles.filter(p => p.isFusionTwist === 1);
+      console.log(`Puzzle counts by type: normal=${normalPuzzles.length}, hard=${hardPuzzles.length}, fusion=${fusionPuzzles.length}`);
+      
       // Filter puzzles before today and sort by date descending
       const pastPuzzles = allPuzzles
         .filter(puzzle => {
-          // Make sure we're comparing dates properly
-          const puzzleDate = new Date(puzzle.date);
-          const todayDate = new Date(todayStr);
-          return puzzleDate < todayDate;
+          try {
+            // Make sure we're comparing dates properly
+            const puzzleDate = new Date(puzzle.date);
+            const todayDate = new Date(todayStr);
+            
+            // Only log a few date comparisons to avoid console spam
+            if (Math.random() < 0.1) {
+              console.log(`Comparing puzzle ${puzzle.id} (${puzzle.difficulty}) date ${puzzle.date} with today ${todayStr}, result: ${puzzleDate < todayDate}`);
+            }
+            
+            return puzzleDate < todayDate;
+          } catch (err) {
+            console.error(`Date comparison error for puzzle ${puzzle.id}:`, err);
+            return false; // Exclude puzzles with invalid dates
+          }
         })
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
         .slice(0, limitCount);
+      
+      // Log past puzzle counts by difficulty
+      const pastNormalPuzzles = pastPuzzles.filter(p => p.difficulty === 'normal');
+      const pastHardPuzzles = pastPuzzles.filter(p => p.difficulty === 'hard');
+      const pastFusionPuzzles = pastPuzzles.filter(p => p.isFusionTwist === 1);
+      console.log(`Past puzzle counts: normal=${pastNormalPuzzles.length}, hard=${pastHardPuzzles.length}, fusion=${pastFusionPuzzles.length}`);
       
       console.log(`Returning ${pastPuzzles.length} archived puzzles`);
       return pastPuzzles;
