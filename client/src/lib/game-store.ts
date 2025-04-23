@@ -743,7 +743,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   revealHint: async () => {
-    const { puzzle, revealedHints, difficultyMode, attempts } = get();
+    const { puzzle, revealedHints, difficultyMode, attempts, hintsUsedAtAttempts } = get();
     
     if (!puzzle) {
       return null;
@@ -751,6 +751,13 @@ export const useGameStore = create<GameState>((set, get) => ({
     
     // Check if we have enough guesses to reveal a hint (1 hint per guess)
     if (attempts <= revealedHints.length) {
+      console.log('Make another guess to unlock a hint');
+      return null;
+    }
+    
+    // Check if the most recent hint was for the current attempt number
+    // This prevents getting consecutive hints without making a new guess in between
+    if (hintsUsedAtAttempts.length > 0 && hintsUsedAtAttempts[hintsUsedAtAttempts.length - 1] === attempts - 1) {
       console.log('Make another guess to unlock a hint');
       return null;
     }

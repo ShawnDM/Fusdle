@@ -24,6 +24,7 @@ const GameCard: React.FC = () => {
     puzzle,
     attempts,
     revealedHints,
+    hintsUsedAtAttempts,
     previousGuesses,
     streak,
     flawlessStreak,
@@ -84,7 +85,17 @@ const GameCard: React.FC = () => {
     // Check if we can use a hint (1 per guess)
     const totalAvailableHints = puzzle?.hints?.length || 3;
     const hintsRemaining = totalAvailableHints - revealedHints.length;
-    const canUseHint = hintsRemaining > 0 && (attempts > revealedHints.length);
+    
+    // Check if we have enough guesses to reveal a hint
+    const hasEnoughGuesses = attempts > revealedHints.length;
+    
+    // Check if the most recent hint was for the current attempt number
+    // This prevents getting consecutive hints without making a new guess in between
+    const lastHintAttempt = hintsUsedAtAttempts.length > 0 ? 
+      hintsUsedAtAttempts[hintsUsedAtAttempts.length - 1] : -1;
+    const isConsecutiveHint = lastHintAttempt === attempts - 1;
+    
+    const canUseHint = hintsRemaining > 0 && hasEnoughGuesses && !isConsecutiveHint;
     
     if (!canUseHint) {
       if (hintsRemaining <= 0) {
@@ -93,10 +104,16 @@ const GameCard: React.FC = () => {
           description: "You've used all available hints for this puzzle.",
           variant: "destructive"
         });
-      } else if (attempts <= revealedHints.length) {
+      } else if (!hasEnoughGuesses) {
         toast({
           title: "One hint per guess",
           description: "Make another guess to unlock your next hint.",
+          variant: "default"
+        });
+      } else if (isConsecutiveHint) {
+        toast({
+          title: "Alternate guesses and hints",
+          description: "You must make another guess before using another hint.",
           variant: "default"
         });
       }
@@ -173,7 +190,18 @@ const GameCard: React.FC = () => {
   // Calculate how many hints are remaining
   const totalAvailableHints = puzzle?.hints?.length || 3;
   const hintsRemaining = totalAvailableHints - revealedHints.length;
-  const canUseHint = hintsRemaining > 0 && (attempts > revealedHints.length); // 1 hint per guess rule
+  
+  // Check if we have enough guesses to reveal a hint
+  const hasEnoughGuesses = attempts > revealedHints.length;
+  
+  // Check if the most recent hint was for the current attempt number
+  // This prevents getting consecutive hints without making a new guess in between
+  const lastHintAttempt = hintsUsedAtAttempts.length > 0 ? 
+    hintsUsedAtAttempts[hintsUsedAtAttempts.length - 1] : -1;
+  const isConsecutiveHint = lastHintAttempt === attempts - 1;
+  
+  // Must meet all three conditions to use a hint
+  const canUseHint = hintsRemaining > 0 && hasEnoughGuesses && !isConsecutiveHint;
 
   return (
     <motion.div 
