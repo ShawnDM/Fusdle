@@ -14,7 +14,9 @@ const ResultsCard: React.FC = () => {
     attempts, 
     shareResult, 
     resetForDevelopment,
-    difficultyMode 
+    difficultyMode,
+    flawlessStreak,
+    streak
   } = useGameStore();
   const [copying, setCopying] = useState(false);
   const [timeUntilNextPuzzle, setTimeUntilNextPuzzle] = useState<string>('');
@@ -180,6 +182,24 @@ const ResultsCard: React.FC = () => {
               ? `You guessed it correctly in ${attempts} ${attempts === 1 ? 'attempt' : 'attempts'}!`
               : `You'll get it next time!`}
           </p>
+          
+          {/* Display current streaks when player wins */}
+          {isWin && (
+            <div className="flex justify-center gap-3 mb-4">
+              <div className="px-4 py-2 bg-secondary/10 rounded-lg">
+                <p className="text-xs text-gray-600 mb-1">Regular Streak</p>
+                <p className="text-xl font-bold text-secondary flex items-center justify-center">
+                  <span className="mr-1">🔥</span> {streak}
+                </p>
+              </div>
+              <div className="px-4 py-2 bg-amber-100 rounded-lg">
+                <p className="text-xs text-gray-600 mb-1">Flawless Streak</p>
+                <p className="text-xl font-bold text-amber-700 flex items-center justify-center">
+                  <span className="mr-1">✨</span> {flawlessStreak}
+                </p>
+              </div>
+            </div>
+          )}
           <div className="mb-4 p-4 bg-neutral rounded-lg">
             <p className="font-medium mb-2">The answer was:</p>
             <p className="text-xl font-bold">{puzzle.answer}</p>
