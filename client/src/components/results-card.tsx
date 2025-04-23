@@ -26,26 +26,26 @@ const ResultsCard: React.FC = () => {
   });
 
   useEffect(() => {
-    // Calculate time until 4 AM EST
+    // Calculate time until midnight (12 AM) EST
     const calculateTimeUntilNextPuzzle = () => {
       const now = new Date();
       
-      // Get current date at 4 AM EST
+      // Get current date at midnight EST
       const today = new Date();
-      today.setHours(4, 0, 0, 0);
+      today.setHours(0, 0, 0, 0);
       
       // Convert to EST
       const options = { timeZone: 'America/New_York' };
-      let estFourAM = new Date(today.toLocaleString('en-US', options));
+      let estMidnight = new Date(today.toLocaleString('en-US', options));
       
-      // If it's already past 4 AM EST, use next day at 4 AM
-      if (now >= estFourAM) {
+      // If it's already past midnight EST, use next day at midnight
+      if (now >= estMidnight) {
         today.setDate(today.getDate() + 1);
-        estFourAM = new Date(today.toLocaleString('en-US', options));
+        estMidnight = new Date(today.toLocaleString('en-US', options));
       }
       
       // Calculate time difference in milliseconds
-      const diffMs = estFourAM.getTime() - now.getTime();
+      const diffMs = estMidnight.getTime() - now.getTime();
       
       // Convert to hours, minutes, seconds
       const hours = Math.floor(diffMs / (1000 * 60 * 60));
@@ -262,7 +262,7 @@ const ResultsCard: React.FC = () => {
           <div className="mt-6 p-4 bg-neutral/50 rounded-lg">
             <p className="text-sm font-medium mb-1">Next puzzle in:</p>
             <p className="text-xl font-bold text-primary">{timeUntilNextPuzzle}</p>
-            <p className="text-xs text-gray-500 mt-1">New puzzles at 4:00 AM EST</p>
+            <p className="text-xs text-gray-500 mt-1">New puzzles at midnight EST</p>
             
             {/* Development-only reset button - will be hidden in production */}
             {import.meta.env.DEV && (

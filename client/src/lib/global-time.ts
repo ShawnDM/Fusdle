@@ -73,29 +73,23 @@ export async function getGlobalDate(): Promise<Date> {
 
 /**
  * Get the current date string in YYYY-MM-DD format based on global time
- * If the time is before 4 AM EST, return yesterday's date
+ * Uses the current date in EST timezone
  */
 export async function getGlobalDateString(): Promise<string> {
   const date = await getGlobalDate();
   
-  // Check if it's before 4 AM EST
-  // We need to use the hour in EST timezone
-  const hours = date.getHours();
+  // We don't need to check for any hour threshold now that we're using midnight
+  // Just get the current date in EST timezone
   const estOptions = { timeZone: 'America/New_York' };
-  const estHours = new Date(date).toLocaleString('en-US', { ...estOptions, hour: 'numeric', hour12: false }).split(':')[0];
-  
-  // If it's before 4 AM EST, use yesterday's puzzle
-  if (parseInt(estHours) < 4) {
-    date.setDate(date.getDate() - 1);
-  }
+  const estDate = new Date(date.toLocaleString('en-US', estOptions));
   
   // Return the date in YYYY-MM-DD format
-  return date.toISOString().split('T')[0];
+  return estDate.toISOString().split('T')[0];
 }
 
 /**
  * Determine if a new puzzle should be shown based on the last puzzle date
- * Returns true if we've crossed the 4 AM EST threshold since the last puzzle
+ * Returns true if we've crossed the midnight EST threshold since the last puzzle
  */
 export async function shouldShowNewPuzzle(lastPuzzleDate: string): Promise<boolean> {
   const currentDateStr = await getGlobalDateString();
@@ -104,8 +98,8 @@ export async function shouldShowNewPuzzle(lastPuzzleDate: string): Promise<boole
 
 /**
  * Expected behavior at midnight EST:
- * - The puzzle does not automatically change at midnight
- * - The puzzle changes at 4 AM EST (when a new day starts for the game)
+ * - The puzzle changes at midnight EST (when a new day starts)
  * - If the user is active during the transition, they'll get the new puzzle on their next page refresh or game action
- * - Completed puzzles remain completed until 4 AM EST
+ * - Completed puzzles are reset at midnight EST
+ * - The game checks once per minute if we've crossed midnight since the last puzzle was loaded
  */
