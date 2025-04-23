@@ -716,10 +716,14 @@ export const useGameStore = create<GameState>((set, get) => ({
       // Mark that hints were used (affects flawless streak)
       markHintsUsed();
       
+      // Reset flawless streak immediately
+      const newFlawlessStreak = 0;
+      
       // Add current attempt to the hintsUsedAtAttempts array
       set(state => ({ 
         revealedHints: [...state.revealedHints, newHint],
-        hintsUsedAtAttempts: [...state.hintsUsedAtAttempts, attempts]
+        hintsUsedAtAttempts: [...state.hintsUsedAtAttempts, attempts],
+        flawlessStreak: newFlawlessStreak
       }));
       
       return newHint;

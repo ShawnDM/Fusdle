@@ -27,9 +27,11 @@ export function getHintsUsedToday(): boolean {
   return hintsUsed === 'true';
 }
 
-// Function to mark that hints were used today
+// Function to mark that hints were used today and immediately reset flawless streak
 export function markHintsUsed(): void {
   localStorage.setItem(HINTS_USED_KEY, 'true');
+  // Immediately reset flawless streak when hints are used
+  resetFlawlessStreak();
 }
 
 // Function to update the streak based on correct answer
@@ -92,7 +94,7 @@ function updateFlawlessStreak(flawless: boolean): number {
 }
 
 // Reset flawless streak
-function resetFlawlessStreak(): void {
+export function resetFlawlessStreak(): void {
   localStorage.setItem(FLAWLESS_STREAK_KEY, '0');
 }
 

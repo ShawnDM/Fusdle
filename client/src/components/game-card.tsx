@@ -9,6 +9,7 @@ import { ArrowLeftRight, Skull, Flame, HelpCircle, X } from "lucide-react";
 import { confirmAlert } from 'react-confirm-alert';
 import { useToast } from "@/hooks/use-toast";
 import { calculateFusdleNumber } from "@/lib/utils";
+import { resetFlawlessStreak } from "@/lib/streak";
 import 'react-confirm-alert/src/react-confirm-alert.css';
 import '@/components/confirm-dialog.css';
 
@@ -71,7 +72,7 @@ const GameCard: React.FC = () => {
     );
   }
 
-  // Handle revealing a hint with confirmation in hard mode
+  // Handle revealing a hint with confirmation for both modes to warn about flawless streak
   const handleRevealHint = async () => {
     // Check if we can use a hint (1 per guess)
     const totalAvailableHints = puzzle?.hints?.length || 3;
@@ -95,10 +96,35 @@ const GameCard: React.FC = () => {
       return;
     }
     
-    if (difficultyMode === 'hard') {
+    // Show warning for all difficulty modes if flawless streak > 0
+    if (flawlessStreak > 0) {
+      confirmAlert({
+        title: 'Your flawless streak is at risk!',
+        message: `You currently have a flawless streak of ${flawlessStreak}. Using a hint will reset your flawless streak to zero. Are you sure you want to continue?`,
+        buttons: [
+          {
+            label: 'No, I\'ll solve it myself',
+            onClick: () => console.log('Hint declined, flawless streak preserved')
+          },
+          {
+            label: 'Yes, show me the hint',
+            onClick: async () => {
+              // Reset flawless streak immediately for instant UI feedback
+              resetFlawlessStreak();
+              useGameStore.setState({ flawlessStreak: 0 });
+              
+              // Then get the hint
+              await revealHint();
+            }
+          }
+        ]
+      });
+    } 
+    // If no flawless streak but in hard mode, still show warning
+    else if (difficultyMode === 'hard') {
       confirmAlert({
         title: 'Do you want a hint?',
-        message: 'In Hard Mode, hints aren\'t free! Using hints will make your solve less impressive and affect your perfect streak.',
+        message: 'In Hard Mode, hints aren\'t free! Using hints will make your solve less impressive.',
         buttons: [
           {
             label: 'No, I\'ll solve it myself',
@@ -106,12 +132,19 @@ const GameCard: React.FC = () => {
           },
           {
             label: 'Yes, show me the hint',
-            onClick: async () => await revealHint()
+            onClick: async () => {
+              // Reset flawless streak if it exists, just to be safe
+              if (flawlessStreak > 0) {
+                resetFlawlessStreak();
+                useGameStore.setState({ flawlessStreak: 0 });
+              }
+              await revealHint();
+            }
           }
         ]
       });
     } else {
-      // In normal mode, reveal the hint immediately
+      // In normal mode with no flawless streak, reveal the hint immediately
       await revealHint();
     }
   };
