@@ -26,21 +26,26 @@ const ResultsCard: React.FC = () => {
   });
 
   useEffect(() => {
-    // Calculate time until midnight EST
+    // Calculate time until 4 AM EST
     const calculateTimeUntilNextPuzzle = () => {
       const now = new Date();
       
-      // Get tomorrow's date at midnight EST
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      tomorrow.setHours(0, 0, 0, 0);
+      // Get current date at 4 AM EST
+      const today = new Date();
+      today.setHours(4, 0, 0, 0);
       
       // Convert to EST
       const options = { timeZone: 'America/New_York' };
-      const estMidnight = new Date(tomorrow.toLocaleString('en-US', options));
+      let estFourAM = new Date(today.toLocaleString('en-US', options));
+      
+      // If it's already past 4 AM EST, use next day at 4 AM
+      if (now >= estFourAM) {
+        today.setDate(today.getDate() + 1);
+        estFourAM = new Date(today.toLocaleString('en-US', options));
+      }
       
       // Calculate time difference in milliseconds
-      const diffMs = estMidnight.getTime() - now.getTime();
+      const diffMs = estFourAM.getTime() - now.getTime();
       
       // Convert to hours, minutes, seconds
       const hours = Math.floor(diffMs / (1000 * 60 * 60));
@@ -248,7 +253,7 @@ const ResultsCard: React.FC = () => {
                     </p>
                   );
                 }
-                return <p key={index}>{line}</p>;
+                return <p key={index} className="my-1">{line}</p>;
               }
             })}
           </div>
@@ -257,7 +262,7 @@ const ResultsCard: React.FC = () => {
           <div className="mt-6 p-4 bg-neutral/50 rounded-lg">
             <p className="text-sm font-medium mb-1">Next puzzle in:</p>
             <p className="text-xl font-bold text-primary">{timeUntilNextPuzzle}</p>
-            <p className="text-xs text-gray-500 mt-1">New puzzles at midnight EST</p>
+            <p className="text-xs text-gray-500 mt-1">New puzzles at 4:00 AM EST</p>
             
             {/* Development-only reset button - will be hidden in production */}
             {import.meta.env.DEV && (
