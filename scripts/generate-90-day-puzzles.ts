@@ -542,8 +542,8 @@ function getRandomInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function getDateStringAt4AM(date: Date): string {
-  const dateAt4AM = new Date(date);
-  dateAt4AM.setHours(8, 0, 0, 0); // 4:00 AM EDT = 8:00 AM UTC
-  return dateAt4AM.toISOString();
+function getDateStringAtMidnight(date: Date): string {
+  const dateAtMidnight = new Date(date);
+  dateAtMidnight.setHours(4, 0, 0, 0); // Midnight EDT = 4:00 AM UTC
+  return dateAtMidnight.toISOString();
 }
