@@ -169,6 +169,29 @@ function App() {
     return () => clearInterval(intervalId);
   }, [currentDay, fetchTodaysPuzzle]);
   
+  // This effect makes sure the correct puzzle for the selected difficulty mode is shown 
+  // when navigating between pages
+  useEffect(() => {
+    // Only run this when returning to the home page
+    if (location === '/' && navigationState.initialPuzzleLoaded) {
+      // Short delay to allow page transition to complete
+      const timer = setTimeout(() => {
+        // Verify that the puzzle displayed matches the current difficulty mode
+        const currentMode = useGameStore.getState().difficultyMode;
+        const currentPuzzle = useGameStore.getState().puzzle;
+        
+        if (currentPuzzle && currentPuzzle.difficulty !== currentMode) {
+          console.log(`Detected mismatch: Showing ${currentPuzzle.difficulty} puzzle when in ${currentMode} mode. Fixing...`);
+          
+          // Fetch the correct puzzle for the current difficulty
+          fetchPuzzleByDifficulty(currentMode);
+        }
+      }, 200);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [location, fetchPuzzleByDifficulty]);
+  
   return (
     <TooltipProvider>
       <div className="max-w-md mx-auto p-4 min-h-screen flex flex-col">
