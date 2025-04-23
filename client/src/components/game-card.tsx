@@ -362,16 +362,6 @@ const GameCard: React.FC = () => {
         {/* Difficulty mode toggle button removed as requested */}
       </div>
 
-      {/* Hard difficulty puzzle badge that displays if the current puzzle is hard */}
-      {puzzle.difficulty === 'hard' && (
-        <Badge 
-          variant="destructive" 
-          className="text-xs p-1 pl-1.5 pr-2 flex items-center gap-1 absolute top-2 left-2 bg-red-600"
-        >
-          <span className="text-xs">🔥</span> Hard Mode
-        </Badge>
-      )}
-
       <EmojiDisplay emojis={puzzle.emojis} />
 
       {/* Word count hint */}
