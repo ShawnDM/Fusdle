@@ -372,9 +372,9 @@ const GameCard: React.FC = () => {
         </div>
       )}
 
-      {/* Input form area with fixed height */}
-      <div className="min-h-[90px]">
-        {gameStatus === 'playing' && !hasCompleted && (
+      {/* Input form area - only add height when actively playing */}
+      {gameStatus === 'playing' && !hasCompleted ? (
+        <div>
           <motion.form 
             className="mb-6" 
             onSubmit={handleSubmit}
@@ -405,8 +405,8 @@ const GameCard: React.FC = () => {
               </button>
             </div>
           </motion.form>
-        )}
-      </div>
+        </div>
+      ) : null}
 
       {gameStatus === 'playing' && !hasCompleted ? (
         <>
@@ -534,13 +534,15 @@ const GameCard: React.FC = () => {
           )}
         </>
       ) : hasCompleted && gameStatus === 'playing' ? (
-        <div className="p-4 bg-neutral/50 rounded-lg text-center my-4">
-          <p className="text-lg font-medium">You've already completed this Fusdle.</p>
-          <p className="text-sm text-gray-500 mt-1">Check back tomorrow for a new challenge!</p>
+        <div className="p-3 bg-neutral/60 rounded-lg text-center mt-2 mb-2">
+          <div className="flex items-center justify-center text-primary">
+            <span className="text-sm mr-1">✅</span>
+            <p className="font-medium">You've already completed this puzzle</p>
+          </div>
           
           {/* Development-only buttons - will be hidden in production */}
           {import.meta.env.DEV && (
-            <div className="flex justify-center space-x-2 mt-3">
+            <div className="flex justify-center space-x-2 mt-2">
               <button
                 onClick={() => resetForDevelopment()}
                 className="bg-black text-white text-xs rounded-lg px-2 py-1 opacity-50 hover:opacity-80 transition-opacity"
