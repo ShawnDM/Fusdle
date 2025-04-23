@@ -143,10 +143,27 @@ const Archive: React.FC = () => {
       return [];
     }
     
-    // Special case for development environment - force include puzzle numbers 1-4
-    // because they have dates before today (April 23)
+    // Only include puzzles from before current date (April 23, 2025)
+    // This explicitly filters out puzzles with future dates
+    const todayStr = "2025-04-23T00:00:00";
+    const today = new Date(todayStr);
+    
     const finalPuzzles = puzzlesToFilter.filter((puzzle: ArchivePuzzle) => {
-      return puzzle.puzzleNumber <= 4 || puzzle.date !== "2025-04-23T00:00:00";
+      try {
+        // Parse the puzzle date 
+        const puzzleDate = new Date(puzzle.date);
+        
+        // For debugging
+        if (puzzle.puzzleNumber <= 10) {
+          console.log(`Archive date check: Puzzle #${puzzle.puzzleNumber}, date=${puzzle.date}, today=${todayStr}, is before? ${puzzleDate < today}`);
+        }
+        
+        // Only include puzzles with dates before today
+        return puzzleDate < today;
+      } catch (err) {
+        console.error(`Date comparison error for puzzle ${puzzle.id}:`, err);
+        return false; // Exclude puzzles with invalid dates
+      }
     });
     
     console.log(`Found ${finalPuzzles.length} puzzles for archive`);

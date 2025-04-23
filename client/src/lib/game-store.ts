@@ -606,16 +606,19 @@ export const useGameStore = create<GameState>((set, get) => ({
     
     // Check if we have cached data for this difficulty
     if (cachedPuzzles[difficulty] && cachedGameStates[difficulty]) {
+      // Use appropriate type to avoid void returns
+      const cachedState = cachedGameStates[difficulty]!;
+      
       set({
         puzzle: cachedPuzzles[difficulty],
         difficultyMode: difficulty,
-        attempts: cachedGameStates[difficulty]!.attempts,
-        revealedHints: cachedGameStates[difficulty]!.revealedHints,
-        hintsUsedAtAttempts: cachedGameStates[difficulty]!.hintsUsedAtAttempts,
-        gameStatus: cachedGameStates[difficulty]!.gameStatus,
-        hasCompleted: cachedGameStates[difficulty]!.hasCompleted,
-        hasGuessedOnce: cachedGameStates[difficulty]!.hasGuessedOnce,
-        partialMatchFeedback: cachedGameStates[difficulty]!.partialMatchFeedback,
+        attempts: cachedState.attempts,
+        revealedHints: cachedState.revealedHints,
+        hintsUsedAtAttempts: cachedState.hintsUsedAtAttempts,
+        gameStatus: cachedState.gameStatus,
+        hasCompleted: cachedState.hasCompleted,
+        hasGuessedOnce: cachedState.hasGuessedOnce,
+        partialMatchFeedback: cachedState.partialMatchFeedback,
         loading: false,
         error: null
       });
