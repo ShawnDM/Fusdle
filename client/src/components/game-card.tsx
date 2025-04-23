@@ -2,7 +2,7 @@ import React, { useState, FormEvent, useEffect, useRef } from "react";
 import { useGameStore } from "@/lib/game-store";
 import EmojiDisplay from "@/components/emoji-display";
 import Hints from "@/components/hints";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeftRight, Skull, Flame, HelpCircle, X } from "lucide-react";
@@ -329,35 +329,35 @@ const GameCard: React.FC = () => {
       
       {/* Difficulty indicator with smooth animations */}
       <div className="flex justify-between items-center mb-4">
-        <motion.div
-          key={`difficulty-badge-${difficultyMode}`}
-          initial={{ opacity: 0, y: 5 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, type: "spring", stiffness: 300 }}
-        >
-          <Badge 
-            variant={difficultyMode === 'hard' ? 'destructive' : 'secondary'}
-            className="text-xs py-1 pl-1.5 pr-2 flex items-center gap-1 transition-colors duration-300"
+        <AnimatePresence mode="wait">
+          <motion.div 
+            key={`difficulty-badge-${difficultyMode}`}
+            initial={{ opacity: 0, scale: 0.9, y: -10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 10 }}
+            transition={{ 
+              duration: 0.25,
+              type: "spring", 
+              stiffness: 500,
+              damping: 25
+            }}
           >
-            {difficultyMode === 'hard' ? (
-              <motion.span className="flex items-center"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.2 }}
-              >
-                <Skull className="h-3 w-3" /> Hard Mode
-              </motion.span>
-            ) : (
-              <motion.span className="flex items-center"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.2 }}
-              >
-                <Flame className="h-3 w-3" /> Normal Mode
-              </motion.span>
-            )}
-          </Badge>
-        </motion.div>
+            <Badge 
+              variant={difficultyMode === 'hard' ? 'destructive' : 'secondary'}
+              className="text-xs py-1 pl-1.5 pr-2 flex items-center gap-1"
+            >
+              {difficultyMode === 'hard' ? (
+                <span className="flex items-center">
+                  <Skull className="h-3 w-3" /> Hard Mode
+                </span>
+              ) : (
+                <span className="flex items-center">
+                  <Flame className="h-3 w-3" /> Normal Mode
+                </span>
+              )}
+            </Badge>
+          </motion.div>
+        </AnimatePresence>
         
         {/* Difficulty mode toggle button removed as requested */}
       </div>
