@@ -325,15 +325,12 @@ export class FirestoreService {
     }
   }
 
-  // Get puzzle archive (limited count)
+  // Get puzzle archive (limited count) with global time
   async getPuzzleArchive(limitCount = 30): Promise<Puzzle[]> {
     try {
-      // Get current date at UTC 8:00 (4:00 AM UTC-4)
-      const today = new Date();
-      today.setUTCHours(8, 0, 0, 0);
-      const todayStr = today.toISOString().split('T')[0];
-      
-      console.log(`Getting archive puzzles, today is: ${todayStr}`);
+      // Get the current date from global time API
+      const todayStr = await getGlobalDateString();
+      console.log(`Getting archive puzzles, global date is: ${todayStr}`);
       
       // Get all puzzles
       const allPuzzlesQuery = query(puzzlesCollection);

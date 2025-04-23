@@ -11,6 +11,7 @@ import NavTabs from "@/components/nav-tabs";
 import { navigationState, updateNavigationState, queryClient } from "@/lib/queryClient";
 import { firestoreService } from "@/firebase/firestore";
 import { getApiBaseUrl } from "@/lib/queryClient";
+import { getGlobalDateString, shouldShowNewPuzzle } from "@/lib/global-time";
 
 function App() {
   const [location, setLocation] = useLocation();
@@ -112,25 +113,55 @@ function App() {
   }, [location, preloadArchiveData, preloadOtherDifficultyMode]);
   
   // Check for a new day (midnight EST) and reset/fetch puzzles accordingly
+  // Uses global time API to prevent users from manipulating device clock
   useEffect(() => {
-    // Set initial date and load initial puzzle
-    setCurrentDay(getCurrentEstDate());
-    fetchTodaysPuzzle().then(() => {
-      // Mark initial puzzle as loaded
-      updateNavigationState({ initialPuzzleLoaded: true });
-    });
+    // Initial load of puzzle with global time
+    const initializePuzzles = async () => {
+      try {
+        // Get the global date string (based on server time)
+        const globalDateStr = await getGlobalDateString();
+        console.log('Global date for initial puzzle load:', globalDateStr);
+        setCurrentDay(globalDateStr);
+        
+        // Fetch today's puzzle using global time
+        await fetchTodaysPuzzle();
+        
+        // Mark initial puzzle as loaded
+        updateNavigationState({ initialPuzzleLoaded: true });
+      } catch (error) {
+        console.error('Error initializing puzzles with global time:', error);
+      }
+    };
+    
+    initializePuzzles();
     
     // Set up an interval to check for date changes (every minute)
-    const intervalId = setInterval(() => {
-      const newDate = getCurrentEstDate();
-      
-      // If the date has changed, update state and fetch new puzzle
-      if (newDate !== currentDay) {
-        console.log('New day detected, refreshing puzzles');
-        setCurrentDay(newDate);
-        fetchTodaysPuzzle();
-        // Reset the preloaded state
-        preloadedRef.current = false;
+    const intervalId = setInterval(async () => {
+      try {
+        // Get current date from the last puzzle load
+        const lastPuzzleDate = currentDay;
+        if (!lastPuzzleDate) return;
+        
+        // Check if we should show a new puzzle (crossed midnight EST)
+        const shouldRefresh = await shouldShowNewPuzzle(lastPuzzleDate);
+        
+        if (shouldRefresh) {
+          // Get the new global date
+          const newGlobalDate = await getGlobalDateString();
+          console.log('New day detected (4 AM EST passed), refreshing puzzles');
+          console.log(`Date changed from ${lastPuzzleDate} to ${newGlobalDate}`);
+          
+          // Update state with the new date
+          setCurrentDay(newGlobalDate);
+          
+          // Fetch the new puzzle
+          await fetchTodaysPuzzle();
+          
+          // Reset the preloaded state to trigger preloading of the other difficulty
+          preloadedRef.current = false;
+        }
+      } catch (error) {
+        console.error('Error checking for puzzle refresh:', error);
       }
     }, 60000); // Check every minute
     

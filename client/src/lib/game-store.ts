@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { apiRequest, getApiBaseUrl } from './queryClient';
 import { updateStreak, getStreak, getFlawlessStreak, markHintsUsed } from './streak';
 import { firestoreService } from '../firebase/firestore';
+import { getGlobalDateString, shouldShowNewPuzzle } from './global-time';
 
 // Helper functions to manage completed puzzles in localStorage
 const COMPLETED_PUZZLES_KEY = 'fusdle_completed_puzzles';
@@ -14,7 +15,7 @@ interface CompletedPuzzleData {
   status: 'won' | 'lost';
 }
 
-export function saveCompletedPuzzle(puzzleId: number, attemptsCount: number, status: 'won' | 'lost', difficulty: string = 'normal'): void {
+export async function saveCompletedPuzzle(puzzleId: number, attemptsCount: number, status: 'won' | 'lost', difficulty: string = 'normal'): Promise<void> {
   try {
     // Save puzzle ID to completed list (now includes difficulty)
     const completedPuzzleIds = getCompletedPuzzlesIds();
@@ -44,10 +45,17 @@ export function saveCompletedPuzzle(puzzleId: number, attemptsCount: number, sta
     if (difficulty === 'normal') {
       useGameStore.setState({ hardModeUnlocked: true });
       
-      // Store today's date in EST to track when hard mode should reset
-      const options = { timeZone: 'America/New_York' };
-      const todayDateEST = new Date().toLocaleDateString('en-US', options);
-      localStorage.setItem('lastCompletionDate', todayDateEST);
+      try {
+        // Get today's date using the global time API
+        const globalDateStr = await getGlobalDateString();
+        localStorage.setItem('lastCompletionDate', globalDateStr);
+      } catch (error) {
+        console.error('Error getting global date, using local time fallback:', error);
+        // Fallback to local time if global time API fails
+        const options = { timeZone: 'America/New_York' };
+        const todayDateEST = new Date().toLocaleDateString('en-US', options);
+        localStorage.setItem('lastCompletionDate', todayDateEST);
+      }
     }
   } catch (error) {
     console.error('Error saving completed puzzle:', error);
@@ -164,7 +172,8 @@ interface GameState {
 }
 
 // Function to check if hard mode should be reset at midnight EST
-function shouldResetHardMode(): boolean {
+// Uses cached date for initial load, but will properly sync with global time
+async function shouldResetHardMode(): Promise<boolean> {
   const lastCompletionDate = localStorage.getItem('lastCompletionDate');
   
   // If no record exists yet, hard mode should be locked
@@ -172,24 +181,39 @@ function shouldResetHardMode(): boolean {
     return true;
   }
   
-  // Get current date in EST time zone
-  const options = { timeZone: 'America/New_York' };
-  const todayDateEST = new Date().toLocaleDateString('en-US', options);
-  
-  // If the last completion date is not today, reset hard mode
-  return lastCompletionDate !== todayDateEST;
+  // Check if we've passed the 4 AM EST threshold since the last completion
+  try {
+    // Use our global time utility that checks with world time API
+    return await shouldShowNewPuzzle(lastCompletionDate);
+  } catch (error) {
+    console.error('Error checking global time, falling back to local time:', error);
+    
+    // Fallback to local time if global time check fails
+    const options = { timeZone: 'America/New_York' };
+    const todayDateEST = new Date().toLocaleDateString('en-US', options);
+    
+    // If the last completion date is not today, reset hard mode
+    return lastCompletionDate !== todayDateEST;
+  }
 }
 
 // Get initial hard mode status, resetting if it's a new day
+// Uses cached value first for immediate UI rendering, then updates async
 function getInitialHardModeStatus(): boolean {
-  // If it's a new day, reset hard mode regardless of previous state
-  if (shouldResetHardMode()) {
-    localStorage.removeItem('hardModeUnlocked');
-    return false;
-  }
+  // For initial load, use the stored value to prevent UI jumping
+  const storedValue = localStorage.getItem('hardModeUnlocked') === 'true';
   
-  // Otherwise, use the stored value
-  return localStorage.getItem('hardModeUnlocked') === 'true';
+  // Check reset condition asynchronously to update if needed
+  (async () => {
+    if (await shouldResetHardMode()) {
+      localStorage.removeItem('hardModeUnlocked');
+      // Update the state if reset was needed
+      useGameStore.setState({ hardModeUnlocked: false });
+    }
+  })();
+  
+  // Return the cached value for immediate rendering
+  return storedValue;
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
