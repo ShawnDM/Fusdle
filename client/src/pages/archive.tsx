@@ -40,9 +40,10 @@ const Archive: React.FC = () => {
       let archiveData = null;
       
       try {
-        const puzzlesByDifficulty = await firestoreService.getPuzzlesByDifficulty('normal', 8);
-        if (puzzlesByDifficulty && puzzlesByDifficulty.length > 0) {
-          archiveData = puzzlesByDifficulty;
+        // Use getPuzzleArchive to get past puzzles of all types
+        const archivePuzzles = await firestoreService.getPuzzleArchive(30);
+        if (archivePuzzles && archivePuzzles.length > 0) {
+          archiveData = archivePuzzles;
         }
       } catch (error) {
         console.warn("Firebase archive fetch failed, trying API:", error);
@@ -99,8 +100,10 @@ const Archive: React.FC = () => {
     if (!archivePuzzles) return [];
     
     if (activeTab === 'fusion') {
+      // Show all fusion puzzles regardless of difficulty
       return archivePuzzles.filter((puzzle: ArchivePuzzle) => puzzle.isFusionTwist === 1);
     } else {
+      // Show regular puzzles of the selected difficulty
       return archivePuzzles.filter((puzzle: ArchivePuzzle) => 
         puzzle.difficulty === activeTab && puzzle.isFusionTwist === 0
       );
