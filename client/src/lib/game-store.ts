@@ -498,30 +498,56 @@ export const useGameStore = create<GameState>((set, get) => ({
       // Try Firebase service first
       let puzzle = null;
       
+      // Fix type safety
+      const safeMode = (difficulty === 'hard' || difficulty === 'normal') 
+        ? difficulty 
+        : 'normal';
+      
+      console.log(`Explicitly fetching puzzle with difficulty: ${safeMode}`);
+      
       try {
         // Try to fetch from Firebase using our service
-        puzzle = await firestoreService.getTodaysPuzzle(difficulty);
+        puzzle = await firestoreService.getTodaysPuzzle(safeMode);
+        
+        // Log the retrieved puzzle difficulty to verify
+        if (puzzle) {
+          console.log(`Retrieved puzzle with difficulty: ${puzzle.difficulty}`);
+          
+          // Ensure the puzzle has the correct difficulty property
+          if (puzzle.difficulty !== safeMode) {
+            console.warn(`Fixing puzzle difficulty mismatch: ${puzzle.difficulty} → ${safeMode}`);
+            puzzle.difficulty = safeMode;
+          }
+        }
       } catch (firebaseError) {
         console.warn('Firebase fetch failed, trying API endpoint:', firebaseError);
       }
       
       // If Firebase fetch fails, use our API endpoint
       if (!puzzle) {
-        const apiUrl = `${getApiBaseUrl()}/api/puzzles/today?difficulty=${difficulty}`;
+        const apiUrl = `${getApiBaseUrl()}/api/puzzles/today?difficulty=${safeMode}`;
+        console.log(`Fetching from API with URL: ${apiUrl}`);
         const response = await fetch(apiUrl);
         
         if (!response.ok) {
-          throw new Error(`Failed to fetch ${difficulty} difficulty puzzle`);
+          throw new Error(`Failed to fetch ${safeMode} difficulty puzzle`);
         }
         
         puzzle = await response.json();
+        console.log(`API returned puzzle with difficulty: ${puzzle.difficulty}`);
+        
+        // Ensure the puzzle has the correct difficulty property
+        if (puzzle.difficulty !== safeMode) {
+          console.warn(`API puzzle difficulty mismatch: ${puzzle.difficulty} → ${safeMode}`);
+          puzzle.difficulty = safeMode;
+        }
       }
       
       // Reset game state for the new difficulty
       set({ 
         puzzle, 
         loading: false,
-        difficultyMode: difficulty as 'normal' | 'hard',
+        difficultyMode: safeMode as 'normal' | 'hard',
         gameStatus: 'playing' as const,
         attempts: 0,
         revealedHints: [],
@@ -536,11 +562,11 @@ export const useGameStore = create<GameState>((set, get) => ({
       set((state) => ({
         cachedPuzzles: {
           ...state.cachedPuzzles,
-          [difficulty]: puzzle
+          [safeMode]: puzzle
         },
         cachedGameStates: {
           ...state.cachedGameStates,
-          [difficulty]: {
+          [safeMode]: {
             attempts: 0,
             revealedHints: [],
             hintsUsedAtAttempts: [],
@@ -552,8 +578,8 @@ export const useGameStore = create<GameState>((set, get) => ({
         }
       }));
       
-      // Check if the puzzle has already been completed
-      setTimeout(() => get().checkCompletedStatus(), 10);
+      // Check if the puzzle has already been completed with a longer delay
+      setTimeout(() => get().checkCompletedStatus(), 50);
     } catch (error) {
       console.error(`Error fetching ${difficulty} puzzle:`, error);
       set({ 
@@ -659,39 +685,50 @@ export const useGameStore = create<GameState>((set, get) => ({
     // First clear the current puzzle to ensure we don't see stale data
     set({
       puzzle: null,
-      loading: true
+      loading: true,
+      difficultyMode: newMode // Set this immediately to update UI
     });
     
-    // Short timeout to ensure UI shows loading state
+    // More substantial delay to ensure proper state updates
     setTimeout(() => {
-      // Try to load from cache first
-      const cacheLoaded = get().loadGameStateFromCache(newMode);
-      
-      if (typeof cacheLoaded === 'boolean' && cacheLoaded) {
-        // Successfully loaded from cache, no need to fetch
-        console.log(`Successfully switched to ${newMode} mode using cached data`);
-      } else {
-        // No cache available, fetch from server
-        console.log(`No cache available for ${newMode} mode, fetching from server`);
+      try {
+        // Try to load from cache first
+        const cacheLoaded = get().loadGameStateFromCache(newMode);
         
-        // Reset game state before fetching
-        set({
-          difficultyMode: newMode,
-          loading: true,
-          attempts: 0,
-          revealedHints: [],
-          hintsUsedAtAttempts: [],
-          gameStatus: 'playing',
-          hasGuessedOnce: false,
-          hasCompleted: false,
-          partialMatchFeedback: null,
-          currentGuess: ''
-        });
-        
-        // Fetch the puzzle for the new mode
-        get().fetchPuzzleByDifficulty(newMode);
+        if (typeof cacheLoaded === 'boolean' && cacheLoaded) {
+          // Successfully loaded from cache, verify difficultyMode is set correctly
+          console.log(`Successfully switched to ${newMode} mode using cached data`);
+          // Double-check that difficulty mode is set correctly
+          if (get().difficultyMode !== newMode) {
+            set({ difficultyMode: newMode });
+          }
+        } else {
+          // No cache available, fetch from server
+          console.log(`No cache available for ${newMode} mode, fetching from server`);
+          
+          // Reset game state before fetching
+          set({
+            difficultyMode: newMode, // Ensure this is set again for safety
+            loading: true,
+            attempts: 0,
+            revealedHints: [],
+            hintsUsedAtAttempts: [],
+            gameStatus: 'playing',
+            hasGuessedOnce: false,
+            hasCompleted: false,
+            partialMatchFeedback: null,
+            currentGuess: ''
+          });
+          
+          // Fetch the puzzle for the new mode with explicit difficulty parameter
+          get().fetchPuzzleByDifficulty(newMode);
+        }
+      } catch (error) {
+        console.error("Error toggling difficulty mode:", error);
+        // Ensure we're not stuck in loading state if an error occurs
+        set({ loading: false });
       }
-    }, 50);
+    }, 100);
   },
 
   revealHint: async () => {
