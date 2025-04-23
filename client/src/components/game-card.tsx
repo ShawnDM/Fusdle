@@ -248,8 +248,8 @@ const GameCard: React.FC = () => {
       )}
       <div className="flex justify-between items-center mb-4">
         <div className="text-sm text-gray-500">
-          {/* Using consistent Fusdle numbering across app */}
-          <span>Fusdle #{calculateFusdleNumber(puzzle.date, undefined)}</span>
+          {/* Using today's date for Fusdle number, not fallback puzzle date */}
+          <span>Fusdle #{calculateFusdleNumber(new Date().toISOString().split('T')[0], undefined)}</span>
         </div>
         <div className="flex items-center space-x-2">
           <div className="flex items-center bg-secondary/10 rounded-full px-3 py-1">
