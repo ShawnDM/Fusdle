@@ -120,6 +120,7 @@ interface GameState {
       attempts: number;
       revealedHints: string[];
       hintsUsedAtAttempts: number[];
+      previousGuesses: string[];
       gameStatus: 'playing' | 'won' | 'lost' | 'gave_up';
       hasCompleted: boolean;
       hasGuessedOnce: boolean;
@@ -129,6 +130,7 @@ interface GameState {
       attempts: number;
       revealedHints: string[];
       hintsUsedAtAttempts: number[];
+      previousGuesses: string[];
       gameStatus: 'playing' | 'won' | 'lost' | 'gave_up';
       hasCompleted: boolean;
       hasGuessedOnce: boolean;
@@ -601,6 +603,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       attempts, 
       revealedHints, 
       hintsUsedAtAttempts, 
+      previousGuesses,
       gameStatus, 
       hasCompleted, 
       hasGuessedOnce,
@@ -619,6 +622,7 @@ export const useGameStore = create<GameState>((set, get) => ({
           attempts,
           revealedHints,
           hintsUsedAtAttempts,
+          previousGuesses,
           gameStatus,
           hasCompleted,
           hasGuessedOnce,
@@ -645,6 +649,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         attempts: cachedState.attempts,
         revealedHints: cachedState.revealedHints,
         hintsUsedAtAttempts: cachedState.hintsUsedAtAttempts,
+        previousGuesses: cachedState.previousGuesses || [], // Include previous guesses
         gameStatus: cachedState.gameStatus,
         hasCompleted: cachedState.hasCompleted,
         hasGuessedOnce: cachedState.hasGuessedOnce,
@@ -904,6 +909,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         attempts: 0,
         revealedHints: [],
         hintsUsedAtAttempts: [],
+        previousGuesses: [],
         currentGuess: '',
         partialMatchFeedback: null,
         hasGuessedOnce: false,
@@ -945,6 +951,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         attempts: 0,
         revealedHints: [],
         hintsUsedAtAttempts: [],
+        previousGuesses: [],
         currentGuess: '',
         hasCompleted: false,
         partialMatchFeedback: null,

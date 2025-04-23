@@ -5,13 +5,19 @@ import Hints from "@/components/hints";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeftRight, Skull, Flame, HelpCircle, X } from "lucide-react";
+import { ArrowLeftRight, Skull, Flame, HelpCircle, X, ChevronDown } from "lucide-react";
 import { confirmAlert } from 'react-confirm-alert';
 import { useToast } from "@/hooks/use-toast";
 import { calculateFusdleNumber } from "@/lib/utils";
 import { resetFlawlessStreak } from "@/lib/streak";
 import 'react-confirm-alert/src/react-confirm-alert.css';
 import '@/components/confirm-dialog.css';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 const GameCard: React.FC = () => {
   const {
@@ -37,7 +43,8 @@ const GameCard: React.FC = () => {
     partialMatchFeedback,
     showNormalModeTutorial,
     showHardModeTutorial,
-    dismissTutorial
+    dismissTutorial,
+    previousGuesses
   } = useGameStore();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -491,6 +498,35 @@ const GameCard: React.FC = () => {
           </div>
 
           <Hints hints={revealedHints} />
+          
+          {/* Previous Guesses Accordion */}
+          {previousGuesses.length > 0 && (
+            <div className="mt-3 mb-3">
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="previous-guesses" className="border border-gray-200 rounded-lg">
+                  <AccordionTrigger className="px-4 py-2 hover:no-underline hover:bg-gray-50 rounded-t-lg">
+                    <div className="flex items-center gap-2 text-sm font-medium text-gray-600">
+                      <ChevronDown className="h-4 w-4" />
+                      <span>Previous Guesses ({previousGuesses.length})</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-3 pt-1">
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {previousGuesses.map((guess, index) => (
+                        <div 
+                          key={`${guess}-${index}`} 
+                          className="p-2 bg-gray-50 rounded text-sm flex justify-between items-center"
+                        >
+                          <span className="font-medium">{guess}</span>
+                          <span className="text-xs text-gray-500">Guess #{index + 1}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
+          )}
           
           {/* Partial match feedback */}
           {partialMatchFeedback && (
