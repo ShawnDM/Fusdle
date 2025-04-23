@@ -3,6 +3,7 @@ import { apiRequest, getApiBaseUrl } from './queryClient';
 import { updateStreak, getStreak, getFlawlessStreak, markHintsUsed } from './streak';
 import { firestoreService } from '../firebase/firestore';
 import { getGlobalDateString, shouldShowNewPuzzle } from './global-time';
+import { calculateFusdleNumber } from './utils';
 
 // Helper functions to manage completed puzzles in localStorage
 const COMPLETED_PUZZLES_KEY = 'fusdle_completed_puzzles';
@@ -1084,10 +1085,8 @@ export const useGameStore = create<GameState>((set, get) => ({
     // Build share text as an array of lines for better platform compatibility
     const resultLines = [];
     
-    // Header line with simplified format - using same calculation as in game-card
-    const puzzleDay = puzzle.date ? 
-      Math.floor((new Date(puzzle.date).getTime() - new Date('2025-04-20').getTime()) / (24 * 60 * 60 * 1000)) + 1 : 
-      puzzle.puzzleNumber;
+    // Use the consistent calculateFusdleNumber utility function
+    const puzzleDay = calculateFusdleNumber(puzzle.date, puzzle.puzzleNumber);
       
     let headerLine = `Fusdle #${puzzleDay}`;
     
