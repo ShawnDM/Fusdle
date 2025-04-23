@@ -211,13 +211,13 @@ function App() {
           </Switch>
         </div>
         
-        <footer className="mt-auto py-4 text-center text-white/70 text-sm">
+        {/* Social buttons placed before footer */}
+        <SocialButtons />
+        
+        <footer className="py-4 text-center text-white/70 text-sm">
           <p>© {new Date().getFullYear()} Fusdle. All rights reserved.</p>
         </footer>
       </div>
-      
-      {/* Fixed social buttons */}
-      <SocialButtons />
       
       <Toaster />
     </TooltipProvider>

@@ -2,12 +2,12 @@ import { motion } from "framer-motion";
 
 const SocialButtons = () => {
   return (
-    <div className="fixed bottom-0 left-0 right-0 flex justify-center pb-4 z-10 pointer-events-none">
+    <div className="w-full flex justify-center mt-8 mb-4">
       <motion.div 
-        className="flex gap-3 bg-white/30 backdrop-blur-md p-2.5 rounded-full shadow-md pointer-events-auto"
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ type: "spring", delay: 0.2 }}
+        className="flex gap-3 bg-white/30 backdrop-blur-md p-2.5 rounded-full shadow-md"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6 }}
       >
         <motion.a 
           href="https://x.com/shawndean_" 
