@@ -12,6 +12,7 @@ import {
 } from 'firebase/firestore';
 import { db } from './config';
 import type { Puzzle, InsertPuzzle } from '@shared/schema';
+import { getGlobalDateString } from '../lib/global-time';
 
 // Collection references
 const puzzlesCollection = collection(db, 'puzzles');
@@ -194,16 +195,13 @@ export class FirestoreService {
     }
   }
 
-  // Get today's puzzle (optionally by difficulty)
+  // Get today's puzzle (optionally by difficulty) using global time
   async getTodaysPuzzle(difficulty: string = 'normal'): Promise<Puzzle | undefined> {
     try {
-      const today = new Date();
-      console.log(`Today's date: ${today.toISOString()}`);
-      
-      // Set to UTC 8:00 to match our 4:00 AM UTC-4 timestamp
-      today.setUTCHours(8, 0, 0, 0);
-      const todayStr = today.toISOString().split('T')[0];
-      console.log(`Formatted today for query: ${todayStr}`);
+      // Get the current date from global time API
+      // This prevents users from manipulating their device clock
+      const todayStr = await getGlobalDateString();
+      console.log(`Today's global date: ${todayStr}`);
       
       // Ensure difficulty is valid
       const effectiveDifficulty = ['normal', 'hard'].includes(difficulty) ? difficulty : 'normal';
