@@ -216,7 +216,7 @@ const PuzzleCard: React.FC<{ puzzle: ArchivePuzzle }> = ({ puzzle }) => {
       <div className="flex justify-between items-start mb-3">
         <div>
           <span className="font-medium">
-            Fusdle #{Math.floor((new Date(puzzle.date).getTime() - new Date('2025-04-20').getTime()) / (24 * 60 * 60 * 1000)) + 1}
+            Fusdle #{puzzle.puzzleNumber}
           </span>
           <div className="text-sm text-gray-500 mt-1">
             {format(new Date(puzzle.date), "MMMM d, yyyy")}

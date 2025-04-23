@@ -640,13 +640,30 @@ export const useGameStore = create<GameState>((set, get) => ({
     
     // Try to load from cache first
     const cacheLoaded = get().loadGameStateFromCache(newMode);
-    if (cacheLoaded === true) {
+    
+    // Check if cacheLoaded is successful (need to explicitly check for boolean true)
+    if (cacheLoaded) {
       // Successfully loaded from cache, no need to fetch
       console.log(`Successfully switched to ${newMode} mode using cached data`);
     } else {
       // No cache available, fetch from server
       console.log(`No cache available for ${newMode} mode, fetching from server`);
-      set({ difficultyMode: newMode, loading: true });
+      
+      // Reset game state before fetching
+      set({
+        difficultyMode: newMode,
+        loading: true,
+        attempts: 0,
+        revealedHints: [],
+        hintsUsedAtAttempts: [],
+        gameStatus: 'playing',
+        hasGuessedOnce: false,
+        hasCompleted: false,
+        partialMatchFeedback: null,
+        currentGuess: ''
+      });
+      
+      // Fetch the puzzle for the new mode
       get().fetchPuzzleByDifficulty(newMode);
     }
   },
