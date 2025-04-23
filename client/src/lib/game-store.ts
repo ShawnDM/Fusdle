@@ -141,6 +141,7 @@ interface GameState {
   attempts: number;
   revealedHints: string[];
   hintsUsedAtAttempts: number[];
+  previousGuesses: string[]; // Track all previous guesses made by the user
   currentGuess: string;
   hasCompleted: boolean;
   partialMatchFeedback: string | null; // Feedback for partial word matches
@@ -235,6 +236,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   attempts: 0,
   revealedHints: [],
   hintsUsedAtAttempts: [],
+  previousGuesses: [], // Track all previous guesses made by the user
   currentGuess: '',
   hasCompleted: false,
   hasGuessedOnce: false, // Track if user has made at least one guess
@@ -438,10 +440,11 @@ export const useGameStore = create<GameState>((set, get) => ({
         set({ partialMatchFeedback: null });
       }
       
-      // Increment attempts and set hasGuessedOnce to true
+      // Increment attempts, set hasGuessedOnce to true, and add guess to previousGuesses
       set(state => ({ 
         attempts: state.attempts + 1,
-        hasGuessedOnce: true 
+        hasGuessedOnce: true,
+        previousGuesses: [...state.previousGuesses, guess]
       }));
       
       // Get the new attempts count after increment
@@ -552,6 +555,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         attempts: 0,
         revealedHints: [],
         hintsUsedAtAttempts: [],
+        previousGuesses: [],
         currentGuess: '',
         hasCompleted: false,
         hasGuessedOnce: false,
@@ -886,6 +890,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         attempts: 0,
         revealedHints: [],
         hintsUsedAtAttempts: [],
+        previousGuesses: [],
         currentGuess: '',
         partialMatchFeedback: null,
         hasGuessedOnce: false,
