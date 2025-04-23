@@ -667,8 +667,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       // Try to load from cache first
       const cacheLoaded = get().loadGameStateFromCache(newMode);
       
-      // Check if cacheLoaded is successful
-      if (cacheLoaded) {
+      if (typeof cacheLoaded === 'boolean' && cacheLoaded) {
         // Successfully loaded from cache, no need to fetch
         console.log(`Successfully switched to ${newMode} mode using cached data`);
       } else {
