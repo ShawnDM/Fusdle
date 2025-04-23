@@ -5,27 +5,26 @@
  * to use midnight (00:00:00) timestamps instead of 4 AM (04:00:00)
  */
 
-import { initializeApp, cert } from 'firebase-admin/app';
-import { getFirestore, Timestamp } from 'firebase-admin/firestore';
+import { initializeApp } from 'firebase/app';
+import { getFirestore, collection, doc, getDocs, updateDoc, query } from 'firebase/firestore';
 import * as dotenv from 'dotenv';
-import { readFileSync } from 'fs';
 
 // Load environment variables
 dotenv.config();
 
-// Initialize Firebase Admin
-try {
-  const serviceAccount = JSON.parse(readFileSync('./serviceAccountKey.json', 'utf8'));
-  initializeApp({
-    credential: cert(serviceAccount)
-  });
-} catch (error) {
-  console.error('Error initializing Firebase Admin:', error);
-  process.exit(1);
-}
+// Firebase configuration
+const firebaseConfig = {
+  apiKey: process.env.VITE_FIREBASE_API_KEY,
+  authDomain: `${process.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`,
+  projectId: process.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: `${process.env.VITE_FIREBASE_PROJECT_ID}.appspot.com`,
+  appId: process.env.VITE_FIREBASE_APP_ID
+};
 
-const db = getFirestore();
-const puzzlesCollection = db.collection('puzzles');
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const puzzlesCollection = collection(db, 'puzzles');
 
 // Convert date string with 4 AM to midnight
 function convertToMidnight(dateStr: string): string {
@@ -38,7 +37,7 @@ async function updatePuzzleTimestamps() {
   
   try {
     // Get all puzzles
-    const puzzlesSnapshot = await puzzlesCollection.get();
+    const puzzlesSnapshot = await getDocs(query(puzzlesCollection));
     
     if (puzzlesSnapshot.empty) {
       console.log('No puzzles found in database');
@@ -47,44 +46,51 @@ async function updatePuzzleTimestamps() {
     
     console.log(`Found ${puzzlesSnapshot.size} puzzles to update`);
     
-    // Prepare batch updates to minimize API calls
-    let batch = db.batch();
-    let counter = 0;
+    // Track updates
     let updatedCount = 0;
+    let promises = [];
     
     // Process each puzzle
-    for (const doc of puzzlesSnapshot.docs) {
-      const puzzle = doc.data();
+    for (const document of puzzlesSnapshot.docs) {
+      const puzzle = document.data();
+      
+      // Convert Firestore Timestamp to string if needed
+      let dateStr = puzzle.date;
+      if (puzzle.date && typeof puzzle.date.toDate === 'function') {
+        dateStr = puzzle.date.toDate().toISOString();
+      }
       
       // Check if the puzzle has a date field with 4 AM
-      if (puzzle.date && puzzle.date.includes('T04:00:00')) {
-        const newDate = convertToMidnight(puzzle.date);
-        console.log(`Updating puzzle #${puzzle.puzzleNumber}: ${puzzle.date} → ${newDate}`);
+      if (dateStr && dateStr.includes('T04:00:00')) {
+        const newDate = convertToMidnight(dateStr);
+        console.log(`Updating puzzle #${puzzle.puzzleNumber}: ${dateStr} → ${newDate}`);
         
-        // Update the document
-        batch.update(doc.ref, { date: newDate });
+        // Update the document (using a new Date object)
+        promises.push(updateDoc(doc(puzzlesCollection, document.id), { 
+          date: new Date(newDate) 
+        }));
         updatedCount++;
         
-        // Firestore batches are limited to 500 operations
-        if (++counter >= 450) {
-          await batch.commit();
-          console.log(`Committed batch of ${counter} updates`);
-          batch = db.batch();
-          counter = 0;
+        // Process in batches of 20 to avoid overwhelming the database
+        if (promises.length >= 20) {
+          await Promise.all(promises);
+          console.log(`Processed batch of ${promises.length} updates`);
+          promises = [];
         }
       }
     }
     
-    // Commit any remaining updates
-    if (counter > 0) {
-      await batch.commit();
-      console.log(`Committed final batch of ${counter} updates`);
+    // Process any remaining updates
+    if (promises.length > 0) {
+      await Promise.all(promises);
+      console.log(`Processed final batch of ${promises.length} updates`);
     }
     
     console.log(`Successfully updated ${updatedCount} puzzles to use midnight timestamps`);
     
   } catch (error) {
     console.error('Error updating puzzle timestamps:', error);
+    throw error;
   }
 }
 

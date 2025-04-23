@@ -89,7 +89,7 @@ async function generatePuzzles() {
       if (currentDayIndex >= DAYS_TO_GENERATE) break;
 
       const currentDate = addDays(START_DATE, currentDayIndex);
-      const dateString = getDateStringAt4AM(currentDate);
+      const dateString = getDateStringAtMidnight(currentDate);
 
       // Always create a normal puzzle
       const [normalPuzzle, normalIndex] = getRandomUniqueItem(normalPuzzles, usedNormalIndexes);
