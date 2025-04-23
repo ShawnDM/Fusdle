@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fusdle Preview Image</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background-color: #9370DB;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: white;
+    }
+    .preview-container {
+      width: 1200px;
+      height: 630px;
+      background-color: #9370DB;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      padding: 2rem;
+      box-sizing: border-box;
+    }
+    .logo {
+      font-size: 7rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+      letter-spacing: -2px;
+      text-shadow: 4px 4px 0px rgba(0,0,0,0.1);
+    }
+    .tagline {
+      font-size: 2.5rem;
+      text-align: center;
+      max-width: 900px;
+      margin-bottom: 3rem;
+    }
+    .emoji-container {
+      display: flex;
+      gap: 1rem;
+      margin: 2rem 0;
+    }
+    .emoji {
+      font-size: 5rem;
+      background-color: white;
+      color: black;
+      width: 120px;
+      height: 120px;
+      border-radius: 16px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    }
+    .cta {
+      font-size: 1.8rem;
+      margin-top: 2rem;
+      background-color: #ffffff;
+      color: #9370DB;
+      padding: 0.75rem 2rem;
+      border-radius: 2rem;
+      font-weight: bold;
+    }
+    .pattern {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      opacity: 0.1;
+      background-image: radial-gradient(circle at 20px 20px, white 2px, transparent 0);
+      background-size: 40px 40px;
+      z-index: 0;
+    }
+    .content {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="preview-container">
+    <div class="pattern"></div>
+    <div class="content">
+      <div class="logo">Fusdle</div>
+      <div class="tagline">Daily Emoji Fusion Puzzle</div>
+      
+      <div class="emoji-container">
+        <div class="emoji">🌊</div>
+        <div class="emoji">➕</div>
+        <div class="emoji">🏠</div>
+        <div class="emoji">=</div>
+        <div class="emoji">❓</div>
+      </div>
+      
+      <div class="cta">Can you solve today's puzzle?</div>
+    </div>
+  </div>
+</body>
+</html>
