@@ -26,8 +26,24 @@ type DifficultyFilter = 'normal' | 'hard' | 'fusion';
 const Archive: React.FC = () => {
   const [activeTab, setActiveTab] = useState<DifficultyFilter>('normal');
 
+  // Track local loading state 
+  const [isInitialLoadDone, setIsInitialLoadDone] = useState(false);
+  
+  // Effect to trigger a manual refresh after component mounts
+  useEffect(() => {
+    // Set a short timeout to allow component to mount fully
+    const refreshTimer = setTimeout(() => {
+      if (!isInitialLoadDone) {
+        console.log("Triggering manual archive refresh");
+        setIsInitialLoadDone(true);
+      }
+    }, 500);
+    
+    return () => clearTimeout(refreshTimer);
+  }, [isInitialLoadDone]);
+  
   // Use React Query with optimized caching
-  const { data: archivePuzzles, isLoading, error } = useQuery({
+  const { data: archivePuzzles, isLoading, error, refetch } = useQuery({
     queryKey: ['/api/puzzles/archive'],
     queryFn: async () => {
       // If we already have preloaded data, use it
@@ -70,8 +86,17 @@ const Archive: React.FC = () => {
       return archiveData;
     },
     staleTime: 1000 * 60 * 10, // 10 minutes
+    refetchOnMount: true,
     enabled: true,
   });
+  
+  // Manual refetch if needed after initial load
+  useEffect(() => {
+    if (isInitialLoadDone && (!archivePuzzles || archivePuzzles.length === 0)) {
+      console.log("No archive puzzles found, triggering refetch");
+      refetch();
+    }
+  }, [isInitialLoadDone, archivePuzzles, refetch]);
 
   if (isLoading) {
     return (

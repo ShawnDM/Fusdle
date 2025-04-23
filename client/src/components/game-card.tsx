@@ -175,14 +175,34 @@ const GameCard: React.FC = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      {/* Normal Mode Tutorial Popup */}
+      {/* Normal Mode Tutorial Popup - with smoother animation */}
       {showNormalModeTutorial && difficultyMode === 'normal' && (
-        <div className="absolute inset-0 bg-black/50 z-10 flex items-center justify-center rounded-2xl">
-          <div className="bg-white rounded-xl p-6 max-w-md mx-4 shadow-xl">
+        <motion.div 
+          className="absolute inset-0 bg-black/50 z-10 flex items-center justify-center rounded-2xl"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <motion.div 
+            className="bg-white rounded-xl p-6 max-w-md mx-4 shadow-xl"
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            transition={{ 
+              type: "spring", 
+              stiffness: 300, 
+              damping: 25,
+              delay: 0.1 
+            }}
+          >
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold flex items-center">
+              <motion.h3 
+                className="text-lg font-bold flex items-center"
+                initial={{ x: -10, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.2 }}
+              >
                 <Flame className="w-5 h-5 mr-2 text-secondary" /> Normal Mode
-              </h3>
+              </motion.h3>
               <Button 
                 variant="ghost" 
                 size="sm" 
@@ -191,7 +211,12 @@ const GameCard: React.FC = () => {
                 <X className="h-4 w-4" />
               </Button>
             </div>
-            <div className="space-y-3 text-sm">
+            <motion.div 
+              className="space-y-3 text-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+            >
               <p>Welcome to <strong>Fusdle</strong>! In this game, you'll guess words or phrases that combine the concepts shown by the emojis.</p>
               <p>In <strong>Normal Mode</strong>:</p>
               <ul className="list-disc pl-5 space-y-1">
@@ -201,24 +226,50 @@ const GameCard: React.FC = () => {
                 <li>Completing today's puzzle unlocks Hard Mode</li>
               </ul>
               <p className="text-secondary font-medium">Make your first guess to begin!</p>
-            </div>
-            <Button 
-              className="w-full mt-4" 
-              onClick={() => dismissTutorial('normal')}>
-              Play
-            </Button>
-          </div>
-        </div>
+            </motion.div>
+            <motion.div
+              initial={{ y: 10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.5 }}
+            >
+              <Button 
+                className="w-full mt-4" 
+                onClick={() => dismissTutorial('normal')}>
+                Play
+              </Button>
+            </motion.div>
+          </motion.div>
+        </motion.div>
       )}
       
-      {/* Hard Mode Tutorial Popup */}
+      {/* Hard Mode Tutorial Popup - with smoother animation */}
       {showHardModeTutorial && difficultyMode === 'hard' && (
-        <div className="absolute inset-0 bg-black/50 z-10 flex items-center justify-center rounded-2xl">
-          <div className="bg-white rounded-xl p-6 max-w-md mx-4 shadow-xl">
+        <motion.div 
+          className="absolute inset-0 bg-black/50 z-10 flex items-center justify-center rounded-2xl"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <motion.div 
+            className="bg-white rounded-xl p-6 max-w-md mx-4 shadow-xl"
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            transition={{ 
+              type: "spring", 
+              stiffness: 300, 
+              damping: 25,
+              delay: 0.1 
+            }}
+          >
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold flex items-center">
+              <motion.h3 
+                className="text-lg font-bold flex items-center"
+                initial={{ x: -10, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.2 }}
+              >
                 <Skull className="w-5 h-5 mr-2 text-destructive" /> Hard Mode
-              </h3>
+              </motion.h3>
               <Button 
                 variant="ghost" 
                 size="sm" 
@@ -227,7 +278,12 @@ const GameCard: React.FC = () => {
                 <X className="h-4 w-4" />
               </Button>
             </div>
-            <div className="space-y-3 text-sm">
+            <motion.div 
+              className="space-y-3 text-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+            >
               <p>You've unlocked <strong>Hard Mode</strong>! This is a more challenging version of Fusdle with:</p>
               <ul className="list-disc pl-5 space-y-1">
                 <li>More difficult puzzles</li>
@@ -236,15 +292,21 @@ const GameCard: React.FC = () => {
                 <li>Solve without hints for a perfect score!</li>
               </ul>
               <p className="text-destructive font-medium">Good luck - you'll need it!</p>
-            </div>
-            <Button 
-              variant="destructive"
-              className="w-full mt-4" 
-              onClick={() => dismissTutorial('hard')}>
-              Play Hard Mode
-            </Button>
-          </div>
-        </div>
+            </motion.div>
+            <motion.div
+              initial={{ y: 10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.5 }}
+            >
+              <Button 
+                variant="destructive"
+                className="w-full mt-4" 
+                onClick={() => dismissTutorial('hard')}>
+                Play Hard Mode
+              </Button>
+            </motion.div>
+          </motion.div>
+        </motion.div>
       )}
       <div className="flex justify-between items-center mb-4">
         <div className="text-sm text-gray-500">
