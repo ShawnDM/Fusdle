@@ -8,6 +8,7 @@ import Home from "@/pages/home";
 import Archive from "@/pages/archive";
 import About from "@/pages/about";
 import NavTabs from "@/components/nav-tabs";
+import SocialButtons from "@/components/social-buttons";
 import { navigationState, updateNavigationState, queryClient } from "@/lib/queryClient";
 import { firestoreService } from "@/firebase/firestore";
 import { getApiBaseUrl } from "@/lib/queryClient";
@@ -191,6 +192,10 @@ function App() {
           <p>© {new Date().getFullYear()} Fusdle. All rights reserved.</p>
         </footer>
       </div>
+      
+      {/* Fixed social buttons */}
+      <SocialButtons />
+      
       <Toaster />
     </TooltipProvider>
   );
