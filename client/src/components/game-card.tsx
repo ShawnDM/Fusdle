@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeftRight, Skull, Flame, HelpCircle, X } from "lucide-react";
 import { confirmAlert } from 'react-confirm-alert';
 import { useToast } from "@/hooks/use-toast";
+import { calculateFusdleNumber } from "@/lib/utils";
 import 'react-confirm-alert/src/react-confirm-alert.css';
 import '@/components/confirm-dialog.css';
 
@@ -213,10 +214,8 @@ const GameCard: React.FC = () => {
       )}
       <div className="flex justify-between items-center mb-4">
         <div className="text-sm text-gray-500">
-          {/* Converting puzzleNumber to day number: April 21 = Fusdle #2 */}
-          <span>Fusdle #{puzzle.date ? 
-            Math.floor((new Date(puzzle.date).getTime() - new Date('2025-04-20').getTime()) / (24 * 60 * 60 * 1000)) + 1 : 
-            '?'}</span>
+          {/* Using consistent Fusdle numbering across app */}
+          <span>Fusdle #{calculateFusdleNumber(puzzle.date, undefined)}</span>
         </div>
         <div className="flex items-center bg-secondary/10 rounded-full px-3 py-1">
           <span className="text-sm font-medium text-secondary">
