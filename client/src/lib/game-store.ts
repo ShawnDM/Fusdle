@@ -629,7 +629,13 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
   
   toggleDifficultyMode: () => {
-    const { difficultyMode, hardModeUnlocked } = get();
+    const { difficultyMode, hardModeUnlocked, loading } = get();
+    
+    // Prevent toggling while loading
+    if (loading) {
+      console.log('Please wait, puzzle is still loading...');
+      return;
+    }
     
     // Can only toggle if hard mode is unlocked
     if (!hardModeUnlocked && difficultyMode === 'normal') {
@@ -637,40 +643,53 @@ export const useGameStore = create<GameState>((set, get) => ({
       return;
     }
     
+    // Indicate loading state immediately to prevent multiple toggles
+    set({ loading: true });
+    
     // Cache current game state before switching
     get().cacheCurrentGameState();
     
     // Switch to the new mode
     const newMode = difficultyMode === 'normal' ? 'hard' : 'normal';
+    console.log(`Switching from ${difficultyMode} to ${newMode} mode`);
     
-    // Try to load from cache first
-    const cacheLoaded = get().loadGameStateFromCache(newMode);
+    // First clear the current puzzle to ensure we don't see stale data
+    set({
+      puzzle: null,
+      loading: true
+    });
     
-    // Check if cacheLoaded is successful
-    if (cacheLoaded) {
-      // Successfully loaded from cache, no need to fetch
-      console.log(`Successfully switched to ${newMode} mode using cached data`);
-    } else {
-      // No cache available, fetch from server
-      console.log(`No cache available for ${newMode} mode, fetching from server`);
+    // Short timeout to ensure UI shows loading state
+    setTimeout(() => {
+      // Try to load from cache first
+      const cacheLoaded = get().loadGameStateFromCache(newMode);
       
-      // Reset game state before fetching
-      set({
-        difficultyMode: newMode,
-        loading: true,
-        attempts: 0,
-        revealedHints: [],
-        hintsUsedAtAttempts: [],
-        gameStatus: 'playing',
-        hasGuessedOnce: false,
-        hasCompleted: false,
-        partialMatchFeedback: null,
-        currentGuess: ''
-      });
-      
-      // Fetch the puzzle for the new mode
-      get().fetchPuzzleByDifficulty(newMode);
-    }
+      // Check if cacheLoaded is successful
+      if (cacheLoaded) {
+        // Successfully loaded from cache, no need to fetch
+        console.log(`Successfully switched to ${newMode} mode using cached data`);
+      } else {
+        // No cache available, fetch from server
+        console.log(`No cache available for ${newMode} mode, fetching from server`);
+        
+        // Reset game state before fetching
+        set({
+          difficultyMode: newMode,
+          loading: true,
+          attempts: 0,
+          revealedHints: [],
+          hintsUsedAtAttempts: [],
+          gameStatus: 'playing',
+          hasGuessedOnce: false,
+          hasCompleted: false,
+          partialMatchFeedback: null,
+          currentGuess: ''
+        });
+        
+        // Fetch the puzzle for the new mode
+        get().fetchPuzzleByDifficulty(newMode);
+      }
+    }, 50);
   },
 
   revealHint: async () => {
