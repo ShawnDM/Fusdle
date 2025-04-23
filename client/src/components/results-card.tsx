@@ -141,7 +141,9 @@ const ResultsCard: React.FC = () => {
             {isWin ? "Congratulations!" : "Nice Try!"}
           </h2>
           <p className="text-lg font-medium text-gray-700 mb-2">
-            Fusdle #{puzzle.puzzleNumber}
+            Fusdle #{puzzle.date ? 
+              Math.floor((new Date(puzzle.date).getTime() - new Date('2025-04-20').getTime()) / (24 * 60 * 60 * 1000)) + 1 : 
+              puzzle.puzzleNumber}
           </p>
           
           {/* Difficulty badge */}

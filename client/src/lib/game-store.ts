@@ -641,8 +641,8 @@ export const useGameStore = create<GameState>((set, get) => ({
     // Try to load from cache first
     const cacheLoaded = get().loadGameStateFromCache(newMode);
     
-    // Check if cacheLoaded is successful (need to explicitly check for boolean true)
-    if (cacheLoaded === true) {
+    // Check if cacheLoaded is successful
+    if (cacheLoaded) {
       // Successfully loaded from cache, no need to fetch
       console.log(`Successfully switched to ${newMode} mode using cached data`);
     } else {
@@ -1084,8 +1084,12 @@ export const useGameStore = create<GameState>((set, get) => ({
     // Build share text as an array of lines for better platform compatibility
     const resultLines = [];
     
-    // Header line with simplified format
-    let headerLine = `Fusdle #${puzzle.puzzleNumber}`;
+    // Header line with simplified format - using same calculation as in game-card
+    const puzzleDay = puzzle.date ? 
+      Math.floor((new Date(puzzle.date).getTime() - new Date('2025-04-20').getTime()) / (24 * 60 * 60 * 1000)) + 1 : 
+      puzzle.puzzleNumber;
+      
+    let headerLine = `Fusdle #${puzzleDay}`;
     
     if (gameStatus === 'won') {
       headerLine += ` - Solved in ${attempts}`;
