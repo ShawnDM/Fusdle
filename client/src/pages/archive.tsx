@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { navigationState, updateNavigationState } from "@/lib/queryClient";
 import { firestoreService } from "@/firebase/firestore";
 import { getApiBaseUrl } from "@/lib/queryClient";
+import { calculateFusdleNumber } from "@/lib/utils";
 
 interface ArchivePuzzle {
   id: number;
@@ -237,7 +238,7 @@ const PuzzleCard: React.FC<{ puzzle: ArchivePuzzle }> = ({ puzzle }) => {
       <div className="flex justify-between items-start mb-3">
         <div>
           <span className="font-medium">
-            Fusdle #{puzzle.puzzleNumber}
+            Fusdle #{calculateFusdleNumber(puzzle.date, puzzle.puzzleNumber)}
           </span>
           <div className="text-sm text-gray-500 mt-1">
             {format(new Date(puzzle.date), "MMMM d, yyyy")}

@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import Confetti from "react-confetti";
 import { Badge } from "@/components/ui/badge";
 import { Skull, Flame, Sparkles } from "lucide-react";
+import { calculateFusdleNumber } from "@/lib/utils";
 
 const ResultsCard: React.FC = () => {
   const { 
@@ -141,9 +142,7 @@ const ResultsCard: React.FC = () => {
             {isWin ? "Congratulations!" : "Nice Try!"}
           </h2>
           <p className="text-lg font-medium text-gray-700 mb-2">
-            Fusdle #{puzzle.date ? 
-              Math.floor((new Date(puzzle.date).getTime() - new Date('2025-04-20').getTime()) / (24 * 60 * 60 * 1000)) + 1 : 
-              puzzle.puzzleNumber}
+            Fusdle #{calculateFusdleNumber(puzzle.date, puzzle.puzzleNumber)}
           </p>
           
           {/* Difficulty badge */}
