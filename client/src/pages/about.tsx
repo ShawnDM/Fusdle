@@ -174,7 +174,7 @@ const About: React.FC = () => {
         <div className="border-t pt-5 mt-2">
           <h3 className="text-xl font-bold mb-3 text-primary">About the Developer</h3>
           <p>
-            Fusdle was created with ❤️ by Shawn Dean and is inspired by word games like Wordle.
+            Fusdle was created with ❤️ by Shawn D. and is inspired by word games like Wordle.
             The game features a growing collection of hand-crafted puzzles with new puzzles generated for 90+ days at a time.
           </p>
           <p className="mt-2">
