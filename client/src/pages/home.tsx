@@ -74,13 +74,6 @@ const Home: React.FC = () => {
   
   return (
     <>
-      {/* Hero section with h1 and intro paragraph */}
-      <div className="text-center mb-6">
-        <h1 className="text-3xl md:text-4xl font-bold mb-2 text-gray-800">Play Fusdle</h1>
-        <p className="text-gray-600 max-w-2xl mx-auto">
-          Guess the phrase using emoji clues. A new puzzle drops every midnight!
-        </p>
-      </div>
       
       {/* Streak and fusion twist indicators */}
       <div className="flex flex-wrap justify-between items-center mb-4">
