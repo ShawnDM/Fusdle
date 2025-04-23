@@ -1,0 +1,42 @@
+[21:34:50.420] Cloning github.com/ShawnDM/Fusdle (Branch: main, Commit: 5027cbb)
+[21:34:50.606] Previous build caches not available
+[21:34:50.705] Cloning completed: 285.000ms
+[21:34:50.741] Found .vercelignore
+[21:34:50.750] Removed 37 ignored files defined in .vercelignore
+[21:34:50.927] Running build in Washington, D.C., USA (East) – iad1
+[21:34:51.065] Running "vercel build"
+[21:34:51.454] Vercel CLI 41.6.0
+[21:34:52.148] Installing dependencies...
+[21:34:57.190] npm warn deprecated @esbuild-kit/esm-loader@2.6.5: Merged into tsx: https://tsx.is
+[21:34:57.356] npm warn deprecated @esbuild-kit/core-utils@3.3.2: Merged into tsx: https://tsx.is
+[21:35:05.847] 
+[21:35:05.848] added 574 packages in 13s
+[21:35:05.848] 
+[21:35:05.848] 66 packages are looking for funding
+[21:35:05.849]   run `npm fund` for details
+[21:35:06.008] 
+[21:35:06.009] > rest-express@1.0.0 build
+[21:35:06.009] > vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+[21:35:06.009] 
+[21:35:06.398] [36mvite v5.4.14 [32mbuilding for production...[36m[39m
+[21:35:06.459] transforming...
+[21:35:06.760] Browserslist: browsers data (caniuse-lite) is 6 months old. Please run:
+[21:35:06.760]   npx update-browserslist-db@latest
+[21:35:06.761]   Why you should do it regularly: https://github.com/browserslist/update-db#readme
+[21:35:12.512] [32m✓[39m 2365 modules transformed.
+[21:35:13.031] rendering chunks...
+[21:35:13.048] computing gzip size...
+[21:35:13.072] [2m../dist/public/[22m[32mindex.html                 [39m[1m[2m  1.85 kB[22m[1m[22m[2m │ gzip:   0.76 kB[22m
+[21:35:13.072] [2m../dist/public/[22m[2massets/[22m[35mindex-BIc5OuwS.css  [39m[1m[2m 66.86 kB[22m[1m[22m[2m │ gzip:  11.75 kB[22m
+[21:35:13.072] [2m../dist/public/[22m[2massets/[22m[36mindex-D29SNNRq.js   [39m[1m[33m795.95 kB[39m[22m[2m │ gzip: 231.32 kB[22m
+[21:35:13.073] [33m
+[21:35:13.073] (!) Some chunks are larger than 500 kB after minification. Consider:
+[21:35:13.073] - Using dynamic import() to code-split the application
+[21:35:13.073] - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+[21:35:13.073] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+[21:35:13.074] [32m✓ built in 6.65s[39m
+[21:35:13.111] ✘ [ERROR] The entry point "server/index.ts" cannot be marked as external
+[21:35:13.111] 
+[21:35:13.112] 1 error
+[21:35:13.124] Error: Command "npm run build" exited with 1
+[21:35:13.419] 

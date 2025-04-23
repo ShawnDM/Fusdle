@@ -1,0 +1,66 @@
+/* Custom styles for the confirmation dialog */
+.react-confirm-alert-overlay {
+  background-color: rgba(0, 0, 0, 0.7);
+  transition: opacity 0.3s;
+}
+
+.react-confirm-alert-body {
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+  padding: 2rem;
+  font-family: inherit;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.react-confirm-alert-body h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.react-confirm-alert-body h3 {
+  font-size: 1rem;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+  color: #666;
+}
+
+.react-confirm-alert-button-group {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.react-confirm-alert-button-group button {
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.2s;
+  border: none;
+  cursor: pointer;
+  outline: none;
+}
+
+/* No button - outlined style */
+.react-confirm-alert-button-group button:first-child {
+  background-color: white;
+  color: #666;
+  border: 1px solid #e0e0e0;
+}
+
+.react-confirm-alert-button-group button:first-child:hover {
+  background-color: #f5f5f5;
+}
+
+/* Yes button - primary style */
+.react-confirm-alert-button-group button:last-child {
+  background-color: #9370DB; /* Match app's secondary color */
+  color: white;
+}
+
+.react-confirm-alert-button-group button:last-child:hover {
+  background-color: #8A64D3; /* Slightly darker on hover */
+}

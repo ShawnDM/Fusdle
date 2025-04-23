@@ -1,0 +1,13 @@
+// Firestore Security Rules for Fusdle Game - TEST MODE
+// IMPORTANT: For testing only - replace with more secure rules before production
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow all access for development purposes
+    match /{document=**} {
+      allow read, write: if true;  // TEST MODE ONLY
+    }
+  }
+}

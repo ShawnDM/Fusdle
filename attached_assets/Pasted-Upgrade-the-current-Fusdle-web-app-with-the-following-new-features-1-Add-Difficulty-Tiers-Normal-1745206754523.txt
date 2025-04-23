@@ -1,0 +1,102 @@
+Upgrade the current Fusdle web app with the following new features:
+
+1. Add Difficulty Tiers (Normal and Hard Mode)
+
+Introduce two puzzles per day:
+
+Normal Puzzle: 2–3 emojis
+
+Hard Puzzle: 4–5 emojis
+
+Default landing page should show the Normal Puzzle first.
+
+After the Normal Puzzle is attempted (solved or skipped), unlock access to the Hard Puzzle for that day.
+
+Add two buttons or tabs to toggle between [Normal Puzzle 🔥] and [Hard Puzzle 💀].
+
+Firebase Firestore should store Normal and Hard puzzles separately, or use a "difficulty" field inside each puzzle document.
+
+Example puzzle document structure:
+
+{ "date": "2025-04-23", "difficulty": "normal", "emojis": ["🐍", "📚"], "answer": "bookworm", "hints": [ "It describes someone who loves reading.", "The second emoji literally hints at it.", "First letter is 'B'." ], "isFusionTwist": false, "twistType": "" }
+
+2. Add Combo/Streak Multipliers
+
+Continue tracking user's streak using localStorage.
+
+Add a flawlessStreak counter that tracks days solved without using any hints.
+
+If a player has a 3+ day streak without using hints, show a "🔥 Streak Mode" badge.
+
+If a player has a 7+ day streak without hints, show a "🔥🔥🔥 Mega Streak" badge.
+
+Update the share result text to reflect the streak, like:
+
+"🔥 4-Day Streak! No hints used!"
+
+Keys in localStorage:
+
+fusdle_streakCount
+
+fusdle_flawlessStreak
+
+3. Add Fusion Twists (Special Puzzle Variants)
+
+Once a week (e.g., Saturdays), introduce a "Fusion Twist."
+
+Twist types can include:
+
+Pun Day
+
+Movie Mash
+
+Fake Fusion (invented/meme words)
+
+Firebase puzzle documents should have fields:
+
+isFusionTwist (true/false)
+
+twistType (string)
+
+When a Fusion Twist is active, display a badge on the homepage like:
+
+"🌀 Fusion Twist Active Today!"
+
+Frontend logic should adjust messaging slightly if a twist is active (e.g., "Today's puzzle has a twist!").
+
+4. Hint Penalty for Share Results
+
+Track if the user requested a hint during the puzzle session.
+
+If a hint was used, degrade the emoji squares in the share result:
+
+Perfect solve: 🟩🟩🟩
+
+1 hint used: ⬜🟩⬜
+
+2 hints used: ⬜⬜🟩
+
+All hints used: ⬜⬜⬜
+
+Update the share text dynamically based on hint usage.
+
+Encourage players to solve without hints to maintain a perfect share grid.
+
+Additional Notes:
+
+Normal and Hard puzzles should be separately tracked in Firebase Firestore under different documents or collections.
+
+Both Normal and Hard puzzles should have independent hints and answer checking.
+
+Streak bonuses should apply whether the player plays only Normal, only Hard, or both — but Hard solves grant 2x bonus streak points if solved without hints.
+
+Home screen should show:
+
+Daily Streak Badge
+
+"Normal Puzzle 🔥" button (always available)
+
+"Hard Puzzle 💀" button (locked until Normal is attempted)
+
+Active Fusion Twist Badge if relevant
+
