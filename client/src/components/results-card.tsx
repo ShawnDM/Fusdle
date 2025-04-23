@@ -137,9 +137,12 @@ const ResultsCard: React.FC = () => {
           <div className={`text-4xl mb-2 ${isWin ? "text-success" : "text-destructive"}`}>
             {isWin ? "🎉" : "😢"}
           </div>
-          <h2 className="text-2xl font-bold mb-2">
+          <h2 className="text-2xl font-bold mb-1">
             {isWin ? "Congratulations!" : "Nice Try!"}
           </h2>
+          <p className="text-lg font-medium text-gray-700 mb-2">
+            Fusdle #{puzzle.puzzleNumber}
+          </p>
           
           {/* Difficulty badge */}
           <div className="flex justify-center mb-3 gap-2">

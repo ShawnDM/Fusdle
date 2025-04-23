@@ -596,7 +596,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
   
   // Function to load a game state from the cache based on difficulty
-  loadGameStateFromCache: (difficulty: 'normal' | 'hard') => {
+  loadGameStateFromCache: (difficulty: 'normal' | 'hard'): boolean => {
     const { cachedPuzzles, cachedGameStates } = get();
     
     // Check if we have cached data for this difficulty
@@ -642,7 +642,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     const cacheLoaded = get().loadGameStateFromCache(newMode);
     
     // Check if cacheLoaded is successful (need to explicitly check for boolean true)
-    if (cacheLoaded) {
+    if (cacheLoaded === true) {
       // Successfully loaded from cache, no need to fetch
       console.log(`Successfully switched to ${newMode} mode using cached data`);
     } else {
