@@ -755,10 +755,12 @@ export const useGameStore = create<GameState>((set, get) => ({
       return null;
     }
     
-    // Check if the most recent hint was for the current attempt number
+    // The most recent hint should have been for a previous attempt, not the current one
     // This prevents getting consecutive hints without making a new guess in between
-    if (hintsUsedAtAttempts.length > 0 && hintsUsedAtAttempts[hintsUsedAtAttempts.length - 1] === attempts - 1) {
+    // Changed attempts-1 to attempts since we compare against the attempt when the hint was used
+    if (hintsUsedAtAttempts.length > 0 && hintsUsedAtAttempts[hintsUsedAtAttempts.length - 1] === attempts) {
       console.log('Make another guess to unlock a hint');
+      console.log('Debug - hintsUsedAtAttempts:', hintsUsedAtAttempts, 'Current attempts:', attempts);
       return null;
     }
     

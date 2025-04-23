@@ -93,7 +93,7 @@ const GameCard: React.FC = () => {
     // This prevents getting consecutive hints without making a new guess in between
     const lastHintAttempt = hintsUsedAtAttempts.length > 0 ? 
       hintsUsedAtAttempts[hintsUsedAtAttempts.length - 1] : -1;
-    const isConsecutiveHint = lastHintAttempt === attempts - 1;
+    const isConsecutiveHint = lastHintAttempt === attempts;
     
     const canUseHint = hintsRemaining > 0 && hasEnoughGuesses && !isConsecutiveHint;
     
@@ -198,7 +198,7 @@ const GameCard: React.FC = () => {
   // This prevents getting consecutive hints without making a new guess in between
   const lastHintAttempt = hintsUsedAtAttempts.length > 0 ? 
     hintsUsedAtAttempts[hintsUsedAtAttempts.length - 1] : -1;
-  const isConsecutiveHint = lastHintAttempt === attempts - 1;
+  const isConsecutiveHint = lastHintAttempt === attempts;
   
   // Must meet all three conditions to use a hint
   const canUseHint = hintsRemaining > 0 && hasEnoughGuesses && !isConsecutiveHint;
