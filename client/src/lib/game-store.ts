@@ -378,7 +378,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   submitGuess: async (guess: string) => {
-    const { puzzle, attempts, difficultyMode } = get();
+    const { puzzle, attempts, difficultyMode, previousGuesses } = get();
     
     if (!puzzle) {
       return false;
@@ -576,6 +576,7 @@ export const useGameStore = create<GameState>((set, get) => ({
             attempts: 0,
             revealedHints: [],
             hintsUsedAtAttempts: [],
+            previousGuesses: [],
             gameStatus: 'playing' as const,
             hasCompleted: false,
             hasGuessedOnce: false,
@@ -722,6 +723,7 @@ export const useGameStore = create<GameState>((set, get) => ({
             attempts: 0,
             revealedHints: [],
             hintsUsedAtAttempts: [],
+            previousGuesses: [],
             gameStatus: 'playing',
             hasGuessedOnce: false,
             hasCompleted: false,
@@ -1063,6 +1065,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         attempts: 0,
         revealedHints: [],
         hintsUsedAtAttempts: [],
+        previousGuesses: [],
         currentGuess: '',
         hasCompleted: false,
         partialMatchFeedback: null,

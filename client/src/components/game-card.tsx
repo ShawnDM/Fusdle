@@ -24,6 +24,7 @@ const GameCard: React.FC = () => {
     puzzle,
     attempts,
     revealedHints,
+    previousGuesses,
     streak,
     flawlessStreak,
     currentGuess,
@@ -43,8 +44,7 @@ const GameCard: React.FC = () => {
     partialMatchFeedback,
     showNormalModeTutorial,
     showHardModeTutorial,
-    dismissTutorial,
-    previousGuesses
+    dismissTutorial
   } = useGameStore();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
