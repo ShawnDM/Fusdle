@@ -224,49 +224,35 @@ export async function shouldShowNewPuzzle(lastPuzzleDate: string): Promise<boole
     console.warn('Method 1 failed: Global clock sync failed, trying other methods', error);
   }
   
-  // Method 2: Use timeapi.io directly as a backup API
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000);
-    
-    const response = await fetch('https://timeapi.io/api/Time/current/zone?timeZone=America/New_York', {
-      cache: 'no-store',
-      headers: {
-        'Pragma': 'no-cache',
-        'Cache-Control': 'no-cache'
-      },
-      signal: controller.signal
-    });
-    
-    clearTimeout(timeoutId);
-    
-    if (response.ok) {
-      const data = await response.json();
-      
-      // Create a date string in YYYY-MM-DD format
-      const currentDateStr = `${data.year}-${String(data.month).padStart(2, '0')}-${String(data.day).padStart(2, '0')}`;
-      
-      console.log(`Method 2 - Direct timeapi.io: Last date: ${lastPuzzleDate}, Current date: ${currentDateStr}`);
-      if (currentDateStr !== lastPuzzleDate) {
-        return true;
-      }
-    }
-  } catch (error) {
-    console.warn('Method 2 failed: Direct API call failed, trying browser timezone', error);
-  }
-  
-  // Method 3: Use browser's timezone API (pretty reliable but can be manipulated)
+  // Method 2: Use browser's timezone API (pretty reliable but can be manipulated)
   try {
     const nowLocal = new Date();
     const nowEST = new Date(nowLocal.toLocaleString('en-US', { timeZone: 'America/New_York' }));
     const estDateString = nowEST.toISOString().split('T')[0];
     
-    console.log(`Method 3 - Browser timezone: Last date: ${lastPuzzleDate}, Current date: ${estDateString}`);
+    console.log(`Method 2 - Browser timezone: Last date: ${lastPuzzleDate}, Current date: ${estDateString}`);
     if (estDateString !== lastPuzzleDate) {
       return true;
     }
   } catch (error) {
-    console.warn('Method 3 failed: Browser timezone API failed, trying date comparison', error);
+    console.warn('Method 2 failed: Browser timezone API failed, trying date comparison', error);
+  }
+  
+  // Method 3: Use the Date object's UTC methods for comparison
+  try {
+    const lastDate = new Date(lastPuzzleDate);
+    const today = new Date();
+    
+    // Format as YYYY-MM-DD using UTC methods
+    const lastDateFormatted = `${lastDate.getUTCFullYear()}-${String(lastDate.getUTCMonth() + 1).padStart(2, '0')}-${String(lastDate.getUTCDate()).padStart(2, '0')}`;
+    const todayFormatted = `${today.getUTCFullYear()}-${String(today.getUTCMonth() + 1).padStart(2, '0')}-${String(today.getUTCDate()).padStart(2, '0')}`;
+    
+    console.log(`Method 3 - UTC date comparison: Last date: ${lastDateFormatted}, Current date: ${todayFormatted}`);
+    if (todayFormatted !== lastDateFormatted) {
+      return true;
+    }
+  } catch (error) {
+    console.warn('Method 3 failed: UTC date comparison failed, trying simple date comparison', error);
   }
   
   // Method 4: Simple date parsing and comparison
