@@ -18,7 +18,14 @@ const SYNC_INTERVAL_MS = 60 * 60 * 1000;
 export async function syncWithGlobalClock(): Promise<void> {
   try {
     // Use worldtimeapi.org to get the current time in EST timezone
-    const response = await fetch('https://worldtimeapi.org/api/timezone/America/New_York');
+    const response = await fetch('https://worldtimeapi.org/api/timezone/America/New_York', {
+      // Add cache-busting to prevent getting cached responses
+      cache: 'no-store',
+      headers: {
+        'Pragma': 'no-cache',
+        'Cache-Control': 'no-cache'
+      }
+    });
     
     if (!response.ok) {
       throw new Error(`Failed to fetch global time: ${response.status}`);
@@ -35,6 +42,7 @@ export async function syncWithGlobalClock(): Promise<void> {
     lastSyncTime = localTime.getTime();
     
     console.log(`Synced with global clock. Server time: ${serverTime.toISOString()}`);
+    console.log(`Server time in EST: ${new Date(serverTime).toLocaleString('en-US', { timeZone: 'America/New_York' })}`);
     console.log(`Time difference: ${serverTimeDiffMs}ms`);
     
     return;
@@ -92,7 +100,15 @@ export async function getGlobalDateString(): Promise<string> {
  * Returns true if we've crossed the midnight EST threshold since the last puzzle
  */
 export async function shouldShowNewPuzzle(lastPuzzleDate: string): Promise<boolean> {
+  // Force a fresh sync with the time server to get the most accurate time
+  try {
+    await syncWithGlobalClock();
+  } catch (error) {
+    console.warn('Failed to sync with global clock for refresh check, using best available time');
+  }
+  
   const currentDateStr = await getGlobalDateString();
+  console.log(`Checking for puzzle refresh - Last date: ${lastPuzzleDate}, Current date: ${currentDateStr}`);
   return currentDateStr !== lastPuzzleDate;
 }
 

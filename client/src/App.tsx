@@ -166,17 +166,34 @@ function App() {
         if (shouldRefresh) {
           // Get the new global date
           const newGlobalDate = await getGlobalDateString();
-          console.log('New day detected (4 AM EST passed), refreshing puzzles');
+          console.log('New day detected (midnight EST passed), refreshing puzzles');
           console.log(`Date changed from ${lastPuzzleDate} to ${newGlobalDate}`);
           
           // Update state with the new date
           setCurrentDay(newGlobalDate);
+          
+          // Reset all game state before fetching the new puzzle
+          useGameStore.setState({
+            puzzle: null,
+            gameStatus: 'playing',
+            attempts: 0,
+            revealedHints: [],
+            hintsUsedAtAttempts: [],
+            previousGuesses: [],
+            currentGuess: '',
+            hasCompleted: false,
+            hasGuessedOnce: false,
+            partialMatchFeedback: null
+          });
           
           // Fetch the new puzzle
           await fetchTodaysPuzzle();
           
           // Reset the preloaded state to trigger preloading of the other difficulty
           preloadedRef.current = false;
+          
+          // Alert the user that a new puzzle is available
+          alert('It\'s a new day! Today\'s puzzle has been loaded.');
         }
       } catch (error) {
         console.error('Error checking for puzzle refresh:', error);
