@@ -215,23 +215,21 @@ function App() {
     }
   }, [location, fetchPuzzleByDifficulty]);
   
-  // Function to manually check for new puzzles
+  // Function to manually check for new puzzles - simplified and more robust
   const checkForNewPuzzle = async () => {
     try {
       const lastPuzzleDate = currentDay;
-      if (!lastPuzzleDate) return false;
       
-      // Check if we should show a new puzzle
-      const shouldRefresh = await shouldShowNewPuzzle(lastPuzzleDate);
+      // Get today's date using our reliable local method
+      const todayDate = await getGlobalDateString();
+      console.log(`Current date check - Last puzzle: ${lastPuzzleDate}, Today: ${todayDate}`);
       
-      if (shouldRefresh) {
-        // Get the new global date
-        const newGlobalDate = await getGlobalDateString();
-        console.log('New day detected, refreshing puzzles');
-        console.log(`Date changed from ${lastPuzzleDate} to ${newGlobalDate}`);
+      // First, do a direct date comparison in case the state is out of sync
+      if (lastPuzzleDate !== todayDate) {
+        console.log(`Direct date mismatch - updating from ${lastPuzzleDate} to ${todayDate}`);
         
-        // Update state with the new date
-        setCurrentDay(newGlobalDate);
+        // Update state with today's date
+        setCurrentDay(todayDate);
         
         // Reset game state
         useGameStore.getState().resetGame();
@@ -245,6 +243,25 @@ function App() {
         return true;
       }
       
+      // If dates match, check using our more detailed implementation
+      const shouldRefresh = await shouldShowNewPuzzle(lastPuzzleDate);
+      
+      if (shouldRefresh) {
+        console.log('Time check suggests we need a new puzzle');
+        
+        // Reset game state
+        useGameStore.getState().resetGame();
+        
+        // Fetch the new puzzle
+        await fetchTodaysPuzzle();
+        
+        // Reset the preloaded state to trigger preloading of the other difficulty
+        preloadedRef.current = false;
+        
+        return true;
+      }
+      
+      console.log('No new puzzle needed - you have the current day');
       return false;
     } catch (error) {
       console.error('Error checking for puzzle refresh:', error);

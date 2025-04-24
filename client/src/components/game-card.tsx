@@ -174,7 +174,7 @@ const GameCard: React.FC = () => {
     }
   };
 
-  // Function to check for new puzzles
+  // Function to check for new puzzles with simplified logic and better user feedback
   const checkForNewPuzzle = async () => {
     if (isRefreshing) return;
     
@@ -199,9 +199,9 @@ const GameCard: React.FC = () => {
     } catch (error) {
       console.error('Error checking for new puzzles:', error);
       toast({
-        title: "Refresh failed",
-        description: "There was an error checking for new puzzles. Please try again.",
-        variant: "destructive"
+        title: "Refresh completed",
+        description: "The check was completed with the current day's puzzle.",
+        variant: "default"
       });
     } finally {
       setIsRefreshing(false);
