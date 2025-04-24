@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { Archive, Home, Info, Database } from "lucide-react";
+import { Archive, Home, Info } from "lucide-react";
 
 interface NavTabsProps {
   currentPath: string;
@@ -49,18 +49,6 @@ const NavTabs: React.FC<NavTabsProps> = ({ currentPath }) => {
           >
             <Info className="w-4 h-4" />
             <span>About</span>
-          </a>
-        </Link>
-        <Link href="/storage-test">
-          <a
-            className={`px-4 py-2.5 rounded-lg font-medium flex items-center gap-1.5 transition-all duration-200 ${
-              currentPath === "/storage-test"
-                ? "text-white bg-secondary shadow-md"
-                : "text-white/90 hover:bg-white/20 hover:text-white"
-            }`}
-          >
-            <Database className="w-4 h-4" />
-            <span>Storage</span>
           </a>
         </Link>
       </motion.nav>
