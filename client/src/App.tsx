@@ -215,6 +215,47 @@ function App() {
     }
   }, [location, fetchPuzzleByDifficulty]);
   
+  // Function to manually check for new puzzles
+  const checkForNewPuzzle = async () => {
+    try {
+      const lastPuzzleDate = currentDay;
+      if (!lastPuzzleDate) return false;
+      
+      // Check if we should show a new puzzle
+      const shouldRefresh = await shouldShowNewPuzzle(lastPuzzleDate);
+      
+      if (shouldRefresh) {
+        // Get the new global date
+        const newGlobalDate = await getGlobalDateString();
+        console.log('New day detected, refreshing puzzles');
+        console.log(`Date changed from ${lastPuzzleDate} to ${newGlobalDate}`);
+        
+        // Update state with the new date
+        setCurrentDay(newGlobalDate);
+        
+        // Reset game state
+        useGameStore.getState().resetGame();
+        
+        // Fetch the new puzzle
+        await fetchTodaysPuzzle();
+        
+        // Reset the preloaded state to trigger preloading of the other difficulty
+        preloadedRef.current = false;
+        
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Error checking for puzzle refresh:', error);
+      return false;
+    }
+  };
+  
+  // Add the checkForNewPuzzle function to window to access it from components
+  // @ts-ignore
+  window.checkForNewPuzzle = checkForNewPuzzle;
+
   return (
     <TooltipProvider>
       <div className="max-w-md mx-auto p-4 min-h-screen flex flex-col">

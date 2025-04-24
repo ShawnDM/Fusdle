@@ -17,38 +17,62 @@ const SYNC_INTERVAL_MS = 60 * 60 * 1000;
  */
 export async function syncWithGlobalClock(): Promise<void> {
   try {
-    // Use worldtimeapi.org to get the current time in EST timezone
-    const response = await fetch('https://worldtimeapi.org/api/timezone/America/New_York', {
-      // Add cache-busting to prevent getting cached responses
-      cache: 'no-store',
-      headers: {
-        'Pragma': 'no-cache',
-        'Cache-Control': 'no-cache'
+    // Try to use worldtimeapi.org first (most reliable)
+    try {
+      // Create a controller for the timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      
+      const response = await fetch('https://worldtimeapi.org/api/timezone/America/New_York', {
+        // Add cache-busting to prevent getting cached responses
+        cache: 'no-store',
+        headers: {
+          'Pragma': 'no-cache',
+          'Cache-Control': 'no-cache'
+        },
+        // Add a short timeout to fail fast if the API is not responding
+        signal: controller.signal
+      });
+      
+      // Clear the timeout if the fetch completes
+      clearTimeout(timeoutId);
+      
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Parse the server time
+        const serverTime = new Date(data.datetime);
+        const localTime = new Date();
+        
+        // Calculate and store the time difference
+        serverTimeDiffMs = serverTime.getTime() - localTime.getTime();
+        lastSyncTime = localTime.getTime();
+        
+        console.log(`Synced with worldtimeapi.org. Server time: ${serverTime.toISOString()}`);
+        console.log(`Server time in EST: ${new Date(serverTime).toLocaleString('en-US', { timeZone: 'America/New_York' })}`);
+        console.log(`Time difference: ${serverTimeDiffMs}ms`);
+        
+        return;
       }
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch global time: ${response.status}`);
+    } catch (apiError) {
+      console.warn('Primary time API failed, trying fallback method', apiError);
     }
     
-    const data = await response.json();
-    
-    // Parse the server time
-    const serverTime = new Date(data.datetime);
+    // Fallback method: Use the user's local time with EST timezone conversion
+    // This is less reliable if the user manipulates their clock, but better than nothing
     const localTime = new Date();
+    const estTime = new Date(localTime.toLocaleString('en-US', { timeZone: 'America/New_York' }));
     
-    // Calculate and store the time difference
-    serverTimeDiffMs = serverTime.getTime() - localTime.getTime();
+    // No time difference to store in this case since we're using local time directly
+    serverTimeDiffMs = 0;
     lastSyncTime = localTime.getTime();
     
-    console.log(`Synced with global clock. Server time: ${serverTime.toISOString()}`);
-    console.log(`Server time in EST: ${new Date(serverTime).toLocaleString('en-US', { timeZone: 'America/New_York' })}`);
-    console.log(`Time difference: ${serverTimeDiffMs}ms`);
+    console.log(`Using fallback time method. Local time converted to EST: ${estTime.toISOString()}`);
     
     return;
   } catch (error) {
-    console.error('Error syncing with global clock:', error);
-    // On error, we'll fall back to local time
+    console.error('All time sync methods failed:', error);
+    // As a last resort, we'll fall back to local time with no adjustments
     serverTimeDiffMs = null;
     throw error;
   }
@@ -100,16 +124,59 @@ export async function getGlobalDateString(): Promise<string> {
  * Returns true if we've crossed the midnight EST threshold since the last puzzle
  */
 export async function shouldShowNewPuzzle(lastPuzzleDate: string): Promise<boolean> {
-  // Force a fresh sync with the time server to get the most accurate time
+  // Try multiple methods to determine if the date has changed
+  
+  // Method 1: Try global clock API (most reliable but may fail)
   try {
+    // Force a fresh sync with the time server to get the most accurate time
     await syncWithGlobalClock();
+    const globalDateStr = await getGlobalDateString();
+    
+    console.log(`Method 1 - API check: Last date: ${lastPuzzleDate}, Current date: ${globalDateStr}`);
+    if (globalDateStr !== lastPuzzleDate) {
+      return true;
+    }
   } catch (error) {
-    console.warn('Failed to sync with global clock for refresh check, using best available time');
+    console.warn('Method 1 failed: Global clock sync failed, trying other methods');
   }
   
-  const currentDateStr = await getGlobalDateString();
-  console.log(`Checking for puzzle refresh - Last date: ${lastPuzzleDate}, Current date: ${currentDateStr}`);
-  return currentDateStr !== lastPuzzleDate;
+  // Method 2: Use browser's timezone API (pretty reliable but can be manipulated)
+  try {
+    const nowLocal = new Date();
+    const nowEST = new Date(nowLocal.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+    const estDateString = nowEST.toISOString().split('T')[0];
+    
+    console.log(`Method 2 - Browser timezone: Last date: ${lastPuzzleDate}, Current date: ${estDateString}`);
+    if (estDateString !== lastPuzzleDate) {
+      return true;
+    }
+  } catch (error) {
+    console.warn('Method 2 failed: Browser timezone API failed, trying final method');
+  }
+  
+  // Method 3: Simple date storage and comparison (fallback)
+  // Store the last check time in memory and see if we've crossed midnight EST
+  try {
+    // Only used for this method
+    const lastCheckKey = '_lastPuzzleTimeCheck';
+    const lastCheckTime = localStorage.getItem(lastCheckKey);
+    const currentTime = new Date().getTime();
+    
+    // If it's been more than 12 hours since our last check, assume we might need a refresh
+    if (!lastCheckTime || (currentTime - parseInt(lastCheckTime)) > 12 * 60 * 60 * 1000) {
+      localStorage.setItem(lastCheckKey, currentTime.toString());
+      console.log('Method 3: More than 12 hours passed, suggesting refresh');
+      return true;
+    }
+    
+    localStorage.setItem(lastCheckKey, currentTime.toString());
+  } catch (error) {
+    console.warn('Method 3 failed: localStorage not available');
+  }
+  
+  // No methods detected a date change
+  console.log('All methods checked - no date change detected');
+  return false;
 }
 
 /**
