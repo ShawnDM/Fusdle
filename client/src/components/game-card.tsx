@@ -5,7 +5,7 @@ import Hints from "@/components/hints";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeftRight, Skull, Flame, HelpCircle, X, ChevronDown } from "lucide-react";
+import { ArrowLeftRight, Skull, Flame, HelpCircle, X, ChevronDown, RefreshCw } from "lucide-react";
 import { confirmAlert } from 'react-confirm-alert';
 import { useToast } from "@/hooks/use-toast";
 import { calculateFusdleNumber } from "@/lib/utils";
@@ -49,6 +49,7 @@ const GameCard: React.FC = () => {
   } = useGameStore();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast(); // Initialize toast hook at component top level
   
@@ -170,6 +171,40 @@ const GameCard: React.FC = () => {
     } else {
       // In normal mode with no flawless streak, reveal the hint immediately
       await revealHint();
+    }
+  };
+
+  // Function to check for new puzzles
+  const checkForNewPuzzle = async () => {
+    if (isRefreshing) return;
+    
+    setIsRefreshing(true);
+    try {
+      // Call the global checkForNewPuzzle function we added to window
+      const refreshResult = await (window as any).checkForNewPuzzle();
+      
+      if (refreshResult) {
+        toast({
+          title: "New puzzle loaded!",
+          description: "You're now playing today's new puzzle.",
+          variant: "default"
+        });
+      } else {
+        toast({
+          title: "You're up to date",
+          description: "You already have the latest puzzle for today.",
+          variant: "default"
+        });
+      }
+    } catch (error) {
+      console.error('Error checking for new puzzles:', error);
+      toast({
+        title: "Refresh failed",
+        description: "There was an error checking for new puzzles. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsRefreshing(false);
     }
   };
 
@@ -394,7 +429,17 @@ const GameCard: React.FC = () => {
           </motion.div>
         </AnimatePresence>
         
-        {/* Difficulty mode toggle button removed as requested */}
+        {/* Manual refresh button */}
+        <Button
+          variant="outline"
+          size="sm"
+          className="text-xs flex items-center gap-1"
+          onClick={checkForNewPuzzle}
+          disabled={isRefreshing}
+        >
+          <RefreshCw className={`h-3 w-3 ${isRefreshing ? 'animate-spin' : ''}`} />
+          {isRefreshing ? 'Checking...' : 'New Puzzle?'}
+        </Button>
       </div>
 
       <EmojiDisplay emojis={puzzle.emojis} />

@@ -13,7 +13,7 @@ const SYNC_INTERVAL_MS = 60 * 60 * 1000;
 
 /**
  * Fetch the current time from a public time API
- * We use worldtimeapi.org as it's reliable and doesn't require API keys
+ * We use worldtimeapi.org as primary and timeapi.io as backup
  */
 export async function syncWithGlobalClock(): Promise<void> {
   try {
@@ -55,21 +55,99 @@ export async function syncWithGlobalClock(): Promise<void> {
         return;
       }
     } catch (apiError) {
-      console.warn('Primary time API failed, trying fallback method', apiError);
+      console.warn('Primary time API failed, trying alternate time API', apiError);
     }
     
-    // Fallback method: Use the user's local time with EST timezone conversion
-    // This is less reliable if the user manipulates their clock, but better than nothing
-    const localTime = new Date();
-    const estTime = new Date(localTime.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+    // Try timeapi.io as second option
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      
+      const response = await fetch('https://timeapi.io/api/Time/current/zone?timeZone=America/New_York', {
+        cache: 'no-store',
+        headers: {
+          'Pragma': 'no-cache',
+          'Cache-Control': 'no-cache'
+        },
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Parse date from this format: 2025-04-24T00:01:02
+        const dateTimeStr = `${data.year}-${String(data.month).padStart(2, '0')}-${String(data.day).padStart(2, '0')}T${String(data.hour).padStart(2, '0')}:${String(data.minute).padStart(2, '0')}:${String(data.seconds).padStart(2, '0')}`;
+        const serverTime = new Date(dateTimeStr);
+        const localTime = new Date();
+        
+        // Calculate and store the time difference
+        serverTimeDiffMs = serverTime.getTime() - localTime.getTime();
+        lastSyncTime = localTime.getTime();
+        
+        console.log(`Synced with timeapi.io. Server time: ${serverTime.toISOString()}`);
+        console.log(`Time difference: ${serverTimeDiffMs}ms`);
+        
+        return;
+      }
+    } catch (apiError) {
+      console.warn('Secondary time API failed, trying browser-based time', apiError);
+    }
     
-    // No time difference to store in this case since we're using local time directly
+    // Fallback method 1: Use the user's local time with EST timezone conversion
+    try {
+      const localTime = new Date();
+      const estTime = new Date(localTime.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+      
+      // No time difference to store in this case since we're using local time directly
+      serverTimeDiffMs = 0;
+      lastSyncTime = localTime.getTime();
+      
+      console.log(`Using browser timezone API. Local time converted to EST: ${estTime.toISOString()}`);
+      
+      return;
+    } catch (tzError) {
+      console.warn('Browser timezone API failed, using localStorage fallback', tzError);
+    }
+    
+    // Fallback method 2: Use localStorage to track time differences between sessions
+    try {
+      const localTime = new Date();
+      const lastKnownTimeKey = '_fusdle_last_known_time';
+      const lastRecordedTime = localStorage.getItem(lastKnownTimeKey);
+      
+      if (lastRecordedTime) {
+        const timeDiff = localTime.getTime() - parseInt(lastRecordedTime);
+        // If it's been more than 24 hours, assume it's a new day
+        if (timeDiff > 24 * 60 * 60 * 1000) {
+          console.log('Using localStorage fallback: More than 24 hours since last check');
+          // Force a new day
+          serverTimeDiffMs = 24 * 60 * 60 * 1000; // Add a day to current time
+        } else {
+          // Not enough time passed for a new day
+          serverTimeDiffMs = 0;
+        }
+      } else {
+        // First time using the app, just use local time
+        serverTimeDiffMs = 0;
+      }
+      
+      // Update the last known time
+      localStorage.setItem(lastKnownTimeKey, localTime.getTime().toString());
+      lastSyncTime = localTime.getTime();
+      
+      console.log(`Using localStorage fallback for time tracking`);
+      return;
+    } catch (lsError) {
+      console.warn('localStorage not available for time tracking', lsError);
+    }
+    
+    // Last resort: Just use the local time with no adjustments
+    console.log('All time sync methods failed, using raw local time');
     serverTimeDiffMs = 0;
-    lastSyncTime = localTime.getTime();
+    lastSyncTime = new Date().getTime();
     
-    console.log(`Using fallback time method. Local time converted to EST: ${estTime.toISOString()}`);
-    
-    return;
   } catch (error) {
     console.error('All time sync methods failed:', error);
     // As a last resort, we'll fall back to local time with no adjustments
@@ -125,6 +203,12 @@ export async function getGlobalDateString(): Promise<string> {
  */
 export async function shouldShowNewPuzzle(lastPuzzleDate: string): Promise<boolean> {
   // Try multiple methods to determine if the date has changed
+
+  // If no lastPuzzleDate is provided, we should show a new puzzle
+  if (!lastPuzzleDate) {
+    console.log('No lastPuzzleDate provided, showing new puzzle');
+    return true;
+  }
   
   // Method 1: Try global clock API (most reliable but may fail)
   try {
@@ -137,42 +221,113 @@ export async function shouldShowNewPuzzle(lastPuzzleDate: string): Promise<boole
       return true;
     }
   } catch (error) {
-    console.warn('Method 1 failed: Global clock sync failed, trying other methods');
+    console.warn('Method 1 failed: Global clock sync failed, trying other methods', error);
   }
   
-  // Method 2: Use browser's timezone API (pretty reliable but can be manipulated)
+  // Method 2: Use timeapi.io directly as a backup API
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    
+    const response = await fetch('https://timeapi.io/api/Time/current/zone?timeZone=America/New_York', {
+      cache: 'no-store',
+      headers: {
+        'Pragma': 'no-cache',
+        'Cache-Control': 'no-cache'
+      },
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (response.ok) {
+      const data = await response.json();
+      
+      // Create a date string in YYYY-MM-DD format
+      const currentDateStr = `${data.year}-${String(data.month).padStart(2, '0')}-${String(data.day).padStart(2, '0')}`;
+      
+      console.log(`Method 2 - Direct timeapi.io: Last date: ${lastPuzzleDate}, Current date: ${currentDateStr}`);
+      if (currentDateStr !== lastPuzzleDate) {
+        return true;
+      }
+    }
+  } catch (error) {
+    console.warn('Method 2 failed: Direct API call failed, trying browser timezone', error);
+  }
+  
+  // Method 3: Use browser's timezone API (pretty reliable but can be manipulated)
   try {
     const nowLocal = new Date();
     const nowEST = new Date(nowLocal.toLocaleString('en-US', { timeZone: 'America/New_York' }));
     const estDateString = nowEST.toISOString().split('T')[0];
     
-    console.log(`Method 2 - Browser timezone: Last date: ${lastPuzzleDate}, Current date: ${estDateString}`);
+    console.log(`Method 3 - Browser timezone: Last date: ${lastPuzzleDate}, Current date: ${estDateString}`);
     if (estDateString !== lastPuzzleDate) {
       return true;
     }
   } catch (error) {
-    console.warn('Method 2 failed: Browser timezone API failed, trying final method');
+    console.warn('Method 3 failed: Browser timezone API failed, trying date comparison', error);
   }
   
-  // Method 3: Simple date storage and comparison (fallback)
+  // Method 4: Simple date parsing and comparison
+  try {
+    // Parse both dates and compare them
+    const lastDate = new Date(lastPuzzleDate);
+    const currentDate = new Date();
+    
+    // Extract year, month, and day components
+    const lastYear = lastDate.getFullYear();
+    const lastMonth = lastDate.getMonth();
+    const lastDay = lastDate.getDate();
+    
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth();
+    const currentDay = currentDate.getDate();
+    
+    // Create simple date objects for comparison (no time component)
+    const lastDateSimple = new Date(lastYear, lastMonth, lastDay);
+    const currentDateSimple = new Date(currentYear, currentMonth, currentDay);
+    
+    console.log(`Method 4 - Simple date comparison: Last date: ${lastDateSimple.toISOString().split('T')[0]}, Current: ${currentDateSimple.toISOString().split('T')[0]}`);
+    
+    // Check if current date is after last date
+    if (currentDateSimple > lastDateSimple) {
+      return true;
+    }
+  } catch (error) {
+    console.warn('Method 4 failed: Simple date comparison failed, trying localStorage', error);
+  }
+  
+  // Method 5: Simple date storage and comparison (fallback)
   // Store the last check time in memory and see if we've crossed midnight EST
   try {
     // Only used for this method
     const lastCheckKey = '_lastPuzzleTimeCheck';
+    const puzzleDateKey = '_lastPuzzleDate';
     const lastCheckTime = localStorage.getItem(lastCheckKey);
+    const storedPuzzleDate = localStorage.getItem(puzzleDateKey);
     const currentTime = new Date().getTime();
     
-    // If it's been more than 12 hours since our last check, assume we might need a refresh
-    if (!lastCheckTime || (currentTime - parseInt(lastCheckTime)) > 12 * 60 * 60 * 1000) {
+    // Store the current puzzle date
+    localStorage.setItem(puzzleDateKey, lastPuzzleDate);
+    
+    // If the stored puzzle date is different or it's been more than 12 hours since our last check
+    if (storedPuzzleDate !== lastPuzzleDate || 
+        !lastCheckTime || 
+        (currentTime - parseInt(lastCheckTime)) > 12 * 60 * 60 * 1000) {
       localStorage.setItem(lastCheckKey, currentTime.toString());
-      console.log('Method 3: More than 12 hours passed, suggesting refresh');
+      console.log('Method 5: Date change or 12+ hours passed, suggesting refresh');
       return true;
     }
     
     localStorage.setItem(lastCheckKey, currentTime.toString());
   } catch (error) {
-    console.warn('Method 3 failed: localStorage not available');
+    console.warn('Method 5 failed: localStorage not available', error);
   }
+  
+  // Method 6: Last resort - allow manual refresh
+  // At this point, we've tried everything, so we'll just return false
+  // and let the user manually refresh with the button we added
   
   // No methods detected a date change
   console.log('All methods checked - no date change detected');
