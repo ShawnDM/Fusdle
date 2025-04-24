@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { Archive, Home, Info } from "lucide-react";
+import { Archive, Home, Info, Database } from "lucide-react";
 
 interface NavTabsProps {
   currentPath: string;
