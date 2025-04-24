@@ -110,7 +110,10 @@ const Home: React.FC = () => {
         <TabsList className="grid w-full grid-cols-2 mb-4">
           <TabsTrigger 
             value="normal"
-            onClick={() => difficultyMode !== 'normal' && fetchPuzzleByDifficulty('normal')}
+            onClick={() => {
+              // Always fetch a fresh normal puzzle when this tab is clicked
+              fetchPuzzleByDifficulty('normal');
+            }}
             className="flex items-center justify-center space-x-2"
           >
             <span>🔥</span>
@@ -119,7 +122,12 @@ const Home: React.FC = () => {
           <TabsTrigger 
             value="hard"
             disabled={!hardModeUnlocked}
-            onClick={() => hardModeUnlocked && difficultyMode !== 'hard' && fetchPuzzleByDifficulty('hard')}
+            onClick={() => {
+              // Always fetch a fresh hard puzzle when this tab is clicked and it's unlocked
+              if (hardModeUnlocked) {
+                fetchPuzzleByDifficulty('hard');
+              }
+            }}
             className="flex items-center justify-center space-x-2"
           >
             <span>💀</span>

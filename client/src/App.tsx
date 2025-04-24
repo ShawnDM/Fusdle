@@ -72,24 +72,41 @@ function App() {
     }
   }, []);
   
-  // Preload the other difficulty mode
+  // Preload the other difficulty mode but don't display it
   const preloadOtherDifficultyMode = useCallback(async () => {
     if (isPreloading) return;
     
     try {
       setIsPreloading(true);
       const otherMode = difficultyMode === 'normal' ? 'hard' : 'normal';
-      console.log(`Preloading ${otherMode} difficulty puzzle for faster mode switching...`);
+      console.log(`Preloading ${otherMode} difficulty puzzle for future use only...`);
       
-      // This will cache the puzzle in the game store
-      await fetchPuzzleByDifficulty(otherMode);
-      console.log(`${otherMode} difficulty puzzle preloaded successfully`);
+      // Don't load the actual puzzle through the game store (which could switch modes)
+      // Instead make a direct API call to preload into cache
+      try {
+        const apiUrl = `${import.meta.env.VITE_API_URL || ''}/api/puzzles/today?difficulty=${otherMode}`;
+        const response = await fetch(apiUrl);
+        if (response.ok) {
+          const data = await response.json();
+          console.log(`${otherMode} difficulty puzzle preloaded to cache successfully`);
+          
+          // Just store in cache without affecting current display
+          useGameStore.setState(state => ({
+            cachedPuzzles: {
+              ...state.cachedPuzzles,
+              [otherMode]: data
+            }
+          }));
+        }
+      } catch (err) {
+        console.error("Failed to preload puzzle data:", err);
+      }
     } catch (error) {
       console.error("Failed to preload other difficulty mode:", error);
     } finally {
       setIsPreloading(false);
     }
-  }, [difficultyMode, fetchPuzzleByDifficulty, isPreloading]);
+  }, [difficultyMode, isPreloading]);
   
   // Track page transitions
   useEffect(() => {
