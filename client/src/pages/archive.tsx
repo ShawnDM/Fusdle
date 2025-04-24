@@ -9,6 +9,7 @@ import { navigationState, updateNavigationState } from "@/lib/queryClient";
 import { firestoreService } from "@/firebase/firestore";
 import { getApiBaseUrl } from "@/lib/queryClient";
 import { calculateFusdleNumber } from "@/lib/utils";
+import { getGlobalDateString } from "@/lib/global-time";
 
 interface ArchivePuzzle {
   id: number;
@@ -25,12 +26,28 @@ type DifficultyFilter = 'normal' | 'hard' | 'fusion';
 
 const Archive: React.FC = () => {
   const [activeTab, setActiveTab] = useState<DifficultyFilter>('normal');
-
-  // Directly fetch firebase data without caching first
-  // This ensures we always have the latest data on the archive page
+  const [currentDate, setCurrentDate] = useState<string>("");
   const [firebaseArchiveData, setFirebaseArchiveData] = useState<ArchivePuzzle[] | null>(null);
   const [isFirebaseLoading, setIsFirebaseLoading] = useState(true);
   const [firebaseError, setFirebaseError] = useState<Error | null>(null);
+  
+  // Fetch the current date for archive filtering - remove the hardcoded date
+  useEffect(() => {
+    async function fetchCurrentDate() {
+      try {
+        const dateStr = await getGlobalDateString();
+        console.log(`Archive using current date: ${dateStr}`);
+        setCurrentDate(dateStr);
+      } catch (e) {
+        console.error("Error getting global date:", e);
+        // Fallback to browser date
+        const today = new Date().toISOString();
+        setCurrentDate(today);
+      }
+    }
+    
+    fetchCurrentDate();
+  }, []);
   
   // Direct Firebase data fetch (this runs on every mount)
   useEffect(() => {
@@ -132,8 +149,20 @@ const Archive: React.FC = () => {
       </div>
     );
   }
+  
+  // If we don't have the current date yet, show loading
+  if (!currentDate) {
+    return (
+      <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 animate-fade-in">
+        <div className="text-center py-8">
+          <div className="text-4xl mb-4">⌛</div>
+          <p className="text-lg">Loading date information...</p>
+        </div>
+      </div>
+    );
+  }
 
-  // Filter puzzles based on active tab 
+  // Filter puzzles based on active tab and current date
   const getFilteredPuzzles = () => {
     // Use displayPuzzles (combined from Firebase and cache) as source
     const puzzlesToFilter = displayPuzzles || [];
@@ -143,23 +172,22 @@ const Archive: React.FC = () => {
       return [];
     }
     
-    // Only include puzzles from before current date (April 23, 2025)
-    // This explicitly filters out puzzles with future dates
-    const todayStr = "2025-04-23T00:00:00";
-    const today = new Date(todayStr);
+    // Parse the current date for comparison
+    const today = new Date(currentDate);
+    const currentDateSimple = currentDate.split('T')[0]; // Get YYYY-MM-DD format
     
     const finalPuzzles = puzzlesToFilter.filter((puzzle: ArchivePuzzle) => {
       try {
-        // Parse the puzzle date 
-        const puzzleDate = new Date(puzzle.date);
+        // Get simple date for puzzle (YYYY-MM-DD only)
+        const puzzleDateSimple = puzzle.date.split('T')[0];
         
-        // For debugging
+        // For debugging - log the comparison for the first few puzzles
         if (puzzle.puzzleNumber <= 10) {
-          console.log(`Archive date check: Puzzle #${puzzle.puzzleNumber}, date=${puzzle.date}, today=${todayStr}, is before? ${puzzleDate < today}`);
+          console.log(`Archive date check: Puzzle #${puzzle.puzzleNumber}, date=${puzzleDateSimple}, today=${currentDateSimple}, is before? ${puzzleDateSimple < currentDateSimple}`);
         }
         
-        // Only include puzzles with dates before today
-        return puzzleDate < today;
+        // Compare dates using string comparison (simpler and more reliable for YYYY-MM-DD format)
+        return puzzleDateSimple < currentDateSimple;
       } catch (err) {
         console.error(`Date comparison error for puzzle ${puzzle.id}:`, err);
         return false; // Exclude puzzles with invalid dates
