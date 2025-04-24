@@ -190,10 +190,10 @@ export function getGameData(): Promise<FusdleGameData> {
       
       request.onsuccess = () => {
         if (request.result) {
-          resolve(request.result);
+          resolve(request.result as FusdleGameData);
         } else {
           // Return default data if no record exists
-          resolve({
+          const defaultData: FusdleGameData = {
             id: 'gameState',
             streak: 0,
             flawlessStreak: 0,
@@ -204,7 +204,8 @@ export function getGameData(): Promise<FusdleGameData> {
             lastPlayedDate: '',
             difficultyMode: 'normal',
             partialMatches: {}
-          });
+          };
+          resolve(defaultData);
         }
       };
       
@@ -278,13 +279,24 @@ export function exportGameData(): Promise<string> {
 export function importGameData(jsonData: string): Promise<void> {
   return new Promise(async (resolve, reject) => {
     try {
-      const gameData = JSON.parse(jsonData) as FusdleGameData;
+      // Parse the JSON data and cast it to our interface type
+      const parsedData = JSON.parse(jsonData);
       
-      // Ensure the required id is present
-      if (!gameData.id) {
-        gameData.id = 'gameState';
-      }
+      // Create a properly typed object with all required fields
+      const gameData: FusdleGameData = {
+        id: 'gameState', // Default ID
+        streak: parsedData.streak || 0,
+        flawlessStreak: parsedData.flawlessStreak || 0,
+        hardModeUnlocked: parsedData.hardModeUnlocked || false,
+        completedPuzzles: parsedData.completedPuzzles || {},
+        normalTutorialShown: parsedData.normalTutorialShown || false,
+        hardTutorialShown: parsedData.hardTutorialShown || false,
+        lastPlayedDate: parsedData.lastPlayedDate || '',
+        difficultyMode: parsedData.difficultyMode || 'normal',
+        partialMatches: parsedData.partialMatches || {}
+      };
       
+      // Store the data in IndexedDB
       await updateGameData(gameData);
       resolve();
     } catch (error) {
