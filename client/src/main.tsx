@@ -3,7 +3,6 @@ import App from "./App";
 import "./index.css";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
-import { initStorage } from "./lib/storage-manager";
 import { initDatabase, migrateFromLocalStorage, checkDataExists } from "./lib/indexed-db";
 
 // Create a FontFace for Quicksand font and add it to the document
@@ -35,10 +34,7 @@ document.title = "Fusdle - Daily Emoji Word Game";
 // Initialize storage systems
 const initApp = async () => {
   try {
-    // First, initialize storage versioning
-    initStorage();
-    
-    // Then initialize IndexedDB
+    // Initialize IndexedDB
     await initDatabase();
     
     // Check if we already have data in IndexedDB

@@ -5,11 +5,14 @@
  * which is more resilient to app deployments compared to localStorage.
  */
 
-const DB_NAME = 'fusdleDB';
+// IndexedDB configuration
+const DB_NAME = 'FusdleDB';
 const DB_VERSION = 1;
 const STORE_NAME = 'gameData';
+const DATA_KEY = 'fusdle_game_data';
 
-interface FusdleGameData {
+// Game data structure
+export interface FusdleGameData {
   id: string;  // Added id field to match database schema
   streak: number;
   flawlessStreak: number;
@@ -28,39 +31,34 @@ interface FusdleGameData {
  */
 export function initDatabase(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
+    console.log('Initializing IndexedDB database...');
+    
+    // Open or create the database
     const request = indexedDB.open(DB_NAME, DB_VERSION);
     
-    request.onerror = (event) => {
-      console.error('IndexedDB error:', event);
-      reject('Failed to open database');
+    // Handle database upgrade (first time or version change)
+    request.onupgradeneeded = (event) => {
+      console.log('Database upgrade needed - creating object store');
+      const db = (event.target as IDBOpenDBRequest).result;
+      
+      // Create the object store if it doesn't exist
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+        console.log('Object store created:', STORE_NAME);
+      }
     };
     
+    // Handle success
     request.onsuccess = (event) => {
       const db = (event.target as IDBOpenDBRequest).result;
+      console.log('IndexedDB initialized successfully');
       resolve(db);
     };
     
-    request.onupgradeneeded = (event) => {
-      const db = (event.target as IDBOpenDBRequest).result;
-      
-      // Create object store for game data if it doesn't exist
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        const store = db.createObjectStore(STORE_NAME, { keyPath: 'id' });
-        
-        // Create a single record with ID 'gameState' to store all game data
-        store.add({ 
-          id: 'gameState',
-          streak: 0,
-          flawlessStreak: 0,
-          hardModeUnlocked: false,
-          completedPuzzles: {},
-          normalTutorialShown: false,
-          hardTutorialShown: false,
-          lastPlayedDate: '',
-          difficultyMode: 'normal',
-          partialMatches: {}
-        });
-      }
+    // Handle errors
+    request.onerror = (event) => {
+      console.error('IndexedDB initialization error:', (event.target as IDBOpenDBRequest).error);
+      reject((event.target as IDBOpenDBRequest).error);
     };
   });
 }
@@ -71,59 +69,42 @@ export function initDatabase(): Promise<IDBDatabase> {
  */
 export async function migrateFromLocalStorage(): Promise<void> {
   try {
-    const db = await initDatabase();
+    console.log('Checking for data to migrate from localStorage...');
     
-    // Collect data from localStorage
-    const gameData: Partial<FusdleGameData> = {
-      streak: parseInt(localStorage.getItem('fusdle_streak') || '0', 10),
-      flawlessStreak: parseInt(localStorage.getItem('fusdle_flawless_streak') || '0', 10),
-      hardModeUnlocked: localStorage.getItem('hardModeUnlocked') === 'true',
-      normalTutorialShown: localStorage.getItem('fusdle_normal_tutorial_shown') === 'true',
-      hardTutorialShown: localStorage.getItem('fusdle_hard_tutorial_shown') === 'true',
-      lastPlayedDate: localStorage.getItem('fusdle_last_played_date') || '',
-      difficultyMode: (localStorage.getItem('fusdle_difficulty_mode') as 'normal' | 'hard') || 'normal'
+    // Check if we have data in localStorage
+    const legacyData = localStorage.getItem('fusdle_game_data');
+    if (!legacyData) {
+      console.log('No localStorage data found to migrate');
+      return;
+    }
+    
+    // Check if we already have data in IndexedDB
+    const hasData = await checkDataExists();
+    if (hasData) {
+      console.log('IndexedDB already contains data, skipping migration');
+      return;
+    }
+    
+    // Parse localStorage data
+    const gameData = JSON.parse(legacyData);
+    console.log('Found localStorage data to migrate:', gameData);
+    
+    // Adapt the data format if necessary
+    const adaptedData: FusdleGameData = {
+      ...gameData,
+      id: DATA_KEY, // Add the required ID field
     };
     
-    // Parse completed puzzles
-    try {
-      const completedPuzzlesStr = localStorage.getItem('completedPuzzles');
-      if (completedPuzzlesStr) {
-        gameData.completedPuzzles = JSON.parse(completedPuzzlesStr);
-      } else {
-        gameData.completedPuzzles = {};
-      }
-    } catch (e) {
-      console.error('Error parsing completedPuzzles:', e);
-      gameData.completedPuzzles = {};
-    }
+    // Store data in IndexedDB
+    await updateGameData(adaptedData);
+    console.log('Data successfully migrated from localStorage to IndexedDB');
     
-    // Parse partial matches (collect all matches from various keys)
-    const partialMatches: Record<string, number[]> = {};
+    // Optional: clear localStorage data after migration
+    // localStorage.removeItem('fusdle_game_data');
     
-    // Look for all keys that might contain partial matches
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && (key.startsWith('fusdle_partial_') || key.includes('_partial_'))) {
-        try {
-          const value = localStorage.getItem(key);
-          if (value) {
-            partialMatches[key] = JSON.parse(value);
-          }
-        } catch (e) {
-          console.error(`Error parsing ${key}:`, e);
-        }
-      }
-    }
-    
-    gameData.partialMatches = partialMatches;
-    
-    // Store in IndexedDB
-    await updateGameData(gameData);
-    
-    console.log('Successfully migrated data from localStorage to IndexedDB');
   } catch (error) {
-    console.error('Migration failed:', error);
-    // If migration fails, we'll continue using localStorage as fallback
+    console.error('Error migrating data from localStorage:', error);
+    throw error;
   }
 }
 
@@ -135,39 +116,66 @@ export function updateGameData(data: Partial<FusdleGameData>): Promise<void> {
   return new Promise(async (resolve, reject) => {
     try {
       const db = await initDatabase();
-      const transaction = db.transaction(STORE_NAME, 'readwrite');
-      const store = transaction.objectStore(STORE_NAME);
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
       
-      // Get current state first
-      const getRequest = store.get('gameState');
+      // First try to get existing data
+      const getRequest = store.get(DATA_KEY);
       
       getRequest.onsuccess = () => {
-        const currentState = getRequest.result || { id: 'gameState' };
+        let updatedData: FusdleGameData;
         
-        // Merge with new data
-        const updatedState = { ...currentState, ...data };
+        if (getRequest.result) {
+          // Update existing data
+          updatedData = {
+            ...getRequest.result,
+            ...data,
+            id: DATA_KEY  // Ensure ID is preserved
+          };
+        } else {
+          // Create new data
+          const defaultData: FusdleGameData = {
+            id: DATA_KEY,
+            streak: 0,
+            flawlessStreak: 0,
+            hardModeUnlocked: false,
+            completedPuzzles: {},
+            normalTutorialShown: false,
+            hardTutorialShown: false,
+            lastPlayedDate: '',
+            difficultyMode: 'normal',
+            partialMatches: {},
+          };
+          
+          updatedData = {
+            ...defaultData,
+            ...data,
+          };
+        }
         
-        // Save updated state
-        const putRequest = store.put(updatedState);
+        // Put the updated data
+        const putRequest = store.put(updatedData);
         
         putRequest.onsuccess = () => {
           resolve();
         };
         
         putRequest.onerror = (event) => {
-          console.error('Error updating game data:', event);
-          reject('Failed to update game data');
+          console.error('Error updating game data:', (event.target as IDBRequest).error);
+          reject((event.target as IDBRequest).error);
         };
       };
       
       getRequest.onerror = (event) => {
-        console.error('Error getting current game state:', event);
-        reject('Failed to get current game state');
+        console.error('Error getting existing game data:', (event.target as IDBRequest).error);
+        reject((event.target as IDBRequest).error);
       };
       
-      transaction.oncomplete = () => {
+      // Close the database when the transaction is complete
+      tx.oncomplete = () => {
         db.close();
       };
+      
     } catch (error) {
       console.error('Error in updateGameData:', error);
       reject(error);
@@ -183,18 +191,18 @@ export function getGameData(): Promise<FusdleGameData> {
   return new Promise(async (resolve, reject) => {
     try {
       const db = await initDatabase();
-      const transaction = db.transaction(STORE_NAME, 'readonly');
-      const store = transaction.objectStore(STORE_NAME);
+      const tx = db.transaction(STORE_NAME, 'readonly');
+      const store = tx.objectStore(STORE_NAME);
       
-      const request = store.get('gameState');
+      const request = store.get(DATA_KEY);
       
       request.onsuccess = () => {
         if (request.result) {
-          resolve(request.result as FusdleGameData);
+          resolve(request.result);
         } else {
-          // Return default data if no record exists
+          // Return default data if nothing is found
           const defaultData: FusdleGameData = {
-            id: 'gameState',
+            id: DATA_KEY,
             streak: 0,
             flawlessStreak: 0,
             hardModeUnlocked: false,
@@ -203,20 +211,22 @@ export function getGameData(): Promise<FusdleGameData> {
             hardTutorialShown: false,
             lastPlayedDate: '',
             difficultyMode: 'normal',
-            partialMatches: {}
+            partialMatches: {},
           };
           resolve(defaultData);
         }
       };
       
       request.onerror = (event) => {
-        console.error('Error retrieving game data:', event);
-        reject('Failed to get game data');
+        console.error('Error getting game data:', (event.target as IDBRequest).error);
+        reject((event.target as IDBRequest).error);
       };
       
-      transaction.oncomplete = () => {
+      // Close the database when the transaction is complete
+      tx.oncomplete = () => {
         db.close();
       };
+      
     } catch (error) {
       console.error('Error in getGameData:', error);
       reject(error);
@@ -232,25 +242,28 @@ export function checkDataExists(): Promise<boolean> {
   return new Promise(async (resolve, reject) => {
     try {
       const db = await initDatabase();
-      const transaction = db.transaction(STORE_NAME, 'readonly');
-      const store = transaction.objectStore(STORE_NAME);
+      const tx = db.transaction(STORE_NAME, 'readonly');
+      const store = tx.objectStore(STORE_NAME);
       
-      const request = store.get('gameState');
+      const request = store.get(DATA_KEY);
       
       request.onsuccess = () => {
         resolve(!!request.result);
       };
       
-      request.onerror = () => {
-        resolve(false);
+      request.onerror = (event) => {
+        console.error('Error checking data exists:', (event.target as IDBRequest).error);
+        reject((event.target as IDBRequest).error);
       };
       
-      transaction.oncomplete = () => {
+      // Close the database when the transaction is complete
+      tx.oncomplete = () => {
         db.close();
       };
+      
     } catch (error) {
-      console.error('Error checking data exists:', error);
-      resolve(false);
+      console.error('Error in checkDataExists:', error);
+      reject(error);
     }
   });
 }
@@ -262,11 +275,11 @@ export function checkDataExists(): Promise<boolean> {
 export function exportGameData(): Promise<string> {
   return new Promise(async (resolve, reject) => {
     try {
-      const gameData = await getGameData();
-      resolve(JSON.stringify(gameData));
+      const data = await getGameData();
+      resolve(JSON.stringify(data, null, 2));
     } catch (error) {
       console.error('Error exporting game data:', error);
-      reject('Failed to export data');
+      reject(error);
     }
   });
 }
@@ -279,29 +292,26 @@ export function exportGameData(): Promise<string> {
 export function importGameData(jsonData: string): Promise<void> {
   return new Promise(async (resolve, reject) => {
     try {
-      // Parse the JSON data and cast it to our interface type
+      // Parse the JSON string
       const parsedData = JSON.parse(jsonData);
       
-      // Create a properly typed object with all required fields
+      // Validate and adapt the data
       const gameData: FusdleGameData = {
-        id: 'gameState', // Default ID
-        streak: parsedData.streak || 0,
-        flawlessStreak: parsedData.flawlessStreak || 0,
-        hardModeUnlocked: parsedData.hardModeUnlocked || false,
-        completedPuzzles: parsedData.completedPuzzles || {},
-        normalTutorialShown: parsedData.normalTutorialShown || false,
-        hardTutorialShown: parsedData.hardTutorialShown || false,
-        lastPlayedDate: parsedData.lastPlayedDate || '',
-        difficultyMode: parsedData.difficultyMode || 'normal',
-        partialMatches: parsedData.partialMatches || {}
+        ...parsedData,
+        id: DATA_KEY // Ensure the ID is correct
       };
       
-      // Store the data in IndexedDB
+      // Store in IndexedDB
       await updateGameData(gameData);
       resolve();
     } catch (error) {
       console.error('Error importing game data:', error);
-      reject('Failed to import data');
+      reject(error);
     }
   });
 }
+
+// Add event listener to save data when page is closed
+window.addEventListener('beforeunload', () => {
+  console.log('Page unloading - data is preserved in IndexedDB');
+});

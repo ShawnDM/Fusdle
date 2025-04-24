@@ -1,9 +1,11 @@
 /**
  * StorageManager
  * 
- * A utility to handle localStorage with versioning and structured data
- * This prevents data loss during deployments by using consistent schema
+ * A utility to handle both localStorage and IndexedDB with version control
+ * This provides a consistent API for accessing user data that survives deployments
  */
+
+import { getGameData, updateGameData, checkDataExists } from './indexed-db';
 
 // Current version of the storage format
 const STORAGE_VERSION = 1;
@@ -49,84 +51,166 @@ export function initStorage(): void {
 }
 
 /**
- * Backup all important localStorage data
- * Returns the data as a JSON string that can be stored elsewhere
+ * Get a value from storage with proper fallback
+ * Tries IndexedDB first, then falls back to localStorage
+ * 
+ * @param key The key to retrieve
+ * @param defaultValue Default value if not found
+ * @returns The stored value or default value
  */
-export function backupStorageData(): string {
-  const backup: Record<string, string> = {};
-  
-  // Add storage version to the backup
-  backup[VERSION_KEY] = localStorage.getItem(VERSION_KEY) || STORAGE_VERSION.toString();
-  
-  // Add all persistent keys to the backup
-  PERSISTENT_KEYS.forEach(key => {
-    const value = localStorage.getItem(key);
-    if (value) {
-      backup[key] = value;
+export async function getStorageValue<T>(key: string, defaultValue: T): Promise<T> {
+  try {
+    // Check if IndexedDB is available and has data
+    const hasIndexedDbData = await checkDataExists();
+    
+    if (hasIndexedDbData) {
+      // Get data from IndexedDB
+      const gameData = await getGameData();
+      
+      // Return the specific key value if it exists
+      switch (key) {
+        case 'streak':
+        case 'fusdle_streak':
+          return gameData.streak as unknown as T;
+        case 'flawlessStreak':
+        case 'fusdle_flawless_streak':
+          return gameData.flawlessStreak as unknown as T;
+        case 'hardModeUnlocked':
+          return gameData.hardModeUnlocked as unknown as T;
+        case 'completedPuzzles':
+          return gameData.completedPuzzles as unknown as T;
+        case 'fusdle_normal_tutorial_shown':
+          return gameData.normalTutorialShown as unknown as T;
+        case 'fusdle_hard_tutorial_shown':
+          return gameData.hardTutorialShown as unknown as T;
+        case 'fusdle_last_played_date':
+          return gameData.lastPlayedDate as unknown as T;
+        case 'fusdle_difficulty_mode':
+          return gameData.difficultyMode as unknown as T;
+        default:
+          // For any other keys, try localStorage as fallback
+          break;
+      }
     }
-  });
-  
-  return JSON.stringify(backup);
-}
-
-/**
- * Restore localStorage data from a backup
- * @param backupData JSON string of the backup data
- * @returns true if restore was successful
- */
-export function restoreStorageData(backupData: string): boolean {
-  try {
-    const backup = JSON.parse(backupData) as Record<string, string>;
     
-    // Restore all keys from the backup
-    Object.entries(backup).forEach(([key, value]) => {
-      localStorage.setItem(key, value);
-    });
-    
-    return true;
-  } catch (error) {
-    console.error('Failed to restore storage data:', error);
-    return false;
-  }
-}
-
-/**
- * Store data in localStorage with a specific key
- * For structured data, this handles the JSON stringification
- * @param key Storage key
- * @param value Value to store (can be complex object)
- */
-export function setStorageItem<T>(key: string, value: T): void {
-  try {
-    const serializedValue = typeof value === 'string' ? 
-      value : JSON.stringify(value);
-    localStorage.setItem(key, serializedValue);
-  } catch (error) {
-    console.error(`Error storing data for key ${key}:`, error);
-  }
-}
-
-/**
- * Get data from localStorage by key
- * For structured data, this handles the JSON parsing
- * @param key Storage key
- * @param defaultValue Default value to return if key not found
- * @returns The stored value or defaultValue if not found
- */
-export function getStorageItem<T>(key: string, defaultValue: T): T {
-  try {
+    // Fallback to localStorage
     const value = localStorage.getItem(key);
     if (value === null) return defaultValue;
     
-    // Handle different types
-    if (typeof defaultValue === 'string') return value as unknown as T;
+    // Parse based on the type of the default value
     if (typeof defaultValue === 'number') return Number(value) as unknown as T;
     if (typeof defaultValue === 'boolean') return (value === 'true') as unknown as T;
+    if (typeof defaultValue === 'string') return value as unknown as T;
     
     // Try to parse as JSON for objects/arrays
-    return JSON.parse(value) as T;
+    try {
+      return JSON.parse(value) as T;
+    } catch (e) {
+      return defaultValue;
+    }
   } catch (error) {
-    console.error(`Error retrieving data for key ${key}:`, error);
+    console.error(`Error getting value for key ${key}:`, error);
     return defaultValue;
+  }
+}
+
+/**
+ * Set a value in storage with proper persistence
+ * Stores in both IndexedDB and localStorage for maximum compatibility
+ * 
+ * @param key The key to store
+ * @param value The value to store
+ */
+export async function setStorageValue<T>(key: string, value: T): Promise<void> {
+  try {
+    // Store in localStorage for backward compatibility
+    if (typeof value === 'object') {
+      localStorage.setItem(key, JSON.stringify(value));
+    } else {
+      localStorage.setItem(key, String(value));
+    }
+    
+    // Also store in IndexedDB for persistence across deployments
+    // Map our keys to the IndexedDB structure
+    switch (key) {
+      case 'streak':
+      case 'fusdle_streak':
+        await updateGameData({ streak: value as unknown as number });
+        break;
+      case 'flawlessStreak':
+      case 'fusdle_flawless_streak':
+        await updateGameData({ flawlessStreak: value as unknown as number });
+        break;
+      case 'hardModeUnlocked':
+        await updateGameData({ hardModeUnlocked: value as unknown as boolean });
+        break;
+      case 'completedPuzzles':
+        await updateGameData({ completedPuzzles: value as unknown as Record<string, any> });
+        break;
+      case 'fusdle_normal_tutorial_shown':
+        await updateGameData({ normalTutorialShown: value as unknown as boolean });
+        break;
+      case 'fusdle_hard_tutorial_shown':
+        await updateGameData({ hardTutorialShown: value as unknown as boolean });
+        break;
+      case 'fusdle_last_played_date':
+        await updateGameData({ lastPlayedDate: value as unknown as string });
+        break;
+      case 'fusdle_difficulty_mode':
+        await updateGameData({ difficultyMode: value as unknown as 'normal' | 'hard' });
+        break;
+      default:
+        // Other values are only stored in localStorage
+        break;
+    }
+  } catch (error) {
+    console.error(`Error setting value for key ${key}:`, error);
+  }
+}
+
+/**
+ * Clear a value from storage
+ * 
+ * @param key The key to clear
+ */
+export async function clearStorageValue(key: string): Promise<void> {
+  try {
+    // Remove from localStorage
+    localStorage.removeItem(key);
+    
+    // Also clear from IndexedDB based on key mapping
+    switch (key) {
+      case 'streak':
+      case 'fusdle_streak':
+        await updateGameData({ streak: 0 });
+        break;
+      case 'flawlessStreak':
+      case 'fusdle_flawless_streak':
+        await updateGameData({ flawlessStreak: 0 });
+        break;
+      case 'hardModeUnlocked':
+        await updateGameData({ hardModeUnlocked: false });
+        break;
+      case 'completedPuzzles':
+        await updateGameData({ completedPuzzles: {} });
+        break;
+      case 'fusdle_normal_tutorial_shown':
+        await updateGameData({ normalTutorialShown: false });
+        break;
+      case 'fusdle_hard_tutorial_shown':
+        await updateGameData({ hardTutorialShown: false });
+        break;
+      case 'fusdle_last_played_date':
+        await updateGameData({ lastPlayedDate: '' });
+        break;
+      case 'fusdle_difficulty_mode':
+        await updateGameData({ difficultyMode: 'normal' });
+        break;
+      default:
+        // Other values are only cleared from localStorage
+        break;
+    }
+  } catch (error) {
+    console.error(`Error clearing value for key ${key}:`, error);
   }
 }
