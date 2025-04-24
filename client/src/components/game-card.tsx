@@ -428,18 +428,6 @@ const GameCard: React.FC = () => {
             </Badge>
           </motion.div>
         </AnimatePresence>
-        
-        {/* Manual refresh button */}
-        <Button
-          variant="outline"
-          size="sm"
-          className="text-xs flex items-center gap-1"
-          onClick={checkForNewPuzzle}
-          disabled={isRefreshing}
-        >
-          <RefreshCw className={`h-3 w-3 ${isRefreshing ? 'animate-spin' : ''}`} />
-          {isRefreshing ? 'Checking...' : 'New Puzzle?'}
-        </Button>
       </div>
 
       <EmojiDisplay emojis={puzzle.emojis} />

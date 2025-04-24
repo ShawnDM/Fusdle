@@ -198,10 +198,12 @@ export class FirestoreService {
   // Get today's puzzle (optionally by difficulty) using global time
   async getTodaysPuzzle(difficulty: string = 'normal'): Promise<Puzzle | undefined> {
     try {
-      // Get the current date from global time API
-      // This prevents users from manipulating their device clock
+      // Get the current date from global time API - this ensures consistency
       const todayStr = await getGlobalDateString();
       console.log(`Today's global date: ${todayStr}`);
+      
+      // Convert date string to Date object for more reliable comparisons
+      const todayDate = new Date(todayStr);
       
       // Ensure difficulty is valid
       const effectiveDifficulty = ['normal', 'hard'].includes(difficulty) ? difficulty : 'normal';
@@ -220,49 +222,76 @@ export class FirestoreService {
       const allPuzzles = allPuzzlesSnapshot.docs.map(puzzleFromFirestore);
       console.log(`Found ${allPuzzles.length} puzzles total`);
       
-      // Debug: Log all puzzle dates to find issues
-      console.log(`Looking for puzzles with date ${todayStr} and difficulty ${effectiveDifficulty}`);
-      allPuzzles.forEach(p => {
-        // Log only puzzles with IDs 1-10 to avoid overwhelming logs
-        if (p.puzzleNumber <= 10) {
-          console.log(`Puzzle #${p.puzzleNumber} (${p.difficulty}): Date="${p.date}", Type=${typeof p.date}`);
+      // Calculate a simple date string for each puzzle (YYYY-MM-DD format without time)
+      // and create an array that includes both puzzle and simple date
+      const puzzlesWithSimpleDates = allPuzzles.map(puzzle => {
+        let simpleDateStr = '';
+        try {
+          // Extract just the date part (YYYY-MM-DD) and ignore time
+          simpleDateStr = puzzle.date.split('T')[0];
+        } catch (e) {
+          console.warn(`Error parsing date for puzzle ${puzzle.puzzleNumber}:`, e);
+          simpleDateStr = '1970-01-01'; // Use epoch as fallback
+        }
+        return { puzzle, simpleDateStr };
+      });
+      
+      // Debug: Log puzzle dates we're looking at
+      console.log(`Looking for puzzles matching ${todayStr.split('T')[0]} with ${effectiveDifficulty} difficulty`);
+      
+      // Find the puzzle for today with the right difficulty using the simple date string
+      const matchingPuzzle = puzzlesWithSimpleDates.find(p => 
+        // Compare only the YYYY-MM-DD part
+        p.simpleDateStr === todayStr.split('T')[0] && 
+        p.puzzle.difficulty === effectiveDifficulty
+      );
+      
+      if (matchingPuzzle) {
+        console.log(`Found today's puzzle: #${matchingPuzzle.puzzle.puzzleNumber} for ${matchingPuzzle.simpleDateStr}`);
+        return matchingPuzzle.puzzle;
+      }
+      
+      // If we can't find a puzzle for today, look for the puzzle with the
+      // next puzzleNumber after the last one shown
+      console.log(`No puzzle found for exact date match. Looking for puzzles chronologically...`);
+      
+      // Sort puzzles by their dates
+      const sortedPuzzles = [...puzzlesWithSimpleDates]
+        .filter(p => p.puzzle.difficulty === effectiveDifficulty)
+        .sort((a, b) => {
+          // First try to sort by date
+          const dateA = new Date(a.simpleDateStr);
+          const dateB = new Date(b.simpleDateStr);
+          
+          // If dates are valid, use them
+          if (!isNaN(dateA.getTime()) && !isNaN(dateB.getTime())) {
+            return dateA.getTime() - dateB.getTime();
+          }
+          
+          // Fallback to puzzle number if dates are invalid
+          return a.puzzle.puzzleNumber - b.puzzle.puzzleNumber;
+        });
+      
+      // Find the first puzzle with a date >= today
+      const nextPuzzle = sortedPuzzles.find(p => {
+        try {
+          const puzzleDate = new Date(p.simpleDateStr);
+          return !isNaN(puzzleDate.getTime()) && puzzleDate >= todayDate;
+        } catch (e) {
+          return false;
         }
       });
       
-      // Look for today's puzzle with the right difficulty
-      // Use trim() to handle potential whitespace issues
-      const todayPuzzle = allPuzzles.find(p => 
-        p.date.trim() === todayStr.trim() && 
-        p.difficulty === effectiveDifficulty
-      );
-      
-      if (todayPuzzle) {
-        console.log(`Found today's puzzle with ID: ${todayPuzzle.id}`);
-        return todayPuzzle;
+      if (nextPuzzle) {
+        console.log(`Found chronological match: Puzzle #${nextPuzzle.puzzle.puzzleNumber} for ${nextPuzzle.simpleDateStr}`);
+        return nextPuzzle.puzzle;
       }
       
-      // Special case: Look specifically for puzzles 5 and 6 which should be for April 23
-      const puzzle5or6 = allPuzzles.find(p => 
-        (p.puzzleNumber === 5 || p.puzzleNumber === 6) && 
-        p.difficulty === effectiveDifficulty
-      );
-      
-      if (puzzle5or6) {
-        console.log(`Found puzzle ${puzzle5or6.puzzleNumber} for April 23 with ${effectiveDifficulty} difficulty`);
-        return puzzle5or6;
-      }
-      
-      console.log(`No puzzle found for today (${todayStr}) with ${effectiveDifficulty} difficulty`);
-      
-      // Fallback: get the earliest puzzle with the specified difficulty
-      const puzzlesWithDifficulty = allPuzzles
-        .filter(p => p.difficulty === effectiveDifficulty)
-        .sort((a, b) => a.puzzleNumber - b.puzzleNumber);
-      
-      if (puzzlesWithDifficulty.length > 0) {
-        const fallbackPuzzle = puzzlesWithDifficulty[0];
-        console.log(`Using fallback puzzle with ID: ${fallbackPuzzle.id}`);
-        return fallbackPuzzle;
+      // If no puzzles for today or future, use the most recent puzzle
+      if (sortedPuzzles.length > 0) {
+        const latestPuzzle = sortedPuzzles[sortedPuzzles.length - 1];
+        console.log(`Using most recent puzzle: #${latestPuzzle.puzzle.puzzleNumber} from ${latestPuzzle.simpleDateStr}`);
+        return latestPuzzle.puzzle;
       }
       
       console.log(`No puzzles found with ${effectiveDifficulty} difficulty`);
@@ -351,7 +380,8 @@ export class FirestoreService {
     try {
       // Get the current date from global time API
       const todayStr = await getGlobalDateString();
-      console.log(`Getting archive puzzles, global date is: ${todayStr}`);
+      const todaySimple = todayStr.split('T')[0]; // Get YYYY-MM-DD format
+      console.log(`Getting archive puzzles, global date is: ${todaySimple}`);
       
       // Get all puzzles
       const allPuzzlesQuery = query(puzzlesCollection);
@@ -366,35 +396,53 @@ export class FirestoreService {
       const allPuzzles = allPuzzlesSnapshot.docs.map(puzzleFromFirestore);
       console.log(`Found ${allPuzzles.length} total puzzles`);
       
-      // Force include puzzles 1-4 in the archive since we know they exist
-      // In a production app, we'd use a proper date filter
-      const archivePuzzles = allPuzzles
-        .filter(puzzle => {
+      // Calculate simple dates for more reliable comparison
+      const puzzlesWithSimpleDates = allPuzzles.map(puzzle => {
+        let simpleDateStr = '';
+        try {
+          // Extract just the date part (YYYY-MM-DD) and ignore time
+          simpleDateStr = puzzle.date.split('T')[0];
+        } catch (e) {
+          console.warn(`Error parsing date for puzzle ${puzzle.puzzleNumber}:`, e);
+          simpleDateStr = '1970-01-01'; // Use epoch as fallback
+        }
+        return { puzzle, simpleDateStr };
+      });
+      
+      // Filter puzzles for archive (puzzles with dates before today)
+      const archivePuzzles = puzzlesWithSimpleDates
+        .filter(({ puzzle, simpleDateStr }) => {
           try {
             // For debugging purposes, log puzzle details (only for first few puzzles)
             if (puzzle.puzzleNumber <= 10) {
-              console.log(`Archive filter checking puzzle #${puzzle.puzzleNumber} (${puzzle.difficulty}): date=${puzzle.date}, today=${todayStr}`);
+              console.log(`Archive filter: Puzzle #${puzzle.puzzleNumber} (${puzzle.difficulty}): date=${simpleDateStr}, today=${todaySimple}`);
             }
             
-            // Special case for development: show all puzzles that are not for today's date
-            if (todayStr === '2025-04-23') {
-              // Explicitly include puzzles 1-4 or any with dates not matching today
-              return (puzzle.puzzleNumber >= 1 && puzzle.puzzleNumber <= 4) || 
-                     puzzle.date !== todayStr;
-            } else {
-              // Compare dates: only show puzzles with dates before today
-              const puzzleDate = new Date(puzzle.date);
-              const todayDate = new Date(todayStr);
-              return puzzleDate < todayDate;
-            }
+            // This is a simple string comparison - if the puzzle date is less than today's date
+            // We know the dates are in YYYY-MM-DD format, so lexicographic comparison works
+            return simpleDateStr < todaySimple;
           } catch (err) {
             console.error(`Date comparison error for puzzle ${puzzle.id}:`, err);
             return false; // Exclude puzzles with invalid dates
           }
         })
+        .map(({ puzzle }) => puzzle) // Extract just the puzzle from the wrapper object
         .sort((a, b) => {
-          // Sort by puzzleNumber for consistent ordering during development
-          return a.puzzleNumber - b.puzzleNumber;
+          // Sort by date (newest first) for the archive view
+          try {
+            const dateA = new Date(a.date).getTime();
+            const dateB = new Date(b.date).getTime();
+            
+            // If dates are valid, use them (newest first)
+            if (!isNaN(dateA) && !isNaN(dateB)) {
+              return dateB - dateA;
+            }
+          } catch (e) {
+            console.warn('Error sorting dates, falling back to puzzle number');
+          }
+          
+          // Fallback to puzzleNumber if dates aren't valid
+          return b.puzzleNumber - a.puzzleNumber;
         })
         .slice(0, limitCount);
       
