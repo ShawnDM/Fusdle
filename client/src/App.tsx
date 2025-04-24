@@ -173,18 +173,7 @@ function App() {
           setCurrentDay(newGlobalDate);
           
           // Reset all game state before fetching the new puzzle
-          useGameStore.setState({
-            puzzle: null,
-            gameStatus: 'playing',
-            attempts: 0,
-            revealedHints: [],
-            hintsUsedAtAttempts: [],
-            previousGuesses: [],
-            currentGuess: '',
-            hasCompleted: false,
-            hasGuessedOnce: false,
-            partialMatchFeedback: null
-          });
+          useGameStore.getState().resetGame();
           
           // Fetch the new puzzle
           await fetchTodaysPuzzle();
