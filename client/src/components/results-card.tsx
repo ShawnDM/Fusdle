@@ -151,10 +151,10 @@ const ResultsCard: React.FC = () => {
           <div className="flex justify-center mb-3 gap-2">
             {/* Show Difficulty Badge */}
             <Badge 
-              variant={difficultyMode === 'hard' ? 'destructive' : 'secondary'}
+              variant={puzzle?.difficulty === 'hard' ? 'destructive' : 'secondary'}
               className="text-xs py-1 pl-1.5 pr-2 flex items-center gap-1"
             >
-              {difficultyMode === 'hard' ? (
+              {puzzle?.difficulty === 'hard' ? (
                 <>
                   <Skull className="h-3 w-3" /> Hard Mode
                 </>

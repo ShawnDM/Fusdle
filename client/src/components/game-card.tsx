@@ -378,10 +378,10 @@ const GameCard: React.FC = () => {
             }}
           >
             <Badge 
-              variant={difficultyMode === 'hard' ? 'destructive' : 'secondary'}
+              variant={puzzle?.difficulty === 'hard' ? 'destructive' : 'secondary'}
               className="text-xs py-1 pl-1.5 pr-2 flex items-center gap-1"
             >
-              {difficultyMode === 'hard' ? (
+              {puzzle?.difficulty === 'hard' ? (
                 <span className="flex items-center">
                   <Skull className="h-3 w-3" /> Hard Mode
                 </span>

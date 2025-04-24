@@ -1254,7 +1254,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     resultLines.push(emojiString);
     
     // Add difficulty mode with appropriate emoji
-    if (difficultyMode === 'hard') {
+    if (puzzle.difficulty === 'hard') {
       resultLines.push('💀 Hard Mode');
     } else {
       resultLines.push('🎯 Normal Mode');
