@@ -149,7 +149,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       
       if (matchedWords.length > 0) {
-        partialMatchFeedback = `You're on the right track! Your guess contains parts of the answer.`;
+        // Include the matched word in the feedback
+        partialMatchFeedback = `You're on the right track! Your guess contains "${matchedWords[0]}".`;
       }
       
       // If incorrect, return the result with partial match feedback
