@@ -76,3 +76,17 @@
 .animate-bounce-in {
   animation: bounceIn 0.8s ease-in-out;
 }
+
+/* Fix for black outlines on input fields across browsers */
+input:focus,
+input:active,
+input {
+  outline: none !important;
+  -webkit-appearance: none;
+  box-shadow: none !important;
+}
+
+/* Override focus rings only for form inputs with explicit styles */
+.focus\:ring-2:focus {
+  box-shadow: 0 0 0 2px rgba(147, 112, 219, 0.5) !important;
+}

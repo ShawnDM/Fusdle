@@ -575,12 +575,13 @@ const GameCard: React.FC = () => {
               <input
                 ref={inputRef}
                 type="text"
-                className="flex-grow min-w-0 rounded-l-lg border-0 p-3 text-lg focus:ring-2 focus:ring-secondary"
+                className="flex-grow min-w-0 rounded-l-lg border border-gray-300 outline-none p-3 text-lg focus:ring-2 focus:ring-secondary focus:border-secondary focus:outline-none"
                 placeholder="Enter your guess"
                 value={currentGuess}
                 onChange={(e) => setCurrentGuess(e.target.value)}
                 autoComplete="off"
                 disabled={isSubmitting}
+                style={{ outline: 'none' }}
               />
               <button
                 type="submit"
