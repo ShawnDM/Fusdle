@@ -142,15 +142,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const answerWords = puzzle.answer.toLowerCase().split(/\s+/);
       const guessWords = guess.toLowerCase().split(/\s+/);
       
-      // Find which words in the guess exactly match words in the answer
-      // Only consider full word matches, not partial word matches
-      const matchedWords = guessWords.filter(guessWord => 
+      // Step 1: Find exact word matches first (preferred)
+      const exactWordMatches = guessWords.filter(guessWord => 
         answerWords.some(answerWord => answerWord === guessWord)
       );
       
-      if (matchedWords.length > 0) {
-        // Include the matched word in the feedback
-        partialMatchFeedback = `You're on the right track! Your guess contains "${matchedWords[0]}".`;
+      // Step 2: If no exact matches, look for partial word matches (substring)
+      if (exactWordMatches.length > 0) {
+        // Include the matched word in the feedback with quotes for consistency
+        partialMatchFeedback = `You're on the right track! Your guess contains "${exactWordMatches[0]}".`;
+      } else {
+        // Look for partial matches (one word contains the other)
+        const partialMatches = [];
+        
+        for (const guessWord of guessWords) {
+          // Skip very short words (2 chars or less) as they often give false positives
+          if (guessWord.length < 3) continue;
+          
+          for (const answerWord of answerWords) {
+            // Check if the guess word is contained in the answer word, or vice versa
+            if (answerWord.includes(guessWord) || guessWord.includes(answerWord)) {
+              partialMatches.push(guessWord);
+              break;
+            }
+          }
+        }
+        
+        if (partialMatches.length > 0) {
+          // Include the matched word in the feedback with quotes for consistency
+          partialMatchFeedback = `You're on the right track! Your guess contains "${partialMatches[0]}".`;
+        } else {
+          // Generic feedback (fallback) if we can't identify a specific match but still want feedback
+          partialMatchFeedback = "You're on the right track! Part of your answer matches.";
+        }
       }
       
       // If incorrect, return the result with partial match feedback

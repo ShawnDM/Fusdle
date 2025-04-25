@@ -28,42 +28,55 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 
-// Helper function to highlight the matching part of the guess - simplified for cross-browser compatibility
+// Helper function to highlight the matching part of the guess - enhanced for production compatibility
 const highlightPartialMatch = (guess: string, feedback: string): React.ReactNode => {
-  console.log('Highlighting partial match (cross-browser version):', { guess, feedback });
+  console.log('Highlighting partial match (enhanced version):', { guess, feedback });
   
   try {
-    // Extract the matching word using a simple approach - just take anything in quotes
-    const matchPattern = /"([^"]+)"/i;
-    const matchResult = feedback.match(matchPattern);
+    // First attempt: Try to extract any word in quotes (which is the ideal case)
+    const quotedPattern = /"([^"]+)"/i;
+    const quotedMatch = feedback.match(quotedPattern);
     
-    // If no match found in quotes, return unhighlighted text
-    if (!matchResult || !matchResult[1]) {
-      console.log('No matching word found in feedback');
-      return <span>{guess}</span>;
-    }
-    
-    const matchWord = matchResult[1].toLowerCase();
-    console.log('Found matching word:', matchWord);
-    
-    // Split the guess into words for word-level matching
-    const words = guess.split(' ');
-    
-    // First try: exact word match
-    for (let i = 0; i < words.length; i++) {
-      if (words[i].toLowerCase() === matchWord) {
-        // Create parts before the matched word
-        const before = i > 0 ? words.slice(0, i).join(' ') + ' ' : '';
+    if (quotedMatch && quotedMatch[1]) {
+      const matchWord = quotedMatch[1].toLowerCase();
+      console.log('Found quoted word:', matchWord);
+      
+      // Split the guess into words
+      const words = guess.split(' ');
+      
+      // Look for an exact match first
+      for (let i = 0; i < words.length; i++) {
+        if (words[i].toLowerCase() === matchWord) {
+          // Create parts with highlighted match
+          const before = i > 0 ? words.slice(0, i).join(' ') + ' ' : '';
+          const after = i < words.length - 1 ? ' ' + words.slice(i + 1).join(' ') : '';
+          
+          return (
+            <span>
+              {before}
+              <span className="text-green-600 bg-green-100 font-semibold px-1 rounded">
+                {words[i]}
+              </span>
+              {after}
+            </span>
+          );
+        }
+      }
+      
+      // Try substring match
+      const guessLower = guess.toLowerCase();
+      const matchIndex = guessLower.indexOf(matchWord);
+      
+      if (matchIndex >= 0) {
+        const before = guess.substring(0, matchIndex);
+        const match = guess.substring(matchIndex, matchIndex + matchWord.length);
+        const after = guess.substring(matchIndex + matchWord.length);
         
-        // Create parts after the matched word
-        const after = i < words.length - 1 ? ' ' + words.slice(i + 1).join(' ') : '';
-        
-        // Return with highlighted match
         return (
           <span>
             {before}
             <span className="text-green-600 bg-green-100 font-semibold px-1 rounded">
-              {words[i]}
+              {match}
             </span>
             {after}
           </span>
@@ -71,27 +84,33 @@ const highlightPartialMatch = (guess: string, feedback: string): React.ReactNode
       }
     }
     
-    // Second try: substring match in full text
-    const guessLower = guess.toLowerCase();
-    const matchIndex = guessLower.indexOf(matchWord);
+    // If no quotes or no match found in quotes, try to find the best match from the guess
+    // This handles the production case where the feedback may not have quotes
+    const words = guess.split(' ');
     
-    if (matchIndex >= 0) {
-      const before = guess.substring(0, matchIndex);
-      const match = guess.substring(matchIndex, matchIndex + matchWord.length);
-      const after = guess.substring(matchIndex + matchWord.length);
+    // Try each word in the guess to see if it could be a partial match
+    for (let i = 0; i < words.length; i++) {
+      const word = words[i].toLowerCase();
+      
+      // Skip very short words (less than 3 chars) as they're likely not significant matches
+      if (word.length < 3) continue;
+      
+      // Highlight this word as our best guess for what matched
+      const before = i > 0 ? words.slice(0, i).join(' ') + ' ' : '';
+      const after = i < words.length - 1 ? ' ' + words.slice(i + 1).join(' ') : '';
       
       return (
         <span>
           {before}
           <span className="text-green-600 bg-green-100 font-semibold px-1 rounded">
-            {match}
+            {words[i]}
           </span>
           {after}
         </span>
       );
     }
     
-    // Fallback: Just show the original guess without highlighting
+    // Last resort: just return the original text
     return <span>{guess}</span>;
   } catch (error) {
     console.error('Error in highlightPartialMatch:', error);
