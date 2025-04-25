@@ -204,9 +204,10 @@ const Archive: React.FC = () => {
       console.log(`Filtered to ${fusionPuzzles.length} fusion puzzles`);
       return fusionPuzzles;
     } else {
-      // Show regular puzzles of the selected difficulty 
+      // Show regular puzzles of the selected difficulty
+      // Fixed to properly handle normal puzzles by checking just the difficulty
       const filteredByDifficulty = finalPuzzles.filter((puzzle: ArchivePuzzle) => 
-        puzzle.difficulty === activeTab && (puzzle.isFusionTwist === 0 || puzzle.isFusionTwist === undefined)
+        puzzle.difficulty === activeTab
       );
       console.log(`Filtered to ${filteredByDifficulty.length} ${activeTab} puzzles`);
       return filteredByDifficulty;

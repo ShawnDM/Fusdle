@@ -573,15 +573,44 @@ const GameCard: React.FC = () => {
                   </AccordionTrigger>
                   <AccordionContent className="px-4 pb-3 pt-1">
                     <div className="space-y-2 max-h-48 overflow-y-auto">
-                      {previousGuesses.map((guess, index) => (
-                        <div 
-                          key={`${guess}-${index}`} 
-                          className="p-2 bg-gray-50 rounded text-sm flex justify-between items-center"
-                        >
-                          <span className="font-medium">{guess}</span>
-                          <span className="text-xs text-gray-500">Guess #{index + 1}</span>
-                        </div>
-                      ))}
+                      {previousGuesses.map((guess, index) => {
+                        // Get partial matches data from localStorage
+                        let partialMatches: number[] = [];
+                        try {
+                          const storageKey = `fusdle_partial_${puzzle?.id}_${difficultyMode}`;
+                          const storedPartialMatches = localStorage.getItem(storageKey);
+                          
+                          if (storedPartialMatches) {
+                            partialMatches = JSON.parse(storedPartialMatches);
+                          }
+                        } catch (e) {
+                          console.error('Error retrieving partial matches:', e);
+                        }
+                        
+                        // Check if this guess is a partial match
+                        const isPartialMatch = partialMatches.includes(index);
+                        
+                        return (
+                          <div 
+                            key={`${guess}-${index}`} 
+                            className={`p-2 rounded text-sm flex justify-between items-center ${
+                              isPartialMatch 
+                                ? 'bg-green-50 border border-green-200' 
+                                : 'bg-gray-50'
+                            }`}
+                          >
+                            <span className={`font-medium ${isPartialMatch ? 'text-green-700' : ''}`}>
+                              {guess}
+                              {isPartialMatch && (
+                                <span className="ml-2 text-xs inline-flex items-center text-green-600">
+                                  (partial match)
+                                </span>
+                              )}
+                            </span>
+                            <span className="text-xs text-gray-500">Guess #{index + 1}</span>
+                          </div>
+                        );
+                      })}
                     </div>
                   </AccordionContent>
                 </AccordionItem>
