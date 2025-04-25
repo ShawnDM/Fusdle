@@ -36,7 +36,36 @@ const highlightPartialMatch = (guess: string, feedback: string): React.ReactNode
   let startIndex = guessLower.indexOf(matchWord);
   
   if (startIndex === -1) {
-    // If we can't find exact match, just return the guess
+    // If we can't find exact match, try finding partial match
+    // This handles cases where the matching word might be pluralized or have different endings
+    for (let i = 0; i < matchWord.length - 2; i++) {
+      const partialWord = matchWord.substring(0, matchWord.length - i);
+      if (partialWord.length < 3) break; // Don't look for matches that are too short
+      
+      startIndex = guessLower.indexOf(partialWord);
+      if (startIndex !== -1) {
+        // If we found a partial match, adjust the match word
+        console.log(`Found partial match "${partialWord}" instead of "${matchWord}"`);
+        const endIndex = startIndex + partialWord.length;
+        
+        // Split the guess into three parts: before match, match, after match
+        const beforeMatch = guess.substring(0, startIndex);
+        const matchPart = guess.substring(startIndex, endIndex);
+        const afterMatch = guess.substring(endIndex);
+        
+        return (
+          <>
+            {beforeMatch}
+            <span className="text-green-600 bg-green-100 font-semibold px-1 rounded">
+              {matchPart}
+            </span>
+            {afterMatch}
+          </>
+        );
+      }
+    }
+    
+    // If we still can't find a match, just return the guess
     return guess;
   }
   
@@ -51,7 +80,9 @@ const highlightPartialMatch = (guess: string, feedback: string): React.ReactNode
   return (
     <>
       {beforeMatch}
-      <span className="text-green-600 font-semibold">{matchPart}</span>
+      <span className="text-green-600 bg-green-100 font-semibold px-1 rounded">
+        {matchPart}
+      </span>
       {afterMatch}
     </>
   );

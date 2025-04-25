@@ -157,7 +157,7 @@ function App() {
         const cacheLoaded = useGameStore.getState().loadGameStateFromCache(currentMode);
         
         // If cache loading failed, try to load from localStorage
-        if (!cacheLoaded) {
+        if (cacheLoaded === false) {
           console.log('Cache load failed, trying localStorage...');
           
           // This will trigger our localStorage loading logic
