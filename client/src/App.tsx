@@ -108,14 +108,39 @@ function App() {
     }
   }, [difficultyMode, isPreloading]);
   
-  // Track page transitions
+  // Track page transitions and maintain game state
   useEffect(() => {
     // Cache current game state before navigating away from home
     const previousLocation = navigationState.lastPageVisited;
     if (previousLocation === '/' && location !== '/') {
       // We're navigating away from the home page, save the game state
       console.log('Navigating away from home, caching game state');
+      
+      // Save the current state to both cache and localStorage for persistence
       useGameStore.getState().cacheCurrentGameState();
+      
+      // Also save to localStorage for guaranteed persistence
+      const currentState = useGameStore.getState();
+      if (currentState.puzzle) {
+        const gameStateKey = `fusdle_game_state_${currentState.puzzle.id}_${currentState.difficultyMode}`;
+        try {
+          const stateToSave = {
+            attempts: currentState.attempts,
+            revealedHints: currentState.revealedHints,
+            hintsUsedAtAttempts: currentState.hintsUsedAtAttempts,
+            previousGuesses: currentState.previousGuesses,
+            gameStatus: currentState.gameStatus,
+            hasCompleted: currentState.hasCompleted,
+            hasGuessedOnce: currentState.hasGuessedOnce,
+            partialMatchFeedback: currentState.partialMatchFeedback,
+          };
+          
+          localStorage.setItem(gameStateKey, JSON.stringify(stateToSave));
+          console.log('Game state persisted to localStorage for later restoration');
+        } catch (error) {
+          console.error('Error persisting game state to localStorage:', error);
+        }
+      }
     }
     
     // Update last visited page in navigation state
@@ -127,7 +152,26 @@ function App() {
       if (previousLocation !== '/' && navigationState.initialPuzzleLoaded) {
         console.log('Returning to home, restoring cached game state');
         const currentMode = useGameStore.getState().difficultyMode;
-        useGameStore.getState().loadGameStateFromCache(currentMode);
+        
+        // First try to load from cache (memory)
+        const cacheLoaded = useGameStore.getState().loadGameStateFromCache(currentMode);
+        
+        // If cache loading failed, try to load from localStorage
+        if (!cacheLoaded) {
+          console.log('Cache load failed, trying localStorage...');
+          
+          // This will trigger our localStorage loading logic
+          // We'll let checkCompletedStatus handle restoring from localStorage
+          const puzzleId = useGameStore.getState().puzzle?.id;
+          if (puzzleId) {
+            setTimeout(() => {
+              useGameStore.getState().checkCompletedStatus();
+            }, 100);
+          } else {
+            // If we don't have a puzzle ID, fetch a fresh puzzle
+            fetchPuzzleByDifficulty(currentMode);
+          }
+        }
       }
       
       // On the home page, preload archive data and other difficulty in the background
@@ -143,7 +187,7 @@ function App() {
         }, 3000);
       }
     }
-  }, [location, preloadArchiveData, preloadOtherDifficultyMode]);
+  }, [location, preloadArchiveData, preloadOtherDifficultyMode, fetchPuzzleByDifficulty]);
   
   // Check for a new day (midnight EST) and reset/fetch puzzles accordingly
   // Uses global time API to prevent users from manipulating device clock

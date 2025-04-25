@@ -315,8 +315,56 @@ export const useGameStore = create<GameState>((set, get) => ({
     // Only proceed if we have a puzzle and haven't already marked it as completed
     if (!puzzle || hasCompleted) return;
     
-    // Check if this puzzle has been completed with the CURRENT difficulty mode
-    // This ensures we track normal and hard difficulties separately
+    // First, try to load any persisted game state for this puzzle
+    try {
+      // Check for persisted game state in localStorage
+      const gameStateKey = `fusdle_game_state_${puzzle.id}_${difficultyMode}`;
+      const savedGameState = localStorage.getItem(gameStateKey);
+      
+      if (savedGameState) {
+        console.log('Found saved game state, attempting to restore...');
+        const parsedState = JSON.parse(savedGameState);
+        
+        // Only restore if we have valid data
+        if (parsedState && typeof parsedState === 'object') {
+          set({
+            attempts: parsedState.attempts || 0,
+            revealedHints: parsedState.revealedHints || [],
+            hintsUsedAtAttempts: parsedState.hintsUsedAtAttempts || [],
+            previousGuesses: parsedState.previousGuesses || [],
+            gameStatus: parsedState.gameStatus || 'playing',
+            hasCompleted: parsedState.hasCompleted || false,
+            hasGuessedOnce: parsedState.hasGuessedOnce || false,
+            partialMatchFeedback: parsedState.partialMatchFeedback || null,
+          });
+          
+          console.log('Successfully restored game state from localStorage');
+          
+          // If the game is already completed in the saved state, also load the answer
+          if (parsedState.hasCompleted && parsedState.gameStatus === 'won') {
+            // Try to get cached answer
+            const cachedAnswerKey = `fusdle_answer_${puzzle.id}_${difficultyMode}`;
+            const cachedAnswer = localStorage.getItem(cachedAnswerKey);
+            
+            if (cachedAnswer) {
+              set({
+                puzzle: { ...puzzle, answer: cachedAnswer }
+              });
+            }
+          }
+          
+          // After loading saved state, check if we need to continue with regular completion check
+          if (parsedState.hasCompleted) {
+            return; // We've already restored a completed game state
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error loading saved game state:', error);
+    }
+    
+    // If we get here, either there was no saved state, or it wasn't a completed state
+    // Continue with the normal completed status check
     const savedPuzzleData = getPuzzleData(puzzle.id, difficultyMode);
     const completedKey = `fusdle_${puzzle.id}_${difficultyMode}_completed`;
     const isPuzzleCompletedForDifficulty = localStorage.getItem(completedKey) === 'true';
