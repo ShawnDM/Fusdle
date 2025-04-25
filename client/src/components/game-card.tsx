@@ -18,6 +18,15 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
 
 // Helper function to highlight the matching part of the guess
 const highlightPartialMatch = (guess: string, feedback: string): React.ReactNode => {
@@ -162,8 +171,16 @@ const GameCard: React.FC = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showFusionDialog, setShowFusionDialog] = useState(false);
+  const [currentTwistType, setCurrentTwistType] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast(); // Initialize toast hook at component top level
+  
+  // Function to show the fusion twist explanation popup
+  const showFusionPopup = (twistType: string | undefined) => {
+    setCurrentTwistType(twistType || "Special");
+    setShowFusionDialog(true);
+  };
   
   // Check if the puzzle has already been completed when the component loads
   useEffect(() => {
@@ -492,35 +509,62 @@ const GameCard: React.FC = () => {
       
       {/* Difficulty indicator with smooth animations */}
       <div className="flex justify-between items-center mb-4">
-        <AnimatePresence mode="wait">
-          <motion.div 
-            key={`difficulty-badge-${difficultyMode}`}
-            initial={{ opacity: 0, scale: 0.9, y: -10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 10 }}
-            transition={{ 
-              duration: 0.25,
-              type: "spring", 
-              stiffness: 500,
-              damping: 25
-            }}
-          >
-            <Badge 
-              variant={puzzle?.difficulty === 'hard' ? 'destructive' : 'secondary'}
-              className="text-xs py-1 pl-1.5 pr-2 flex items-center gap-1"
+        <div className="flex items-center gap-2">
+          <AnimatePresence mode="wait">
+            <motion.div 
+              key={`difficulty-badge-${difficultyMode}`}
+              initial={{ opacity: 0, scale: 0.9, y: -10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 10 }}
+              transition={{ 
+                duration: 0.25,
+                type: "spring", 
+                stiffness: 500,
+                damping: 25
+              }}
             >
-              {puzzle?.difficulty === 'hard' ? (
+              <Badge 
+                variant={puzzle?.difficulty === 'hard' ? 'destructive' : 'secondary'}
+                className="text-xs py-1 pl-1.5 pr-2 flex items-center gap-1"
+              >
+                {puzzle?.difficulty === 'hard' ? (
+                  <span className="flex items-center">
+                    <Skull className="h-3 w-3" /> Hard Mode
+                  </span>
+                ) : (
+                  <span className="flex items-center">
+                    <Flame className="h-3 w-3" /> Normal Mode
+                  </span>
+                )}
+              </Badge>
+            </motion.div>
+          </AnimatePresence>
+          
+          {/* Add fusion twist badge */}
+          {puzzle.isFusionTwist && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, x: -10 }}
+              animate={{ opacity: 1, scale: 1, x: 0 }}
+              transition={{ 
+                delay: 0.15,
+                type: "spring", 
+                stiffness: 500,
+                damping: 25
+              }}
+              onClick={() => showFusionPopup(puzzle.twistType)}
+              className="cursor-pointer"
+            >
+              <Badge 
+                variant="outline"
+                className="text-xs py-1 pl-1.5 pr-2 flex items-center gap-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white border-none"
+              >
                 <span className="flex items-center">
-                  <Skull className="h-3 w-3" /> Hard Mode
+                  <span className="animate-spin-slow">🌀</span> Fusion Twist!
                 </span>
-              ) : (
-                <span className="flex items-center">
-                  <Flame className="h-3 w-3" /> Normal Mode
-                </span>
-              )}
-            </Badge>
-          </motion.div>
-        </AnimatePresence>
+              </Badge>
+            </motion.div>
+          )}
+        </div>
       </div>
 
       <EmojiDisplay emojis={puzzle.emojis} />
