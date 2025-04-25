@@ -177,7 +177,7 @@ const GameCard: React.FC = () => {
   const { toast } = useToast(); // Initialize toast hook at component top level
   
   // Function to show the fusion twist explanation popup
-  const showFusionPopup = (twistType: string | undefined) => {
+  const showFusionPopup = (twistType: string | undefined | null) => {
     setCurrentTwistType(twistType || "Special");
     setShowFusionDialog(true);
   };
@@ -846,8 +846,68 @@ const GameCard: React.FC = () => {
           )}
         </div>
       ) : null}
+      
+      {/* Fusion Twist Explanation Dialog */}
+      <Dialog open={showFusionDialog} onOpenChange={setShowFusionDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center">
+              <span className="mr-2 animate-spin-slow">🌀</span> Fusion Twist Puzzle
+            </DialogTitle>
+            <DialogDescription>
+              You've discovered a special Fusion Twist puzzle!
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4 text-center">
+            <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-4 rounded-lg">
+              <h3 className="text-lg font-bold mb-2">{currentTwistType} Style</h3>
+              <p>
+                {getFusionTwistDescription(currentTwistType)}
+              </p>
+            </div>
+            
+            <div className="space-y-2 text-sm">
+              <p>Fusion Twist puzzles appear twice a week and offer unique word combinations and creative challenges.</p>
+              <p>Use the same game mechanics, but expect more surprising and creative answers!</p>
+            </div>
+          </div>
+          
+          <DialogFooter className="sm:justify-center">
+            <Button
+              type="button"
+              onClick={() => setShowFusionDialog(false)}
+              className="w-full sm:w-auto"
+            >
+              Got It!
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
+};
+
+// Helper function to provide descriptions for different fusion twist types
+const getFusionTwistDescription = (twistType: string | null | undefined): string => {
+  if (!twistType) return 'This special puzzle features unique twists on the standard format. Expect creative and unexpected answers!';
+  
+  switch (twistType) {
+    case 'Wordplay':
+      return 'This puzzle uses creative wordplay, puns, or double meanings. Think outside the box!';
+    case 'Pop Culture':
+      return 'References movies, TV shows, music, or other elements of popular culture. Think of iconic lines or characters!';
+    case 'Movie Mash':
+      return 'Combines elements from popular movies or film genres. Think cinematic!';
+    case 'Food Fusion':
+      return 'Combines culinary concepts or food items in unexpected ways. Think delicious combinations!';
+    case 'Animal Fusion':
+      return 'Combines animal concepts or creates mythical creature references. Think wild combinations!';
+    case 'Funny Lore':
+      return 'References internet memes, inside jokes, or funny cultural stories. Think viral!';
+    default:
+      return 'This special puzzle features unique twists on the standard format. Expect creative and unexpected answers!';
+  }
 };
 
 export default GameCard;
