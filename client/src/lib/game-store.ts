@@ -739,23 +739,28 @@ export const useGameStore = create<GameState>((set, get) => ({
       // Use appropriate type to avoid void returns
       const cachedState = cachedGameStates[difficulty]!;
       
-      set({
-        puzzle: cachedPuzzles[difficulty],
-        difficultyMode: difficulty,
-        attempts: cachedState.attempts,
-        revealedHints: cachedState.revealedHints,
-        hintsUsedAtAttempts: cachedState.hintsUsedAtAttempts,
-        previousGuesses: cachedState.previousGuesses || [], // Include previous guesses
-        gameStatus: cachedState.gameStatus,
-        hasCompleted: cachedState.hasCompleted,
-        hasGuessedOnce: cachedState.hasGuessedOnce,
-        partialMatchFeedback: cachedState.partialMatchFeedback,
-        loading: false,
-        error: null
-      });
-      
-      console.log(`Loaded ${difficulty} mode state from cache`);
-      return true;
+      try {
+        set({
+          puzzle: cachedPuzzles[difficulty],
+          difficultyMode: difficulty,
+          attempts: cachedState.attempts,
+          revealedHints: cachedState.revealedHints,
+          hintsUsedAtAttempts: cachedState.hintsUsedAtAttempts,
+          previousGuesses: cachedState.previousGuesses || [], // Include previous guesses
+          gameStatus: cachedState.gameStatus,
+          hasCompleted: cachedState.hasCompleted,
+          hasGuessedOnce: cachedState.hasGuessedOnce,
+          partialMatchFeedback: cachedState.partialMatchFeedback,
+          loading: false,
+          error: null
+        });
+        
+        console.log(`Loaded ${difficulty} mode state from cache`);
+        return true;
+      } catch (error) {
+        console.error(`Error loading cached state for ${difficulty} mode:`, error);
+        return false;
+      }
     }
     
     console.log(`No cached state found for ${difficulty} mode`);

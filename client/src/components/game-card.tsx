@@ -603,20 +603,20 @@ const GameCard: React.FC = () => {
 
       {/* Input form area - only add height when actively playing */}
       {gameStatus === 'playing' && !hasCompleted ? (
-        <div>
+        <div className="px-1"> {/* Add padding to prevent overflow on mobile */}
           <motion.form 
-            className="mb-6" 
+            className="mb-6 w-full max-w-full" 
             onSubmit={handleSubmit}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="flex">
+            <div className="flex w-full max-w-full overflow-hidden">
               <input
                 ref={inputRef}
                 type="text"
-                className="flex-grow rounded-l-lg border-0 p-3 text-lg focus:ring-2 focus:ring-secondary"
+                className="flex-grow min-w-0 rounded-l-lg border-0 p-3 text-lg focus:ring-2 focus:ring-secondary"
                 placeholder="Enter your guess"
                 value={currentGuess}
                 onChange={(e) => setCurrentGuess(e.target.value)}
@@ -625,7 +625,7 @@ const GameCard: React.FC = () => {
               />
               <button
                 type="submit"
-                className={`bg-secondary text-white rounded-r-lg px-4 font-medium transition ${
+                className={`bg-secondary text-white rounded-r-lg px-3 sm:px-4 font-medium whitespace-nowrap transition ${
                   isSubmitting ? "opacity-70" : "hover:bg-secondary/90"
                 }`}
                 disabled={isSubmitting}

@@ -154,7 +154,7 @@ function App() {
         const currentMode = useGameStore.getState().difficultyMode;
         
         // First try to load from cache (memory)
-        const cacheLoaded = useGameStore.getState().loadGameStateFromCache(currentMode);
+        const cacheLoaded = useGameStore.getState().loadGameStateFromCache(currentMode) || false;
         
         // If cache loading failed, try to load from localStorage
         if (!cacheLoaded) {
