@@ -3,6 +3,7 @@ import { useGameStore } from "@/lib/game-store";
 import GameCard from "@/components/game-card";
 import ResultsCard from "@/components/results-card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { navigationState } from "@/lib/queryClient";
 
 const Home: React.FC = () => {
   const { 

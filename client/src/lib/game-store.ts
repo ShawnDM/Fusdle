@@ -220,6 +220,46 @@ function getInitialHardModeStatus(): boolean {
   return storedValue;
 }
 
+// New function to persist current game state to localStorage
+function persistGameState(state: Partial<GameState>) {
+  if (!state.puzzle) return;
+  
+  const stateToSave = {
+    attempts: state.attempts || 0,
+    revealedHints: state.revealedHints || [],
+    hintsUsedAtAttempts: state.hintsUsedAtAttempts || [],
+    previousGuesses: state.previousGuesses || [],
+    gameStatus: state.gameStatus || 'playing',
+    hasCompleted: state.hasCompleted || false,
+    hasGuessedOnce: state.hasGuessedOnce || false,
+    partialMatchFeedback: state.partialMatchFeedback || null,
+  };
+  
+  try {
+    const gameStateKey = `fusdle_game_state_${state.puzzle.id}_${state.difficultyMode}`;
+    localStorage.setItem(gameStateKey, JSON.stringify(stateToSave));
+    console.log('Game state persisted to localStorage');
+  } catch (error) {
+    console.error('Error persisting game state:', error);
+  }
+}
+
+// Function to load persisted game state
+function loadPersistedGameState(puzzleId: number, difficultyMode: string): Partial<GameState> | null {
+  try {
+    const gameStateKey = `fusdle_game_state_${puzzleId}_${difficultyMode}`;
+    const savedState = localStorage.getItem(gameStateKey);
+    
+    if (savedState) {
+      return JSON.parse(savedState);
+    }
+  } catch (error) {
+    console.error('Error loading persisted game state:', error);
+  }
+  
+  return null;
+}
+
 export const useGameStore = create<GameState>((set, get) => ({
   puzzle: null,
   // Initialize cache for both puzzle difficulties
@@ -452,6 +492,10 @@ export const useGameStore = create<GameState>((set, get) => ({
       // Get the new attempts count after increment
       const newAttempts = get().attempts;
       
+      // Save the current game state to persist across navigation
+      const currentState = get();
+      persistGameState(currentState);
+      
       if (data.isCorrect) {
         // Update game state for correct guess
         const newStreak = updateStreak(true);
@@ -483,6 +527,9 @@ export const useGameStore = create<GameState>((set, get) => ({
         if (hardModeUnlocked) {
           localStorage.setItem('hardModeUnlocked', 'true');
         }
+        
+        // Save the final game state again after setting won status
+        persistGameState(get());
         
         return true;
       } else {

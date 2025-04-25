@@ -579,7 +579,7 @@ const GameCard: React.FC = () => {
 
           <Hints hints={revealedHints} />
           
-          {/* Previous Guesses Accordion */}
+          {/* Previous Guesses - Redesigned completely outside of accordion with clear highlighting */}
           {previousGuesses.length > 0 && (
             <div className="mt-3 mb-3">
               <div className="w-full border border-gray-200 rounded-lg">
@@ -590,7 +590,7 @@ const GameCard: React.FC = () => {
                   </div>
                 </div>
                 
-                {/* Content - Always visible */}
+                {/* Content - Always visible and not in accordion */}
                 <div className="px-4 pb-3 pt-2">
                   <div className="space-y-2 max-h-48 overflow-y-auto">
                     {previousGuesses.map((guess, index) => {
@@ -613,19 +613,25 @@ const GameCard: React.FC = () => {
                       return (
                         <div 
                           key={`${guess}-${index}`} 
-                          className="p-2 bg-gray-50 rounded text-sm flex justify-between items-center"
+                          className={`p-2 rounded text-sm flex justify-between items-center ${
+                            isPartialMatch 
+                              ? 'bg-green-50 border border-green-100' 
+                              : 'bg-gray-50'
+                          }`}
                         >
-                          <span className="font-medium">
-                            {isPartialMatch 
-                              ? (
-                                // When it's a partial match, check the feedback to determine what part to highlight
-                                partialMatchFeedback 
-                                  ? highlightPartialMatch(guess, partialMatchFeedback)
-                                  : guess
-                              ) 
-                              : guess}
-                          </span>
-                          <span className="text-xs text-gray-500">Guess #{index + 1}</span>
+                          {isPartialMatch ? (
+                            <div className="font-medium text-gray-700">
+                              {partialMatchFeedback 
+                                ? highlightPartialMatch(guess, partialMatchFeedback)
+                                : guess}
+                              <div className="text-xs text-green-600 mt-1">
+                                Contains a partial match
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="font-medium text-gray-700">{guess}</span>
+                          )}
+                          <span className="text-xs text-gray-500">#{index + 1}</span>
                         </div>
                       );
                     })}
