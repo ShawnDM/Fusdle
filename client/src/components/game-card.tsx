@@ -28,127 +28,74 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 
-// Helper function to highlight the matching part of the guess
+// Helper function to highlight the matching part of the guess - simplified for cross-browser compatibility
 const highlightPartialMatch = (guess: string, feedback: string): React.ReactNode => {
-  console.log('Highlighting partial match:', { guess, feedback });
+  console.log('Highlighting partial match (cross-browser version):', { guess, feedback });
   
   try {
-    // Try to extract the matching word from feedback
-    let matchingWord = '';
+    // Extract the matching word using a simple approach - just take anything in quotes
+    const matchPattern = /"([^"]+)"/i;
+    const matchResult = feedback.match(matchPattern);
     
-    // First attempt: look for word in quotes
-    let match = feedback.match(/contains "([^"]+)"/i);
-    if (match && match[1]) {
-      matchingWord = match[1].toLowerCase().trim();
-    } else {
-      // Second attempt: look for word after "contains"
-      match = feedback.match(/contains ([a-zA-Z0-9]+)/i);
-      if (match && match[1]) {
-        matchingWord = match[1].toLowerCase().trim();
-      } else {
-        // Third attempt: just find any word in quotes
-        match = feedback.match(/"([^"]+)"/i);
-        if (match && match[1]) {
-          matchingWord = match[1].toLowerCase().trim();
-        }
-      }
+    // If no match found in quotes, return unhighlighted text
+    if (!matchResult || !matchResult[1]) {
+      console.log('No matching word found in feedback');
+      return <span>{guess}</span>;
     }
     
-    if (!matchingWord) {
-      console.log('Could not extract matching word from feedback');
-      return guess;
-    }
+    const matchWord = matchResult[1].toLowerCase();
+    console.log('Found matching word:', matchWord);
     
-    console.log('Extracted matching word:', matchingWord);
+    // Split the guess into words for word-level matching
+    const words = guess.split(' ');
     
-    // Convert guess to lowercase for case-insensitive matching
-    const guessLower = guess.toLowerCase();
-    
-    // Split the guess into words
-    const words = guess.split(/\s+/);
-    
-    // First, check if any word in the guess matches the extracted word exactly
+    // First try: exact word match
     for (let i = 0; i < words.length; i++) {
-      if (words[i].toLowerCase() === matchingWord) {
-        // Found exact match, highlight this word
-        const parts = [];
+      if (words[i].toLowerCase() === matchWord) {
+        // Create parts before the matched word
+        const before = i > 0 ? words.slice(0, i).join(' ') + ' ' : '';
         
-        // Add words before the match
-        if (i > 0) {
-          parts.push(words.slice(0, i).join(' '), ' ');
-        }
+        // Create parts after the matched word
+        const after = i < words.length - 1 ? ' ' + words.slice(i + 1).join(' ') : '';
         
-        // Add the highlighted matching word
-        parts.push(
-          <span key="match" className="text-green-600 bg-green-100 font-semibold px-1 rounded">
-            {words[i]}
+        // Return with highlighted match
+        return (
+          <span>
+            {before}
+            <span className="text-green-600 bg-green-100 font-semibold px-1 rounded">
+              {words[i]}
+            </span>
+            {after}
           </span>
         );
-        
-        // Add words after the match
-        if (i < words.length - 1) {
-          parts.push(' ', words.slice(i + 1).join(' '));
-        }
-        
-        return <>{parts}</>;
       }
     }
     
-    // Next, check if the matching word is a substring of the guess
-    const indexInGuess = guessLower.indexOf(matchingWord);
-    if (indexInGuess >= 0) {
-      // Found substring match, highlight it
-      const beforeMatch = guess.substring(0, indexInGuess);
-      const matchPart = guess.substring(indexInGuess, indexInGuess + matchingWord.length);
-      const afterMatch = guess.substring(indexInGuess + matchingWord.length);
+    // Second try: substring match in full text
+    const guessLower = guess.toLowerCase();
+    const matchIndex = guessLower.indexOf(matchWord);
+    
+    if (matchIndex >= 0) {
+      const before = guess.substring(0, matchIndex);
+      const match = guess.substring(matchIndex, matchIndex + matchWord.length);
+      const after = guess.substring(matchIndex + matchWord.length);
       
       return (
-        <>
-          {beforeMatch}
+        <span>
+          {before}
           <span className="text-green-600 bg-green-100 font-semibold px-1 rounded">
-            {matchPart}
+            {match}
           </span>
-          {afterMatch}
-        </>
+          {after}
+        </span>
       );
     }
     
-    // If no exact match, check if any word contains or is contained by the matching word
-    for (let i = 0; i < words.length; i++) {
-      const wordLower = words[i].toLowerCase();
-      
-      if (wordLower.includes(matchingWord) || matchingWord.includes(wordLower)) {
-        // Found partial match, highlight this word
-        const parts = [];
-        
-        // Add words before the match
-        if (i > 0) {
-          parts.push(words.slice(0, i).join(' '), ' ');
-        }
-        
-        // Add the highlighted matching word
-        parts.push(
-          <span key="match" className="text-green-600 bg-green-100 font-semibold px-1 rounded">
-            {words[i]}
-          </span>
-        );
-        
-        // Add words after the match
-        if (i < words.length - 1) {
-          parts.push(' ', words.slice(i + 1).join(' '));
-        }
-        
-        return <>{parts}</>;
-      }
-    }
-    
-    // If all else fails, just return the guess without highlighting
-    console.log('No match found, returning original guess');
-    return guess;
-    
+    // Fallback: Just show the original guess without highlighting
+    return <span>{guess}</span>;
   } catch (error) {
     console.error('Error in highlightPartialMatch:', error);
-    return guess;
+    return <span>{guess}</span>;
   }
 };
 
