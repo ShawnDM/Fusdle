@@ -29,11 +29,58 @@ import {
 } from "@/components/ui/dialog";
 
 // Helper function to highlight the matching part of the guess - enhanced for production compatibility
-const highlightPartialMatch = (guess: string, feedback: string): React.ReactNode => {
-  console.log('Highlighting partial match (enhanced version):', { guess, feedback });
+const highlightPartialMatch = (guess: string, feedback: string, matchedWord?: string | null): React.ReactNode => {
+  console.log('Highlighting partial match (enhanced version):', { guess, feedback, matchedWord });
   
   try {
-    // First attempt: Try to extract any word in quotes (which is the ideal case)
+    // PRIORITY 1: Use server-provided matched word if available
+    if (matchedWord) {
+      const matchWord = matchedWord.toLowerCase();
+      
+      // Split the guess into words for word-level matching
+      const words = guess.split(' ');
+      
+      // Look for an exact word match first
+      for (let i = 0; i < words.length; i++) {
+        if (words[i].toLowerCase() === matchWord) {
+          // Create parts with highlighted match
+          const before = i > 0 ? words.slice(0, i).join(' ') + ' ' : '';
+          const after = i < words.length - 1 ? ' ' + words.slice(i + 1).join(' ') : '';
+          
+          return (
+            <span>
+              {before}
+              <span className="text-green-600 bg-green-100 font-semibold px-1 rounded">
+                {words[i]}
+              </span>
+              {after}
+            </span>
+          );
+        }
+      }
+      
+      // Try substring match if word match fails
+      const guessLower = guess.toLowerCase();
+      const matchIndex = guessLower.indexOf(matchWord);
+      
+      if (matchIndex >= 0) {
+        const before = guess.substring(0, matchIndex);
+        const match = guess.substring(matchIndex, matchIndex + matchWord.length);
+        const after = guess.substring(matchIndex + matchWord.length);
+        
+        return (
+          <span>
+            {before}
+            <span className="text-green-600 bg-green-100 font-semibold px-1 rounded">
+              {match}
+            </span>
+            {after}
+          </span>
+        );
+      }
+    }
+    
+    // PRIORITY 2: Extract word from quotes in feedback
     const quotedPattern = /"([^"]+)"/i;
     const quotedMatch = feedback.match(quotedPattern);
     
@@ -84,16 +131,18 @@ const highlightPartialMatch = (guess: string, feedback: string): React.ReactNode
       }
     }
     
-    // If no quotes or no match found in quotes, try to find the best match from the guess
-    // This handles the production case where the feedback may not have quotes
+    // FALLBACK: Try to intelligently guess which word matched
+    // This handles the production case where the server might not provide the matchedWord
     const words = guess.split(' ');
     
-    // Try each word in the guess to see if it could be a partial match
-    for (let i = 0; i < words.length; i++) {
-      const word = words[i].toLowerCase();
+    // Sort words by length (prioritize longer words as they're more likely to be significant)
+    const significantWords = [...words]
+      .filter(word => word.length >= 3)
+      .sort((a, b) => b.length - a.length);
       
-      // Skip very short words (less than 3 chars) as they're likely not significant matches
-      if (word.length < 3) continue;
+    if (significantWords.length > 0) {
+      const bestGuessWord = significantWords[0];
+      const i = words.indexOf(bestGuessWord);
       
       // Highlight this word as our best guess for what matched
       const before = i > 0 ? words.slice(0, i).join(' ') + ' ' : '';
@@ -142,6 +191,7 @@ const GameCard: React.FC = () => {
     hardModeUnlocked,
     toggleDifficultyMode,
     partialMatchFeedback,
+    matchedWord,
     showNormalModeTutorial,
     showHardModeTutorial,
     dismissTutorial
@@ -753,7 +803,7 @@ const GameCard: React.FC = () => {
                           {isPartialMatch ? (
                             <div className="font-medium text-gray-700">
                               {shouldHighlight
-                                ? highlightPartialMatch(guess, partialMatchFeedback!)
+                                ? highlightPartialMatch(guess, partialMatchFeedback!, matchedWord)
                                 : guess}
                               <div className="text-xs text-green-600 mt-1">
                                 Contains a partial match

@@ -286,6 +286,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   hasCompleted: false,
   hasGuessedOnce: false, // Track if user has made at least one guess
   partialMatchFeedback: null, // Initialize partial match feedback
+  matchedWord: null, // Initialize matched word for highlighting partial matches
   
   // Tutorial states - get from localStorage or show by default if not seen
   // Also check for explicit show flags that can be set to force tutorial display
