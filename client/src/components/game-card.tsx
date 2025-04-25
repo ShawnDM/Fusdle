@@ -787,9 +787,32 @@ const GameCard: React.FC = () => {
                       // Check if this guess is a partial match - use original index
                       const isPartialMatch = partialMatches.includes(originalIndex);
                       
-                      // Any partial match should show the highlighting if feedback is available
-                      // This is more compatible with how the deployed version processes matches
-                      const shouldHighlight = isPartialMatch && partialMatchFeedback !== null;
+                      // Try to get the saved matched word for this specific guess
+                      let savedMatchedWord: string | null = null;
+                      if (isPartialMatch) {
+                        try {
+                          const matchedWordsKey = `fusdle_matched_words_${puzzle?.id}_${difficultyMode}`;
+                          const storedMatchedWords = localStorage.getItem(matchedWordsKey);
+                          if (storedMatchedWords) {
+                            const matchedWords = JSON.parse(storedMatchedWords);
+                            // Use string key for safer access since localStorage saves as strings
+                            if (matchedWords && matchedWords[originalIndex.toString()]) {
+                              savedMatchedWord = matchedWords[originalIndex.toString()];
+                              console.log(`Found saved matched word for guess ${originalIndex}: "${savedMatchedWord}"`);
+                            }
+                          }
+                        } catch (e) {
+                          console.error('Error retrieving matched word:', e);
+                        }
+                      }
+                      
+                      // Any partial match should show the highlighting if feedback is available or we have a saved matched word
+                      const shouldHighlight = isPartialMatch && (partialMatchFeedback !== null || savedMatchedWord !== null);
+                      
+                      // For the most recent guess, use the current matchedWord from state
+                      // For older guesses, use their saved matched word from localStorage
+                      const effectiveMatchedWord = 
+                        reversedIndex === 0 ? matchedWord : savedMatchedWord;
                       
                       return (
                         <div 
@@ -803,7 +826,11 @@ const GameCard: React.FC = () => {
                           {isPartialMatch ? (
                             <div className="font-medium text-gray-700">
                               {shouldHighlight
-                                ? highlightPartialMatch(guess, partialMatchFeedback!, matchedWord)
+                                ? highlightPartialMatch(
+                                    guess, 
+                                    partialMatchFeedback || "You're on the right track!", 
+                                    effectiveMatchedWord
+                                  )
                                 : guess}
                               <div className="text-xs text-green-600 mt-1">
                                 Contains a partial match

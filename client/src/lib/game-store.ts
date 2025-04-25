@@ -529,13 +529,13 @@ export const useGameStore = create<GameState>((set, get) => ({
             // Also store the matched word for this attempt, which helps with highlighting
             if (data.matchedWord) {
               const matchedWordsKey = `fusdle_matched_words_${puzzle.id}_${difficultyMode}`;
-              let matchedWords = {};
+              let matchedWords: Record<string, string> = {};
               try {
                 const storedMatchedWords = localStorage.getItem(matchedWordsKey);
                 if (storedMatchedWords) {
                   matchedWords = JSON.parse(storedMatchedWords);
                 }
-                matchedWords[attempts] = data.matchedWord;
+                matchedWords[attempts.toString()] = data.matchedWord;
                 localStorage.setItem(matchedWordsKey, JSON.stringify(matchedWords));
                 console.log(`Saved matched word "${data.matchedWord}" for attempt ${attempts}`);
               } catch (e) {
@@ -728,7 +728,8 @@ export const useGameStore = create<GameState>((set, get) => ({
       gameStatus, 
       hasCompleted, 
       hasGuessedOnce,
-      partialMatchFeedback
+      partialMatchFeedback,
+      matchedWord
     } = get();
     
     // Save current state to the cache
