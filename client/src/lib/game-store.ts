@@ -748,7 +748,8 @@ export const useGameStore = create<GameState>((set, get) => ({
           gameStatus,
           hasCompleted,
           hasGuessedOnce,
-          partialMatchFeedback
+          partialMatchFeedback,
+          matchedWord
         }
       }
     }));
@@ -777,6 +778,7 @@ export const useGameStore = create<GameState>((set, get) => ({
           hasCompleted: cachedState.hasCompleted,
           hasGuessedOnce: cachedState.hasGuessedOnce,
           partialMatchFeedback: cachedState.partialMatchFeedback,
+          matchedWord: cachedState.matchedWord || null,
           loading: false,
           error: null
         });
@@ -854,6 +856,7 @@ export const useGameStore = create<GameState>((set, get) => ({
             hasGuessedOnce: false,
             hasCompleted: false,
             partialMatchFeedback: null,
+            matchedWord: null,
             currentGuess: ''
           });
           
@@ -1035,6 +1038,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         previousGuesses: [],
         currentGuess: '',
         partialMatchFeedback: null,
+        matchedWord: null,
         hasGuessedOnce: false,
         showNormalModeTutorial: true,
         showHardModeTutorial: true,
@@ -1049,6 +1053,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         previousGuesses: [],
         currentGuess: '',
         partialMatchFeedback: null,
+        matchedWord: null,
         hasGuessedOnce: false,
         error: null
       });
@@ -1092,6 +1097,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         currentGuess: '',
         hasCompleted: false,
         partialMatchFeedback: null,
+        matchedWord: null,
         hasGuessedOnce: false,
         error: null
       });
@@ -1204,6 +1210,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         currentGuess: '',
         hasCompleted: false,
         partialMatchFeedback: null,
+        matchedWord: null,
         hasGuessedOnce: false,
         // Update difficulty mode based on puzzle difficulty
         difficultyMode: randomPuzzle.difficulty as 'normal' | 'hard',
