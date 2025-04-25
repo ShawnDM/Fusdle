@@ -30,114 +30,126 @@ import {
 
 // Helper function to highlight the matching part of the guess
 const highlightPartialMatch = (guess: string, feedback: string): React.ReactNode => {
-  // Parse feedback to extract the matching word
-  const matchRegExp = /contains "([^"]+)"/i;
-  const matches = feedback.match(matchRegExp);
+  console.log('Highlighting partial match:', { guess, feedback });
   
-  if (!matches || matches.length < 2) {
-    return guess; // No match found in feedback
-  }
-  
-  const matchWord = matches[1].toLowerCase().trim();
-  const guessLower = guess.toLowerCase();
-  
-  // Handle multi-word guesses - Split the guess into words
-  const guessWords = guess.split(/\s+/);
-  
-  // Check if any of the words in the guess match the target word exactly
-  for (let i = 0; i < guessWords.length; i++) {
-    const word = guessWords[i];
+  try {
+    // Try to extract the matching word from feedback
+    let matchingWord = '';
     
-    if (word.toLowerCase() === matchWord) {
-      // We found an exact word match! Recreate the guess with this word highlighted
+    // First attempt: look for word in quotes
+    let match = feedback.match(/contains "([^"]+)"/i);
+    if (match && match[1]) {
+      matchingWord = match[1].toLowerCase().trim();
+    } else {
+      // Second attempt: look for word after "contains"
+      match = feedback.match(/contains ([a-zA-Z0-9]+)/i);
+      if (match && match[1]) {
+        matchingWord = match[1].toLowerCase().trim();
+      } else {
+        // Third attempt: just find any word in quotes
+        match = feedback.match(/"([^"]+)"/i);
+        if (match && match[1]) {
+          matchingWord = match[1].toLowerCase().trim();
+        }
+      }
+    }
+    
+    if (!matchingWord) {
+      console.log('Could not extract matching word from feedback');
+      return guess;
+    }
+    
+    console.log('Extracted matching word:', matchingWord);
+    
+    // Convert guess to lowercase for case-insensitive matching
+    const guessLower = guess.toLowerCase();
+    
+    // Split the guess into words
+    const words = guess.split(/\s+/);
+    
+    // First, check if any word in the guess matches the extracted word exactly
+    for (let i = 0; i < words.length; i++) {
+      if (words[i].toLowerCase() === matchingWord) {
+        // Found exact match, highlight this word
+        const parts = [];
+        
+        // Add words before the match
+        if (i > 0) {
+          parts.push(words.slice(0, i).join(' '), ' ');
+        }
+        
+        // Add the highlighted matching word
+        parts.push(
+          <span key="match" className="text-green-600 bg-green-100 font-semibold px-1 rounded">
+            {words[i]}
+          </span>
+        );
+        
+        // Add words after the match
+        if (i < words.length - 1) {
+          parts.push(' ', words.slice(i + 1).join(' '));
+        }
+        
+        return <>{parts}</>;
+      }
+    }
+    
+    // Next, check if the matching word is a substring of the guess
+    const indexInGuess = guessLower.indexOf(matchingWord);
+    if (indexInGuess >= 0) {
+      // Found substring match, highlight it
+      const beforeMatch = guess.substring(0, indexInGuess);
+      const matchPart = guess.substring(indexInGuess, indexInGuess + matchingWord.length);
+      const afterMatch = guess.substring(indexInGuess + matchingWord.length);
+      
       return (
         <>
-          {guessWords.slice(0, i).join(' ')}
-          {i > 0 ? ' ' : ''}
+          {beforeMatch}
           <span className="text-green-600 bg-green-100 font-semibold px-1 rounded">
-            {word}
+            {matchPart}
           </span>
-          {i < guessWords.length - 1 ? ' ' : ''}
-          {guessWords.slice(i + 1).join(' ')}
+          {afterMatch}
         </>
       );
     }
-  }
-  
-  // If no exact word match, try substring matching within whole guess
-  let startIndex = guessLower.indexOf(matchWord);
-  
-  if (startIndex === -1) {
-    // If we can't find exact match, check if any word in the guess is a partial match
-    for (let i = 0; i < guessWords.length; i++) {
-      const word = guessWords[i].toLowerCase();
+    
+    // If no exact match, check if any word contains or is contained by the matching word
+    for (let i = 0; i < words.length; i++) {
+      const wordLower = words[i].toLowerCase();
       
-      // Check if this word contains part of the match
-      if (word.includes(matchWord) || matchWord.includes(word)) {
-        // This word contains part of the match, highlight it
-        return (
-          <>
-            {guessWords.slice(0, i).join(' ')}
-            {i > 0 ? ' ' : ''}
-            <span className="text-green-600 bg-green-100 font-semibold px-1 rounded">
-              {guessWords[i]}
-            </span>
-            {i < guessWords.length - 1 ? ' ' : ''}
-            {guessWords.slice(i + 1).join(' ')}
-          </>
+      if (wordLower.includes(matchingWord) || matchingWord.includes(wordLower)) {
+        // Found partial match, highlight this word
+        const parts = [];
+        
+        // Add words before the match
+        if (i > 0) {
+          parts.push(words.slice(0, i).join(' '), ' ');
+        }
+        
+        // Add the highlighted matching word
+        parts.push(
+          <span key="match" className="text-green-600 bg-green-100 font-semibold px-1 rounded">
+            {words[i]}
+          </span>
         );
+        
+        // Add words after the match
+        if (i < words.length - 1) {
+          parts.push(' ', words.slice(i + 1).join(' '));
+        }
+        
+        return <>{parts}</>;
       }
     }
     
-    // If still no match, try finding partial match with decreasing length
-    for (let i = 0; i < matchWord.length - 2; i++) {
-      const partialWord = matchWord.substring(0, matchWord.length - i);
-      if (partialWord.length < 3) break; // Don't look for matches that are too short
-      
-      startIndex = guessLower.indexOf(partialWord);
-      if (startIndex !== -1) {
-        // If we found a partial match, adjust the match word
-        console.log(`Found partial match "${partialWord}" instead of "${matchWord}"`);
-        const endIndex = startIndex + partialWord.length;
-        
-        // Split the guess into three parts: before match, match, after match
-        const beforeMatch = guess.substring(0, startIndex);
-        const matchPart = guess.substring(startIndex, endIndex);
-        const afterMatch = guess.substring(endIndex);
-        
-        return (
-          <>
-            {beforeMatch}
-            <span className="text-green-600 bg-green-100 font-semibold px-1 rounded">
-              {matchPart}
-            </span>
-            {afterMatch}
-          </>
-        );
-      }
-    }
+    // If all else fails, just return the guess without highlighting
+    console.log('No match found, returning original guess');
+    return guess;
     
-    // If we still can't find a match, just return the guess
+  } catch (error) {
+    console.error('Error in highlightPartialMatch:', error);
     return guess;
   }
-  
-  const endIndex = startIndex + matchWord.length;
-  
-  // Split the guess into three parts: before match, match, after match
-  const beforeMatch = guess.substring(0, startIndex);
-  const matchPart = guess.substring(startIndex, endIndex);
-  const afterMatch = guess.substring(endIndex);
-  
-  // Return the highlighted guess with JSX
-  return (
-    <>
-      {beforeMatch}
-      <span className="text-green-600 bg-green-100 font-semibold px-1 rounded">
-        {matchPart}
-      </span>
-      {afterMatch}
-    </>
-  );
 };
 
 const GameCard: React.FC = () => {
@@ -758,10 +770,9 @@ const GameCard: React.FC = () => {
                       // Check if this guess is a partial match - use original index
                       const isPartialMatch = partialMatches.includes(originalIndex);
                       
-                      // Only the most recent partial match should show the highlighting
-                      const shouldHighlight = isPartialMatch && partialMatchFeedback && 
-                        partialMatches.length > 0 && 
-                        originalIndex === partialMatches[partialMatches.length - 1];
+                      // Any partial match should show the highlighting if feedback is available
+                      // This is more compatible with how the deployed version processes matches
+                      const shouldHighlight = isPartialMatch && partialMatchFeedback !== null;
                       
                       return (
                         <div 
