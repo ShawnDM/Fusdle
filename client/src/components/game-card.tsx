@@ -184,7 +184,7 @@ const GameCard: React.FC = () => {
   
   // Show fusion popup automatically when a fusion puzzle is first loaded
   useEffect(() => {
-    if (puzzle?.isFusionTwist) {
+    if (puzzle?.isFusionTwist === 1) {
       // Check if we've shown the popup for this specific puzzle before
       const fusionPopupShownKey = `fusdle_fusion_popup_shown_${puzzle.id}`;
       const hasShownPopup = localStorage.getItem(fusionPopupShownKey);
@@ -559,7 +559,7 @@ const GameCard: React.FC = () => {
           </AnimatePresence>
           
           {/* Add fusion twist badge */}
-          {puzzle.isFusionTwist && (
+          {puzzle.isFusionTwist === 1 && (
             <motion.div
               initial={{ opacity: 0, scale: 0.9, x: -10 }}
               animate={{ opacity: 1, scale: 1, x: 0 }}
@@ -639,84 +639,86 @@ const GameCard: React.FC = () => {
 
       {gameStatus === 'playing' && !hasCompleted ? (
         <>
-          <div className="flex justify-between items-center mb-4">
-            <div className="text-sm text-gray-600">
-              <span>{attempts}</span> {attempts === 1 ? 'guess' : 'guesses'} made
+          {/* Move attempts counter to its own section above the buttons */}
+          <div className="flex justify-center items-center mb-3">
+            <div className="text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
+              <span className="font-medium">{attempts}</span> {attempts === 1 ? 'guess' : 'guesses'} made
             </div>
-            
-            <div className="flex space-x-2">
-              {/* Give Up button - only shows after making at least one guess */}
-              {hasGuessedOnce && (
-                <Button 
-                  variant="destructive" 
-                  size="sm"
-                  onClick={() => {
-                    confirmAlert({
-                      title: 'Are you sure?',
-                      message: 'Giving up will end the game and reveal the answer. Your streak will be lost.',
-                      buttons: [
-                        {
-                          label: 'No, keep trying',
-                          onClick: () => {}
-                        },
-                        {
-                          label: 'Yes, give up',
-                          onClick: () => giveUp()
-                        }
-                      ]
-                    });
-                  }}
-                  className="text-xs flex items-center gap-1"
-                >
-                  <span className="text-xs">⚠️</span> Give Up
-                </Button>
-              )}
-              
-              {/* Hint button - disabled if no hints remaining or not enough guesses */}
-              {attempts > 0 && (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={handleRevealHint}
-                  disabled={!canUseHint}
-                  className="text-xs flex items-center gap-1"
-                  title={!canUseHint ? 
-                    (hintsRemaining <= 0 ? 
-                      "No more hints available" : 
-                      "Make another guess to unlock a hint") : 
-                    "Reveal a hint"
-                  }
-                >
-                  <span className="text-xs">💡</span> 
-                  {difficultyMode === 'hard' ? 'Request Hint' : 'Get Hint'}
-                  <span className="ml-1 opacity-75">({hintsRemaining})</span>
-                </Button>
-              )}
-              
-              {/* Help button to show tutorial again with smoother animation */}
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+          </div>
+          
+          {/* Action buttons row */}
+          <div className="flex justify-center items-center mb-4 gap-2">
+            {/* Give Up button - only shows after making at least one guess */}
+            {hasGuessedOnce && (
+              <Button 
+                variant="destructive" 
+                size="sm"
+                onClick={() => {
+                  confirmAlert({
+                    title: 'Are you sure?',
+                    message: 'Giving up will end the game and reveal the answer. Your streak will be lost.',
+                    buttons: [
+                      {
+                        label: 'No, keep trying',
+                        onClick: () => {}
+                      },
+                      {
+                        label: 'Yes, give up',
+                        onClick: () => giveUp()
+                      }
+                    ]
+                  });
+                }}
+                className="text-xs flex items-center gap-1"
               >
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    // For the normal mode, just manually set the tutorial flag
-                    if (difficultyMode === 'normal') {
-                      useGameStore.setState({ showNormalModeTutorial: true });
-                    } else {
-                      useGameStore.setState({ showHardModeTutorial: true });
-                    }
-                  }}
-                  className="text-xs flex items-center gap-1 transition-all duration-200"
-                  title="Show tutorial again"
-                >
-                  <HelpCircle className="h-3 w-3" />
-                </Button>
-              </motion.div>
-            </div>
+                <span className="text-xs">⚠️</span> Give Up
+              </Button>
+            )}
+            
+            {/* Hint button - disabled if no hints remaining or not enough guesses */}
+            {attempts > 0 && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleRevealHint}
+                disabled={!canUseHint}
+                className="text-xs flex items-center gap-1"
+                title={!canUseHint ? 
+                  (hintsRemaining <= 0 ? 
+                    "No more hints available" : 
+                    "Make another guess to unlock a hint") : 
+                  "Reveal a hint"
+                }
+              >
+                <span className="text-xs">💡</span> 
+                {difficultyMode === 'hard' ? 'Request Hint' : 'Get Hint'}
+                <span className="ml-1 opacity-75">({hintsRemaining})</span>
+              </Button>
+            )}
+            
+            {/* Help button to show tutorial again with smoother animation */}
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
+            >
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  // For the normal mode, just manually set the tutorial flag
+                  if (difficultyMode === 'normal') {
+                    useGameStore.setState({ showNormalModeTutorial: true });
+                  } else {
+                    useGameStore.setState({ showHardModeTutorial: true });
+                  }
+                }}
+                className="text-xs flex items-center gap-1 transition-all duration-200"
+                title="Show tutorial again"
+              >
+                <HelpCircle className="h-3 w-3" />
+              </Button>
+            </motion.div>
           </div>
 
           <Hints hints={revealedHints} />
