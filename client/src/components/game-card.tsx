@@ -19,6 +19,44 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
+// Helper function to highlight the matching part of the guess
+const highlightPartialMatch = (guess: string, feedback: string): React.ReactNode => {
+  // Parse feedback to extract the matching word
+  const matchRegExp = /contains "([^"]+)"/i;
+  const matches = feedback.match(matchRegExp);
+  
+  if (!matches || matches.length < 2) {
+    return guess; // No match found in feedback
+  }
+  
+  const matchWord = matches[1].toLowerCase();
+  const guessLower = guess.toLowerCase();
+  
+  // Try to find the matching word boundaries
+  let startIndex = guessLower.indexOf(matchWord);
+  
+  if (startIndex === -1) {
+    // If we can't find exact match, just return the guess
+    return guess;
+  }
+  
+  const endIndex = startIndex + matchWord.length;
+  
+  // Split the guess into three parts: before match, match, after match
+  const beforeMatch = guess.substring(0, startIndex);
+  const matchPart = guess.substring(startIndex, endIndex);
+  const afterMatch = guess.substring(endIndex);
+  
+  // Return the highlighted guess with JSX
+  return (
+    <>
+      {beforeMatch}
+      <span className="text-green-600 font-semibold">{matchPart}</span>
+      {afterMatch}
+    </>
+  );
+};
+
 const GameCard: React.FC = () => {
   const {
     puzzle,
@@ -174,35 +212,16 @@ const GameCard: React.FC = () => {
     }
   };
 
-  // Function to check for new puzzles with simplified logic and better user feedback
+  // Function to check for new puzzles with simplified logic (no popup)
   const checkForNewPuzzle = async () => {
     if (isRefreshing) return;
     
     setIsRefreshing(true);
     try {
-      // Call the global checkForNewPuzzle function we added to window
-      const refreshResult = await (window as any).checkForNewPuzzle();
-      
-      if (refreshResult) {
-        toast({
-          title: "New puzzle loaded!",
-          description: "You're now playing today's new puzzle.",
-          variant: "default"
-        });
-      } else {
-        toast({
-          title: "You're up to date",
-          description: "You already have the latest puzzle for today.",
-          variant: "default"
-        });
-      }
+      // Call the global checkForNewPuzzle function without any popup notifications
+      await (window as any).checkForNewPuzzle();
     } catch (error) {
       console.error('Error checking for new puzzles:', error);
-      toast({
-        title: "Refresh completed",
-        description: "The check was completed with the current day's puzzle.",
-        variant: "default"
-      });
     } finally {
       setIsRefreshing(false);
     }
@@ -593,19 +612,17 @@ const GameCard: React.FC = () => {
                         return (
                           <div 
                             key={`${guess}-${index}`} 
-                            className={`p-2 rounded text-sm flex justify-between items-center ${
-                              isPartialMatch 
-                                ? 'bg-green-50 border border-green-200' 
-                                : 'bg-gray-50'
-                            }`}
+                            className="p-2 bg-gray-50 rounded text-sm flex justify-between items-center"
                           >
-                            <span className={`font-medium ${isPartialMatch ? 'text-green-700' : ''}`}>
-                              {guess}
-                              {isPartialMatch && (
-                                <span className="ml-2 text-xs inline-flex items-center text-green-600">
-                                  (partial match)
-                                </span>
-                              )}
+                            <span className="font-medium">
+                              {isPartialMatch 
+                                ? (
+                                  // When it's a partial match, check the feedback to determine what part to highlight
+                                  partialMatchFeedback 
+                                    ? highlightPartialMatch(guess, partialMatchFeedback)
+                                    : guess
+                                ) 
+                                : guess}
                             </span>
                             <span className="text-xs text-gray-500">Guess #{index + 1}</span>
                           </div>
