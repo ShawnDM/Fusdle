@@ -182,6 +182,24 @@ const GameCard: React.FC = () => {
     setShowFusionDialog(true);
   };
   
+  // Show fusion popup automatically when a fusion puzzle is first loaded
+  useEffect(() => {
+    if (puzzle?.isFusionTwist) {
+      // Check if we've shown the popup for this specific puzzle before
+      const fusionPopupShownKey = `fusdle_fusion_popup_shown_${puzzle.id}`;
+      const hasShownPopup = localStorage.getItem(fusionPopupShownKey);
+      
+      if (!hasShownPopup) {
+        // Show popup after a short delay to ensure UI is ready
+        setTimeout(() => {
+          showFusionPopup(puzzle.twistType);
+          // Mark this fusion popup as shown
+          localStorage.setItem(fusionPopupShownKey, 'true');
+        }, 600);
+      }
+    }
+  }, [puzzle?.id, puzzle?.isFusionTwist]);
+  
   // Check if the puzzle has already been completed when the component loads
   useEffect(() => {
     if (puzzle) {
@@ -552,16 +570,22 @@ const GameCard: React.FC = () => {
                 damping: 25
               }}
               onClick={() => showFusionPopup(puzzle.twistType)}
-              className="cursor-pointer"
+              className="cursor-pointer relative group"
+              title="Click to learn about Fusion Twist puzzles"
             >
               <Badge 
                 variant="outline"
-                className="text-xs py-1 pl-1.5 pr-2 flex items-center gap-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white border-none"
+                className="text-xs py-1 pl-1.5 pr-2 flex items-center gap-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white border-none group-hover:shadow-lg group-hover:scale-105 transition-all"
               >
                 <span className="flex items-center">
                   <span className="animate-spin-slow">🌀</span> Fusion Twist!
                 </span>
               </Badge>
+              
+              {/* Tiny hint indicator that this is clickable */}
+              <span className="absolute -bottom-1 -right-1 bg-white text-[8px] rounded-full px-1 py-0 shadow-sm opacity-90 group-hover:opacity-100">
+                ℹ️
+              </span>
             </motion.div>
           )}
         </div>
