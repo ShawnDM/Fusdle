@@ -737,7 +737,11 @@ const GameCard: React.FC = () => {
                 {/* Content - Always visible and not in accordion */}
                 <div className="px-4 pb-3 pt-2">
                   <div className="space-y-2 max-h-48 overflow-y-auto">
-                    {previousGuesses.map((guess, index) => {
+                    {/* Reverse the array to show newest guesses first */}
+                    {[...previousGuesses].reverse().map((guess, reversedIndex) => {
+                      // Calculate the original index (for partial matches and display)
+                      const originalIndex = previousGuesses.length - reversedIndex - 1;
+                      
                       // Get partial matches data from localStorage
                       let partialMatches: number[] = [];
                       try {
@@ -751,12 +755,12 @@ const GameCard: React.FC = () => {
                         console.error('Error retrieving partial matches:', e);
                       }
                       
-                      // Check if this guess is a partial match
-                      const isPartialMatch = partialMatches.includes(index);
+                      // Check if this guess is a partial match - use original index
+                      const isPartialMatch = partialMatches.includes(originalIndex);
                       
                       return (
                         <div 
-                          key={`${guess}-${index}`} 
+                          key={`${guess}-${originalIndex}`} 
                           className={`p-2 rounded text-sm flex justify-between items-center ${
                             isPartialMatch 
                               ? 'bg-green-50 border border-green-100' 
@@ -775,7 +779,7 @@ const GameCard: React.FC = () => {
                           ) : (
                             <span className="font-medium text-gray-700">{guess}</span>
                           )}
-                          <span className="text-xs text-gray-500">#{index + 1}</span>
+                          <span className="text-xs text-gray-500">#{originalIndex + 1}</span>
                         </div>
                       );
                     })}
