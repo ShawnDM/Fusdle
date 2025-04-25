@@ -29,15 +29,58 @@ const highlightPartialMatch = (guess: string, feedback: string): React.ReactNode
     return guess; // No match found in feedback
   }
   
-  const matchWord = matches[1].toLowerCase();
+  const matchWord = matches[1].toLowerCase().trim();
   const guessLower = guess.toLowerCase();
   
-  // Try to find the matching word boundaries
+  // Handle multi-word guesses - Split the guess into words
+  const guessWords = guess.split(/\s+/);
+  
+  // Check if any of the words in the guess match the target word exactly
+  for (let i = 0; i < guessWords.length; i++) {
+    const word = guessWords[i];
+    
+    if (word.toLowerCase() === matchWord) {
+      // We found an exact word match! Recreate the guess with this word highlighted
+      return (
+        <>
+          {guessWords.slice(0, i).join(' ')}
+          {i > 0 ? ' ' : ''}
+          <span className="text-green-600 bg-green-100 font-semibold px-1 rounded">
+            {word}
+          </span>
+          {i < guessWords.length - 1 ? ' ' : ''}
+          {guessWords.slice(i + 1).join(' ')}
+        </>
+      );
+    }
+  }
+  
+  // If no exact word match, try substring matching within whole guess
   let startIndex = guessLower.indexOf(matchWord);
   
   if (startIndex === -1) {
-    // If we can't find exact match, try finding partial match
-    // This handles cases where the matching word might be pluralized or have different endings
+    // If we can't find exact match, check if any word in the guess is a partial match
+    for (let i = 0; i < guessWords.length; i++) {
+      const word = guessWords[i].toLowerCase();
+      
+      // Check if this word contains part of the match
+      if (word.includes(matchWord) || matchWord.includes(word)) {
+        // This word contains part of the match, highlight it
+        return (
+          <>
+            {guessWords.slice(0, i).join(' ')}
+            {i > 0 ? ' ' : ''}
+            <span className="text-green-600 bg-green-100 font-semibold px-1 rounded">
+              {guessWords[i]}
+            </span>
+            {i < guessWords.length - 1 ? ' ' : ''}
+            {guessWords.slice(i + 1).join(' ')}
+          </>
+        );
+      }
+    }
+    
+    // If still no match, try finding partial match with decreasing length
     for (let i = 0; i < matchWord.length - 2; i++) {
       const partialWord = matchWord.substring(0, matchWord.length - i);
       if (partialWord.length < 3) break; // Don't look for matches that are too short
