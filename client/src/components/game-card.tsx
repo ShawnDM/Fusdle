@@ -35,6 +35,7 @@ const highlightPartialMatch = (guess: string, feedback: string, matchedWord?: st
   try {
     // PRIORITY 1: Use server-provided matched word if available
     if (matchedWord) {
+      console.log(`Using matched word from server: "${matchedWord}"`);
       const matchWord = matchedWord.toLowerCase();
       
       // Split the guess into words for word-level matching
@@ -796,9 +797,12 @@ const GameCard: React.FC = () => {
                           if (storedMatchedWords) {
                             const matchedWords = JSON.parse(storedMatchedWords);
                             // Use string key for safer access since localStorage saves as strings
+                            console.log(`Looking for matched word for guess ${originalIndex} in:`, matchedWords);
                             if (matchedWords && matchedWords[originalIndex.toString()]) {
                               savedMatchedWord = matchedWords[originalIndex.toString()];
                               console.log(`Found saved matched word for guess ${originalIndex}: "${savedMatchedWord}"`);
+                            } else {
+                              console.log(`No saved matched word found for guess ${originalIndex}`);
                             }
                           }
                         } catch (e) {
