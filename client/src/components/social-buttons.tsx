@@ -10,7 +10,7 @@ const SocialButtons = () => {
         transition={{ duration: 0.6 }}
       >
         <motion.a 
-          href="https://x.com/shawndean_" 
+          href="https://x.com/playfusdle" 
           target="_blank" 
           rel="noopener noreferrer"
           className="bg-white/90 w-11 h-11 rounded-full flex items-center justify-center text-gray-800 hover:bg-[#1da1f2] hover:text-white transition-colors duration-300 shadow-sm"
