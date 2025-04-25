@@ -95,16 +95,20 @@ const Home: React.FC = () => {
           )}
         </div>
         
-        {/* Right side - Fusion twist indicator */}
-        <div className="flex items-center">
-          {hasFusionTwist && (
-            <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 rounded-full text-sm font-medium flex items-center space-x-1 animate-pulse">
-              <span>🌀</span>
-              <span>{puzzle?.twistType || 'Fusion Twist'} active today!</span>
-            </div>
-          )}
-        </div>
+        {/* Right side - Streak display (kept the same) */}
+        <div className="flex items-center"></div>
       </div>
+      
+      {/* Centered Fusion twist indicator - More prominent position */}
+      {hasFusionTwist && (
+        <div className="flex justify-center items-center mb-6">
+          <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-5 py-2.5 rounded-lg shadow-md text-center font-medium flex items-center gap-3 animate-pulse transform hover:scale-105 transition-transform cursor-default">
+            <span className="animate-spin-slow text-xl">🌀</span>
+            <span className="text-md font-bold">{puzzle?.twistType || 'Fusion Twist'} puzzle active today!</span>
+            <span className="animate-spin-slow text-xl">🌀</span>
+          </div>
+        </div>
+      )}
       
       {/* Difficulty mode tabs */}
       <Tabs 
