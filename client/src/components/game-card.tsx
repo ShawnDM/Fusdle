@@ -36,7 +36,9 @@ const highlightPartialMatch = (guess: string, feedback: string, matchedWord?: st
     // PRIORITY 1: Use server-provided matched word if available
     if (matchedWord) {
       console.log(`Using matched word from server: "${matchedWord}"`);
-      const matchWord = matchedWord.toLowerCase();
+      // Type safety - ensure matchedWord is actually a string
+      const matchWordRaw = matchedWord.toString();
+      const matchWord = matchWordRaw.toLowerCase();
       
       // Split the guess into words for word-level matching
       const words = guess.split(' ');
@@ -63,11 +65,13 @@ const highlightPartialMatch = (guess: string, feedback: string, matchedWord?: st
       // Try substring match if word match fails
       const guessLower = guess.toLowerCase();
       const matchIndex = guessLower.indexOf(matchWord);
+      console.log(`Substring match: searching for "${matchWord}" in "${guessLower}", found at index ${matchIndex}`);
       
       if (matchIndex >= 0) {
         const before = guess.substring(0, matchIndex);
         const match = guess.substring(matchIndex, matchIndex + matchWord.length);
         const after = guess.substring(matchIndex + matchWord.length);
+        console.log(`Highlighting: before="${before}", match="${match}", after="${after}"`);
         
         return (
           <span>
@@ -817,6 +821,8 @@ const GameCard: React.FC = () => {
                       // For older guesses, use their saved matched word from localStorage
                       const effectiveMatchedWord = 
                         reversedIndex === 0 ? matchedWord : savedMatchedWord;
+                      
+                      console.log(`Guess ${originalIndex}: Using matched word "${effectiveMatchedWord}" (reversedIndex=${reversedIndex}, matchedWord=${matchedWord}, savedMatchedWord=${savedMatchedWord})`);
                       
                       return (
                         <div 
