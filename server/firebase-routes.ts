@@ -137,24 +137,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check for partial word matches
       let partialMatchFeedback = null;
+      let matchedWord = null; // Explicit matched word for client highlighting
       
       // Split answer into words and check if any match
       const answerWords = puzzle.answer.toLowerCase().split(/\s+/);
       const guessWords = guess.toLowerCase().split(/\s+/);
       
-      // Step 1: Find exact word matches first (preferred)
-      const exactWordMatches = guessWords.filter(guessWord => 
-        answerWords.some(answerWord => answerWord === guessWord)
-      );
+      console.log('Checking for matches between:', { answer: puzzle.answer, guess });
       
-      // Step 2: If no exact matches, look for partial word matches (substring)
-      if (exactWordMatches.length > 0) {
-        // Include the matched word in the feedback with quotes for consistency
-        partialMatchFeedback = `You're on the right track! Your guess contains "${exactWordMatches[0]}".`;
-      } else {
-        // Look for partial matches (one word contains the other)
-        const partialMatches = [];
-        
+      // Step 1: Find exact word matches first (preferred)
+      for (const guessWord of guessWords) {
+        if (answerWords.includes(guessWord)) {
+          matchedWord = guessWord;
+          break;
+        }
+      }
+      
+      // If no exact matches found, try substring matches
+      if (!matchedWord) {
         for (const guessWord of guessWords) {
           // Skip very short words (2 chars or less) as they often give false positives
           if (guessWord.length < 3) continue;
@@ -162,23 +162,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
           for (const answerWord of answerWords) {
             // Check if the guess word is contained in the answer word, or vice versa
             if (answerWord.includes(guessWord) || guessWord.includes(answerWord)) {
-              partialMatches.push(guessWord);
+              matchedWord = guessWord;
               break;
             }
           }
+          if (matchedWord) break; // Exit once we find a match
         }
+      }
+      
+      // Generate appropriate feedback based on the match found
+      if (matchedWord) {
+        // Include the matched word in the feedback with quotes for consistency
+        partialMatchFeedback = `You're on the right track! Your guess contains "${matchedWord}".`;
+        console.log(`Found partial match: ${matchedWord}`);
+      } else {
+        // Only use generic feedback if we're very confident there's some match we couldn't identify
+        // This is safer than potentially giving false feedback
+        const guessText = guess.toLowerCase();
+        const answerText = puzzle.answer.toLowerCase();
         
-        if (partialMatches.length > 0) {
-          // Include the matched word in the feedback with quotes for consistency
-          partialMatchFeedback = `You're on the right track! Your guess contains "${partialMatches[0]}".`;
-        } else {
-          // Generic feedback (fallback) if we can't identify a specific match but still want feedback
+        // If there's some textual overlap, provide generic feedback
+        if (guessText.length > 3 && answerText.includes(guessText.substring(0, 4)) || 
+            guessText.includes(answerText.substring(0, 4))) {
           partialMatchFeedback = "You're on the right track! Part of your answer matches.";
         }
       }
       
-      // If incorrect, return the result with partial match feedback
-      return res.json({ isCorrect, partialMatchFeedback });
+      // If incorrect, return the result with partial match feedback and matched word
+      return res.json({ 
+        isCorrect, 
+        partialMatchFeedback,
+        matchedWord // Send the matched word to the client for better highlighting
+      });
     } catch (error) {
       console.error('Error processing guess:', error);
       res.status(500).json({ error: 'Failed to process guess' });

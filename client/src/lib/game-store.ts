@@ -125,6 +125,7 @@ interface GameState {
       hasCompleted: boolean;
       hasGuessedOnce: boolean;
       partialMatchFeedback: string | null;
+      matchedWord: string | null;
     } | null;
     hard: {
       attempts: number;
@@ -135,6 +136,7 @@ interface GameState {
       hasCompleted: boolean;
       hasGuessedOnce: boolean;
       partialMatchFeedback: string | null;
+      matchedWord: string | null;
     } | null;
   };
   loading: boolean;
@@ -147,6 +149,7 @@ interface GameState {
   currentGuess: string;
   hasCompleted: boolean;
   partialMatchFeedback: string | null; // Feedback for partial word matches
+  matchedWord: string | null; // The specific matched word from partial match
   hasGuessedOnce: boolean; // Track if user has made at least one guess
   // Tutorial visibility states
   showNormalModeTutorial: boolean;
@@ -490,7 +493,11 @@ export const useGameStore = create<GameState>((set, get) => ({
       
       // Update partial match feedback if it exists
       if (data.partialMatchFeedback) {
-        set({ partialMatchFeedback: data.partialMatchFeedback });
+        // Store both the feedback message and matched word if provided
+        set({ 
+          partialMatchFeedback: data.partialMatchFeedback,
+          matchedWord: data.matchedWord || null  // Store matched word from server
+        });
         
         // Save this attempt as having a partial match
         try {
@@ -518,6 +525,23 @@ export const useGameStore = create<GameState>((set, get) => ({
               localStorage.setItem(fusionKey, JSON.stringify(partialMatches));
             }
             
+            // Also store the matched word for this attempt, which helps with highlighting
+            if (data.matchedWord) {
+              const matchedWordsKey = `fusdle_matched_words_${puzzle.id}_${difficultyMode}`;
+              let matchedWords = {};
+              try {
+                const storedMatchedWords = localStorage.getItem(matchedWordsKey);
+                if (storedMatchedWords) {
+                  matchedWords = JSON.parse(storedMatchedWords);
+                }
+                matchedWords[attempts] = data.matchedWord;
+                localStorage.setItem(matchedWordsKey, JSON.stringify(matchedWords));
+                console.log(`Saved matched word "${data.matchedWord}" for attempt ${attempts}`);
+              } catch (e) {
+                console.error('Error storing matched word:', e);
+              }
+            }
+            
             console.log('Saved partial match for attempt:', attempts);
             console.log('Updated partial matches array:', partialMatches);
           } else {
@@ -527,7 +551,7 @@ export const useGameStore = create<GameState>((set, get) => ({
           console.error('Error saving partial match:', e);
         }
       } else {
-        set({ partialMatchFeedback: null });
+        set({ partialMatchFeedback: null, matchedWord: null });
       }
       
       // Increment attempts, set hasGuessedOnce to true, and add guess to previousGuesses
