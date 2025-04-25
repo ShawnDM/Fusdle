@@ -110,11 +110,26 @@ function App() {
   
   // Track page transitions
   useEffect(() => {
+    // Cache current game state before navigating away from home
+    const previousLocation = navigationState.lastPageVisited;
+    if (previousLocation === '/' && location !== '/') {
+      // We're navigating away from the home page, save the game state
+      console.log('Navigating away from home, caching game state');
+      useGameStore.getState().cacheCurrentGameState();
+    }
+    
     // Update last visited page in navigation state
     updateNavigationState({ lastPageVisited: location });
     
     // Preload related data based on current page
     if (location === '/') {
+      // If we're returning to home page, check if we need to restore cached state
+      if (previousLocation !== '/' && navigationState.initialPuzzleLoaded) {
+        console.log('Returning to home, restoring cached game state');
+        const currentMode = useGameStore.getState().difficultyMode;
+        useGameStore.getState().loadGameStateFromCache(currentMode);
+      }
+      
       // On the home page, preload archive data and other difficulty in the background
       if (!navigationState.archiveLoaded) {
         setTimeout(() => preloadArchiveData(), 2000); // Delay to not compete with initial puzzle load

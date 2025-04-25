@@ -582,56 +582,56 @@ const GameCard: React.FC = () => {
           {/* Previous Guesses Accordion */}
           {previousGuesses.length > 0 && (
             <div className="mt-3 mb-3">
-              <Accordion type="single" collapsible className="w-full">
-                <AccordionItem value="previous-guesses" className="border border-gray-200 rounded-lg">
-                  <AccordionTrigger className="px-4 py-2 hover:no-underline hover:bg-gray-50 rounded-t-lg">
-                    <div className="flex items-center gap-2 text-sm font-medium text-gray-600">
-                      <ChevronDown className="h-4 w-4" />
-                      <span>Previous Guesses ({previousGuesses.length})</span>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="px-4 pb-3 pt-1">
-                    <div className="space-y-2 max-h-48 overflow-y-auto">
-                      {previousGuesses.map((guess, index) => {
-                        // Get partial matches data from localStorage
-                        let partialMatches: number[] = [];
-                        try {
-                          const storageKey = `fusdle_partial_${puzzle?.id}_${difficultyMode}`;
-                          const storedPartialMatches = localStorage.getItem(storageKey);
-                          
-                          if (storedPartialMatches) {
-                            partialMatches = JSON.parse(storedPartialMatches);
-                          }
-                        } catch (e) {
-                          console.error('Error retrieving partial matches:', e);
+              <div className="w-full border border-gray-200 rounded-lg">
+                {/* Header */}
+                <div className="px-4 py-2 flex items-center justify-between bg-gray-50 rounded-t-lg">
+                  <div className="flex items-center gap-2 text-sm font-medium text-gray-600">
+                    <span>Previous Guesses ({previousGuesses.length})</span>
+                  </div>
+                </div>
+                
+                {/* Content - Always visible */}
+                <div className="px-4 pb-3 pt-2">
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {previousGuesses.map((guess, index) => {
+                      // Get partial matches data from localStorage
+                      let partialMatches: number[] = [];
+                      try {
+                        const storageKey = `fusdle_partial_${puzzle?.id}_${difficultyMode}`;
+                        const storedPartialMatches = localStorage.getItem(storageKey);
+                        
+                        if (storedPartialMatches) {
+                          partialMatches = JSON.parse(storedPartialMatches);
                         }
-                        
-                        // Check if this guess is a partial match
-                        const isPartialMatch = partialMatches.includes(index);
-                        
-                        return (
-                          <div 
-                            key={`${guess}-${index}`} 
-                            className="p-2 bg-gray-50 rounded text-sm flex justify-between items-center"
-                          >
-                            <span className="font-medium">
-                              {isPartialMatch 
-                                ? (
-                                  // When it's a partial match, check the feedback to determine what part to highlight
-                                  partialMatchFeedback 
-                                    ? highlightPartialMatch(guess, partialMatchFeedback)
-                                    : guess
-                                ) 
-                                : guess}
-                            </span>
-                            <span className="text-xs text-gray-500">Guess #{index + 1}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
+                      } catch (e) {
+                        console.error('Error retrieving partial matches:', e);
+                      }
+                      
+                      // Check if this guess is a partial match
+                      const isPartialMatch = partialMatches.includes(index);
+                      
+                      return (
+                        <div 
+                          key={`${guess}-${index}`} 
+                          className="p-2 bg-gray-50 rounded text-sm flex justify-between items-center"
+                        >
+                          <span className="font-medium">
+                            {isPartialMatch 
+                              ? (
+                                // When it's a partial match, check the feedback to determine what part to highlight
+                                partialMatchFeedback 
+                                  ? highlightPartialMatch(guess, partialMatchFeedback)
+                                  : guess
+                              ) 
+                              : guess}
+                          </span>
+                          <span className="text-xs text-gray-500">Guess #{index + 1}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
             </div>
           )}
           
