@@ -758,6 +758,11 @@ const GameCard: React.FC = () => {
                       // Check if this guess is a partial match - use original index
                       const isPartialMatch = partialMatches.includes(originalIndex);
                       
+                      // Only the most recent partial match should show the highlighting
+                      const shouldHighlight = isPartialMatch && partialMatchFeedback && 
+                        partialMatches.length > 0 && 
+                        originalIndex === partialMatches[partialMatches.length - 1];
+                      
                       return (
                         <div 
                           key={`${guess}-${originalIndex}`} 
@@ -769,8 +774,8 @@ const GameCard: React.FC = () => {
                         >
                           {isPartialMatch ? (
                             <div className="font-medium text-gray-700">
-                              {partialMatchFeedback 
-                                ? highlightPartialMatch(guess, partialMatchFeedback)
+                              {shouldHighlight
+                                ? highlightPartialMatch(guess, partialMatchFeedback!)
                                 : guess}
                               <div className="text-xs text-green-600 mt-1">
                                 Contains a partial match
