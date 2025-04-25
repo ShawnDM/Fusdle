@@ -28,58 +28,27 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 
-// Helper function to highlight the matching part of the guess - enhanced for all feedback message formats
+// Helper function to highlight the matching part of the guess - simplified for cross-browser compatibility
 const highlightPartialMatch = (guess: string, feedback: string): React.ReactNode => {
-  console.log('Highlighting partial match (enhanced version):', { guess, feedback });
+  console.log('Highlighting partial match (cross-browser version):', { guess, feedback });
   
   try {
-    // Check common words in the guess that might be the match
-    const guessLower = guess.toLowerCase();
-    const words = guess.split(' ');
-    let matchWord = '';
+    // Extract the matching word using a simple approach - just take anything in quotes
+    const matchPattern = /"([^"]+)"/i;
+    const matchResult = feedback.match(matchPattern);
     
-    // First attempt: try to extract from quotes if they exist
-    const quotesPattern = /"([^"]+)"/i;
-    const quotesMatch = feedback.match(quotesPattern);
-    
-    if (quotesMatch && quotesMatch[1]) {
-      matchWord = quotesMatch[1].toLowerCase();
-      console.log('Found quoted word:', matchWord);
-    } 
-    // Second attempt: look for a word from the guess that appears in the feedback
-    else {
-      for (const word of words) {
-        if (word.length > 2 && feedback.toLowerCase().includes(word.toLowerCase())) {
-          matchWord = word.toLowerCase();
-          console.log('Found matching word in feedback:', matchWord);
-          break;
-        }
-      }
-    }
-    
-    // Third attempt: just use the longest word from the guess as a fallback
-    if (!matchWord) {
-      // Find the longest word in the guess
-      let longestWord = '';
-      for (const word of words) {
-        if (word.length > longestWord.length) {
-          longestWord = word;
-        }
-      }
-      
-      if (longestWord.length > 2) {
-        matchWord = longestWord.toLowerCase();
-        console.log('Using longest word as fallback:', matchWord);
-      }
-    }
-    
-    // If still no word to highlight, return original
-    if (!matchWord) {
-      console.log('No word to highlight found');
+    // If no match found in quotes, return unhighlighted text
+    if (!matchResult || !matchResult[1]) {
+      console.log('No matching word found in feedback');
       return <span>{guess}</span>;
     }
     
-    // Try to highlight the matching word
+    const matchWord = matchResult[1].toLowerCase();
+    console.log('Found matching word:', matchWord);
+    
+    // Split the guess into words for word-level matching
+    const words = guess.split(' ');
+    
     // First try: exact word match
     for (let i = 0; i < words.length; i++) {
       if (words[i].toLowerCase() === matchWord) {
@@ -103,6 +72,7 @@ const highlightPartialMatch = (guess: string, feedback: string): React.ReactNode
     }
     
     // Second try: substring match in full text
+    const guessLower = guess.toLowerCase();
     const matchIndex = guessLower.indexOf(matchWord);
     
     if (matchIndex >= 0) {
@@ -767,9 +737,7 @@ const GameCard: React.FC = () => {
                                 ? highlightPartialMatch(guess, partialMatchFeedback!)
                                 : guess}
                               <div className="text-xs text-green-600 mt-1">
-                                {partialMatchFeedback?.includes('"') 
-                                  ? `Contains match: ${partialMatchFeedback.match(/"([^"]+)"/)?.[1] || 'part of word'}`
-                                  : 'Contains a partial match'}
+                                Contains a partial match
                               </div>
                             </div>
                           ) : (
@@ -790,15 +758,7 @@ const GameCard: React.FC = () => {
             <div className="mt-2 mb-4 p-3 bg-purple-50 rounded-lg border border-purple-200 text-purple-800">
               <div className="flex items-center">
                 <span className="mr-2">✨</span>
-                <p className="text-sm font-medium">
-                  {partialMatchFeedback.includes('"') ? (
-                    <>
-                      You're on the right track! Your guess contains <span className="font-bold underline">"{partialMatchFeedback.match(/"([^"]+)"/)?.[1] || 'a matched word'}"</span>.
-                    </>
-                  ) : (
-                    partialMatchFeedback
-                  )}
-                </p>
+                <p className="text-sm font-medium">{partialMatchFeedback}</p>
               </div>
             </div>
           )}
