@@ -231,21 +231,18 @@ const Archive: React.FC = () => {
           <TabsTrigger 
             value="normal" 
             className="flex items-center gap-1"
-            onClick={() => setActiveTab('normal')}
           >
             <Flame className="h-3.5 w-3.5" /> Normal
           </TabsTrigger>
           <TabsTrigger 
             value="hard" 
             className="flex items-center gap-1"
-            onClick={() => setActiveTab('hard')}
           >
             <Skull className="h-3.5 w-3.5" /> Hard
           </TabsTrigger>
           <TabsTrigger 
             value="fusion" 
             className="flex items-center gap-1"
-            onClick={() => setActiveTab('fusion')}
           >
             <Sparkles className="h-3.5 w-3.5" /> Fusion
           </TabsTrigger>

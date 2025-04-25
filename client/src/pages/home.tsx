@@ -106,16 +106,21 @@ const Home: React.FC = () => {
       </div>
       
       {/* Difficulty mode tabs */}
-      <Tabs defaultValue="normal" className="mb-6">
+      <Tabs 
+        defaultValue="normal" 
+        className="mb-6"
+        onValueChange={(value) => {
+          // When tab value changes, fetch the appropriate puzzle
+          if (value === 'normal') {
+            fetchPuzzleByDifficulty('normal');
+          } else if (value === 'hard' && hardModeUnlocked) {
+            fetchPuzzleByDifficulty('hard');
+          }
+        }}
+      >
         <TabsList className="grid w-full grid-cols-2 mb-4">
           <TabsTrigger 
             value="normal"
-            onClick={(e) => {
-              // Always fetch a fresh normal puzzle when this tab is clicked
-              fetchPuzzleByDifficulty('normal');
-              // Force the tab to update immediately on click rather than release
-              e.currentTarget.click();
-            }}
             className="flex items-center justify-center space-x-2"
           >
             <span>🔥</span>
@@ -124,14 +129,6 @@ const Home: React.FC = () => {
           <TabsTrigger 
             value="hard"
             disabled={!hardModeUnlocked}
-            onClick={(e) => {
-              // Always fetch a fresh hard puzzle when this tab is clicked and it's unlocked
-              if (hardModeUnlocked) {
-                fetchPuzzleByDifficulty('hard');
-                // Force the tab to update immediately on click rather than release
-                e.currentTarget.click();
-              }
-            }}
             className="flex items-center justify-center space-x-2"
           >
             <span>💀</span>
