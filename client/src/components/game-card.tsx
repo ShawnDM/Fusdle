@@ -40,21 +40,24 @@ const highlightPartialMatch = (guess: string, feedback: string, matchedWord?: st
       const matchWordRaw = matchedWord.toString().trim();
       const matchWord = matchWordRaw.toLowerCase();
       
+      // Normalize the guess - handle both single and multi-word guesses
+      const guessLower = guess.toLowerCase().trim();
+      
       // Split the guess into words for word-level matching
-      const words = guess.split(' ');
+      const wordsFirst = guess.split(' ');
       
       // Look for an exact word match first
-      for (let i = 0; i < words.length; i++) {
-        if (words[i].toLowerCase() === matchWord) {
+      for (let i = 0; i < wordsFirst.length; i++) {
+        if (wordsFirst[i].toLowerCase() === matchWord) {
           // Create parts with highlighted match
-          const before = i > 0 ? words.slice(0, i).join(' ') + ' ' : '';
-          const after = i < words.length - 1 ? ' ' + words.slice(i + 1).join(' ') : '';
+          const before = i > 0 ? wordsFirst.slice(0, i).join(' ') + ' ' : '';
+          const after = i < wordsFirst.length - 1 ? ' ' + wordsFirst.slice(i + 1).join(' ') : '';
           
           return (
             <span>
               {before}
               <span className="text-green-600 bg-green-100 font-semibold px-1 rounded">
-                {words[i]}
+                {wordsFirst[i]}
               </span>
               {after}
             </span>
@@ -63,7 +66,7 @@ const highlightPartialMatch = (guess: string, feedback: string, matchedWord?: st
       }
       
       // Try substring match if word match fails
-      const guessLower = guess.toLowerCase();
+      // We already have guessLower from above
       const matchIndex = guessLower.indexOf(matchWord);
       console.log(`Substring match: searching for "${matchWord}" in "${guessLower}", found at index ${matchIndex}`);
       
@@ -116,8 +119,8 @@ const highlightPartialMatch = (guess: string, feedback: string, matchedWord?: st
       }
       
       // Try substring match
-      const guessLower = guess.toLowerCase();
-      const matchIndex = guessLower.indexOf(matchWord);
+      const guessLowerQuoted = guess.toLowerCase();
+      const matchIndex = guessLowerQuoted.indexOf(matchWord);
       
       if (matchIndex >= 0) {
         const before = guess.substring(0, matchIndex);
