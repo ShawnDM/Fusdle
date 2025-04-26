@@ -150,6 +150,8 @@ interface GameState {
   hasCompleted: boolean;
   partialMatchFeedback: string | null; // Feedback for partial word matches
   matchedWord: string | null; // The specific matched word from partial match
+  matchType: string | null; // Type of match (primary, exact, substring, wrong-order)
+  hasCorrectWordsWrongOrder: boolean; // Flag for when words are correct but in wrong order
   hasGuessedOnce: boolean; // Track if user has made at least one guess
   // Tutorial visibility states
   showNormalModeTutorial: boolean;
@@ -287,6 +289,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   hasGuessedOnce: false, // Track if user has made at least one guess
   partialMatchFeedback: null, // Initialize partial match feedback
   matchedWord: null, // Initialize matched word for highlighting partial matches
+  matchType: null, // Initialize match type as null
+  hasCorrectWordsWrongOrder: false, // Initialize wrong order flag as false
   
   // Tutorial states - get from localStorage or show by default if not seen
   // Also check for explicit show flags that can be set to force tutorial display
@@ -494,10 +498,12 @@ export const useGameStore = create<GameState>((set, get) => ({
       
       // Update partial match feedback if it exists
       if (data.partialMatchFeedback) {
-        // Store both the feedback message and matched word if provided
+        // Store feedback, matched word, match type, and wrong order flag
         set({ 
           partialMatchFeedback: data.partialMatchFeedback,
-          matchedWord: data.matchedWord || null  // Store matched word from server
+          matchedWord: data.matchedWord || null,  // Store matched word from server
+          matchType: data.matchType || null,      // Store match type
+          hasCorrectWordsWrongOrder: data.hasCorrectWordsWrongOrder || false  // Store wrong order flag
         });
         
         // Save this attempt as having a partial match
@@ -552,7 +558,12 @@ export const useGameStore = create<GameState>((set, get) => ({
           console.error('Error saving partial match:', e);
         }
       } else {
-        set({ partialMatchFeedback: null, matchedWord: null });
+        set({ 
+          partialMatchFeedback: null, 
+          matchedWord: null,
+          matchType: null,
+          hasCorrectWordsWrongOrder: false 
+        });
       }
       
       // Increment attempts, set hasGuessedOnce to true, and add guess to previousGuesses
