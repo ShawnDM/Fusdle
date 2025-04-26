@@ -4,8 +4,9 @@ import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import Confetti from "react-confetti";
 import { Badge } from "@/components/ui/badge";
-import { Skull, Flame, Sparkles } from "lucide-react";
+import { Skull, Flame, Sparkles, ListIcon } from "lucide-react";
 import { calculateFusdleNumber } from "@/lib/utils";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 const ResultsCard: React.FC = () => {
   const { 
@@ -16,7 +17,8 @@ const ResultsCard: React.FC = () => {
     resetForDevelopment,
     difficultyMode,
     flawlessStreak,
-    streak
+    streak,
+    previousGuesses
   } = useGameStore();
   const [copying, setCopying] = useState(false);
   const [timeUntilNextPuzzle, setTimeUntilNextPuzzle] = useState<string>('');
@@ -281,6 +283,46 @@ const ResultsCard: React.FC = () => {
               }
             })}
           </div>
+          
+          {/* All Guesses Accordion */}
+          {previousGuesses && previousGuesses.length > 0 && (
+            <div className="mt-4">
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="guesses">
+                  <AccordionTrigger className="flex items-center justify-center py-2 text-sm">
+                    <div className="flex items-center gap-1">
+                      <ListIcon className="h-4 w-4" />
+                      <span>View All Guesses ({previousGuesses.length})</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="p-3 bg-gray-50 rounded-lg mt-2 max-h-52 overflow-y-auto">
+                      <ul className="space-y-1.5 divide-y divide-gray-100">
+                        {previousGuesses.map((guess, index) => (
+                          <li 
+                            key={`${guess}-${index}`} 
+                            className="py-1.5 px-1 text-sm flex justify-between items-center"
+                          >
+                            <span className="font-medium text-gray-700">{guess}</span>
+                            <span className="text-xs text-gray-500">#{index + 1}</span>
+                          </li>
+                        ))}
+                        {isWin && (
+                          <li className="py-1.5 px-1 text-sm flex justify-between items-center bg-green-50 rounded mt-2">
+                            <span className="font-medium text-green-700">{puzzle.answer}</span>
+                            <div className="flex items-center">
+                              <span className="ml-1 text-green-600">✓</span>
+                              <span className="ml-1 text-xs text-gray-500">#{previousGuesses.length + 1}</span>
+                            </div>
+                          </li>
+                        )}
+                      </ul>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
+          )}
           
           {/* Next puzzle countdown timer */}
           <div className="mt-6 p-4 bg-neutral/50 rounded-lg">

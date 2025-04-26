@@ -1097,7 +1097,7 @@ const GameCard: React.FC = () => {
                             <div className="font-medium text-gray-700">
                               {/* Apply special wrong order styling to all words */}
                               <div className="wrong-order-highlight">
-                                {guess.split(' ').map((word, idx) => (
+                                {guess.split(' ').map((word, idx: number) => (
                                   <React.Fragment key={idx}>
                                     <span className="text-amber-700 bg-amber-100 font-semibold px-1 py-0.5 rounded border border-amber-300">
                                       {word}
