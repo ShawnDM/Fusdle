@@ -62,11 +62,25 @@ const highlightPartialMatch = (guess: string, feedback: string, matchedWord?: st
      * It highlights all words in amber/yellow to indicate they're correct but in wrong order
      */
     
-    // Special detection for "piece puzzle" when answer is "puzzle piece"
+    // Special detection for any words in wrong order
     const puzzleAnswer = gameStore.puzzle?.answer?.toLowerCase().trim();
-    const isWrongOrderGuess = (
-      guess.toLowerCase().trim() === "piece puzzle" && 
+    const guessLower = guess.toLowerCase().trim();
+    
+    // First, check for the specific test case we're using
+    const isSpecificTestCase = (
+      guessLower === "piece puzzle" && 
       puzzleAnswer === "puzzle piece"
+    );
+    
+    // Then, generalize to try detecting any wrong order case for multi-word answers
+    const isWrongOrderGuess = isSpecificTestCase || (
+      // Only check multi-word answers and guesses
+      puzzleAnswer?.includes(" ") && 
+      guessLower.includes(" ") &&
+      // Split into words and check if they're the same words in different order
+      puzzleAnswer.split(" ").sort().join(" ") === guessLower.split(" ").sort().join(" ") &&
+      // Make sure it's not just an exact match
+      puzzleAnswer !== guessLower
     );
     
     if (isWrongOrderGuess) {
