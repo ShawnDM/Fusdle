@@ -61,17 +61,19 @@ const highlightPartialMatch = (guess: string, feedback: string, matchedWord?: st
       // In this case, highlight all words in yellow to indicate they're correct but in wrong order
       const words = guess.split(' ');
       
+      console.log("HIGHLIGHTING WRONG ORDER MATCH!");
+      
       return (
         <div>
           {words.map((word, idx) => (
             <React.Fragment key={idx}>
-              <span className="text-amber-600 bg-amber-100 font-semibold px-1 rounded">
+              <span className="text-amber-700 bg-amber-100 font-semibold px-1 py-0.5 rounded border border-amber-300">
                 {word}
               </span>
               {idx < words.length - 1 && <span> </span>}
             </React.Fragment>
           ))}
-          <div className="text-xs text-amber-600 mt-1">
+          <div className="text-xs text-amber-700 font-medium mt-1">
             Correct words but wrong order!
           </div>
         </div>
@@ -1018,7 +1020,11 @@ const GameCard: React.FC = () => {
                       // Get the wrong order state from localStorage for older guesses
                       let isWrongOrderMatch = false;
                       
-                      if (reversedIndex === 0) {
+                      // First check for special case response from server about wrong order
+                      if (hasCorrectWordsWrongOrder && matchType === 'wrong-order') {
+                        isWrongOrderMatch = true;
+                        console.log(`Setting isWrongOrderMatch=true for current guess (${originalIndex})`);
+                      } else if (reversedIndex === 0) {
                         // For the most recent guess, use the state
                         isWrongOrderMatch = hasCorrectWordsWrongOrder && matchType === 'wrong-order';
                       } else {
@@ -1028,7 +1034,10 @@ const GameCard: React.FC = () => {
                           const storedWrongOrderGuesses = localStorage.getItem(wrongOrderKey);
                           if (storedWrongOrderGuesses) {
                             const wrongOrderGuesses = JSON.parse(storedWrongOrderGuesses);
-                            isWrongOrderMatch = wrongOrderGuesses.includes(originalIndex);
+                            if (wrongOrderGuesses.includes(originalIndex)) {
+                              isWrongOrderMatch = true;
+                              console.log(`Found wrong order match for guess ${originalIndex} in localStorage`);
+                            }
                           }
                         } catch (e) {
                           console.error('Error retrieving wrong order data:', e);
@@ -1040,12 +1049,15 @@ const GameCard: React.FC = () => {
                       let borderColorClass = '';
                       
                       if (isWrongOrderMatch) {
-                        bgColorClass = 'bg-amber-50';
-                        borderColorClass = 'border border-amber-200';
+                        // Make sure this visibly stands out for wrong order
+                        bgColorClass = 'bg-amber-100';
+                        borderColorClass = 'border-2 border-amber-300';
                       } else if (isPartialMatch) {
                         bgColorClass = 'bg-green-50';
                         borderColorClass = 'border border-green-100';
                       }
+                      
+                      console.log(`Guess ${originalIndex} styles: isWrongOrderMatch=${isWrongOrderMatch}, bgColorClass=${bgColorClass}`);
                       
                       return (
                         <div 
