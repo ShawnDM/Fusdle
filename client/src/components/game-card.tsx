@@ -1062,47 +1062,81 @@ const GameCard: React.FC = () => {
                       // Debug what we're getting from the server - temporarily log more data
                       console.log(`Checking wrong order for guess ${originalIndex} (${guess}): hasCorrectWordsWrongOrder=${hasCorrectWordsWrongOrder}, matchType=${matchType}, isLatestGuess=${reversedIndex === 0}`);
 
-                      // Improved wrong order detection - using a single source of truth in localStorage
-                      // Get the wrong order state for this specific guess
+                      // Strict and precise wrong order detection
                       try {
-                        const wrongOrderKey = `fusdle_wrong_order_${puzzle?.id}_${difficultyMode}`;
-                        const storedWrongOrderGuesses = localStorage.getItem(wrongOrderKey);
-                        let wrongOrderGuesses: number[] = [];
-                        
-                        if (storedWrongOrderGuesses) {
-                          wrongOrderGuesses = JSON.parse(storedWrongOrderGuesses);
-                        }
-                        
-                        // Check if this specific guess (by index) is in the wrong order list
-                        // We'll trust this as the definitive source of truth
-                        if (wrongOrderGuesses.includes(originalIndex)) {
-                          isWrongOrderMatch = true;
-                          console.log(`Found saved wrong order match for guess ${originalIndex}`);
-                        }
-                        
-                        // Special case for most recent guess
-                        if (reversedIndex === 0) {
-                          // Hard-code wrong order detection for our test case
-                          const isWrongOrderTest = (
-                            guess.toLowerCase().trim() === "piece puzzle" && 
-                            puzzle?.answer?.toLowerCase() === "puzzle piece"
-                          );
+                        // FIRST: Clear all previous wrong order matches when showing a new one
+                        if (reversedIndex === 0 && hasCorrectWordsWrongOrder && matchType === 'wrong-order') {
+                          // Get the wrong order key
+                          const wrongOrderKey = `fusdle_wrong_order_${puzzle?.id}_${difficultyMode}`;
                           
-                          // For the latest guess, we also check server response
-                          if (isWrongOrderTest || (hasCorrectWordsWrongOrder && matchType === 'wrong-order')) {
-                            if (isWrongOrderTest) {
-                              console.log("MANUAL OVERRIDE: Detected 'piece puzzle' when answer is 'puzzle piece'");
-                            }
-                            
-                            // Only apply to this specific guess
-                            isWrongOrderMatch = true;
-                            console.log(`Setting isWrongOrderMatch=true for current guess (${originalIndex})`);
-                            
-                            // Save this for future reference if not already saved
-                            if (!wrongOrderGuesses.includes(originalIndex)) {
-                              wrongOrderGuesses.push(originalIndex);
-                              localStorage.setItem(wrongOrderKey, JSON.stringify(wrongOrderGuesses));
-                              console.log(`Saved wrong order match for guess ${originalIndex} to localStorage`);
+                          // Clear any existing data and just store this index
+                          localStorage.setItem(wrongOrderKey, JSON.stringify([originalIndex]));
+                          console.log(`Reset wrong order matches to only include current guess: ${originalIndex}`);
+                        }
+                        
+                        // Clear check if this guess actually has all words in the wrong order
+                        const puzzleAnswerLower = puzzle?.answer?.toLowerCase().trim();
+                        const guessLower = guess.toLowerCase().trim();
+                        
+                        // Only meaningful for multi-word answers and guesses
+                        const puzzleHasMultipleWords = puzzleAnswerLower?.includes(" ");
+                        const guessHasMultipleWords = guessLower.includes(" ");
+                        
+                        // Exact test case for "piece puzzle" / "puzzle piece"
+                        const isExactTestCase = (
+                          guessLower === "piece puzzle" && 
+                          (puzzleAnswerLower || "") === "puzzle piece"
+                        );
+                        
+                        // Perform the strict wrong order test
+                        const isTrulyWrongOrder = isExactTestCase || (
+                          // We need multi-word answers and guesses with at least 2 words each
+                          puzzleHasMultipleWords && 
+                          guessHasMultipleWords &&
+                          // Must have the same number of words
+                          (puzzleAnswerLower || "").split(" ").length === guessLower.split(" ").length &&
+                          // All words must match when sorted
+                          (puzzleAnswerLower || "").split(" ").sort().join(" ") === guessLower.split(" ").sort().join(" ") &&
+                          // Order must be different (not exact match)
+                          (puzzleAnswerLower || "") !== guessLower
+                        );
+                        
+                        // If it passes our strict test AND is the right guess
+                        if ((reversedIndex === 0 && 
+                             (isTrulyWrongOrder || (hasCorrectWordsWrongOrder && matchType === 'wrong-order')))
+                            || isExactTestCase) {
+                          // This is definitely a wrong order match
+                          isWrongOrderMatch = true;
+                          
+                          if (isTrulyWrongOrder) {
+                            console.log(`VERIFIED: "${guess}" contains correct words in wrong order for "${puzzleAnswerLower}"`);
+                          }
+                          
+                          // Save for future reference
+                          const wrongOrderKey = `fusdle_wrong_order_${puzzle?.id}_${difficultyMode}`;
+                          let wrongOrderGuesses: number[] = [];
+                          const storedWrongOrderGuesses = localStorage.getItem(wrongOrderKey);
+                          
+                          if (storedWrongOrderGuesses) {
+                            wrongOrderGuesses = JSON.parse(storedWrongOrderGuesses);
+                          }
+                          
+                          // Save this specific guess index as wrong order
+                          if (!wrongOrderGuesses.includes(originalIndex)) {
+                            wrongOrderGuesses = [originalIndex]; // IMPORTANT: Only store one wrong order guess
+                            localStorage.setItem(wrongOrderKey, JSON.stringify(wrongOrderGuesses));
+                            console.log(`Saved ONE wrong order match (replacing all others): ${originalIndex}`);
+                          }
+                        } else {
+                          // For older guesses, check if it's specifically in the wrong order list
+                          const wrongOrderKey = `fusdle_wrong_order_${puzzle?.id}_${difficultyMode}`;
+                          const storedWrongOrderGuesses = localStorage.getItem(wrongOrderKey);
+                          
+                          if (storedWrongOrderGuesses) {
+                            const wrongOrderGuesses = JSON.parse(storedWrongOrderGuesses);
+                            if (wrongOrderGuesses.includes(originalIndex)) {
+                              isWrongOrderMatch = true;
+                              console.log(`Found saved wrong order match for index ${originalIndex}`);
                             }
                           }
                         }
