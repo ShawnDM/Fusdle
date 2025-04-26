@@ -138,6 +138,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check for partial word matches
       let partialMatchFeedback = null;
       let matchedWord = null; // Explicit matched word for client highlighting
+      let matchType = 'none';
       
       // Split answer into words and check if any match
       const answerWords = puzzle.answer.toLowerCase().split(/\s+/);
@@ -145,24 +146,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log('Checking for matches between:', { answer: puzzle.answer, guess });
       
+      // Improved matching algorithm
+      
       // Step 1: Find exact word matches first (preferred)
+      // We prioritize matching the primary words in the answer if possible
+      const primaryWords = answerWords.filter(w => w.length >= 4); // Primary words are longer
+      
+      // First check for primary word matches (like "escape" or "artist")
       for (const guessWord of guessWords) {
-        if (answerWords.includes(guessWord)) {
+        if (guessWord.length >= 4 && primaryWords.includes(guessWord)) {
           matchedWord = guessWord;
+          matchType = 'primary';
+          console.log(`Found primary word match: "${matchedWord}"`);
           break;
         }
       }
       
-      // If no exact matches found, try substring matches
+      // If no primary match, look for any exact word match
+      if (!matchedWord) {
+        for (const guessWord of guessWords) {
+          if (guessWord.length >= 3 && answerWords.includes(guessWord)) {
+            matchedWord = guessWord;
+            matchType = 'exact';
+            console.log(`Found exact word match: "${matchedWord}"`);
+            break;
+          }
+        }
+      }
+      
+      // If still no match, try substring matches with significant words
       if (!matchedWord) {
         for (const guessWord of guessWords) {
           // Skip very short words (2 chars or less) as they often give false positives
           if (guessWord.length < 3) continue;
           
           for (const answerWord of answerWords) {
+            // Only consider meaningful answer words
+            if (answerWord.length < 4) continue;
+            
             // Check if the guess word is contained in the answer word, or vice versa
             if (answerWord.includes(guessWord) || guessWord.includes(answerWord)) {
               matchedWord = guessWord;
+              matchType = 'substring';
+              console.log(`Found substring match: "${matchedWord}" within "${answerWord}"`);
               break;
             }
           }
@@ -174,7 +200,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (matchedWord) {
         // Include the matched word in the feedback with quotes for consistency
         partialMatchFeedback = `You're on the right track! Your guess contains "${matchedWord}".`;
-        console.log(`Found partial match: ${matchedWord}`);
+        console.log(`Found partial match (${matchType}): ${matchedWord}`);
       } else {
         // Only use generic feedback if we're very confident there's some match we couldn't identify
         // This is safer than potentially giving false feedback
@@ -185,6 +211,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (guessText.length > 3 && answerText.includes(guessText.substring(0, 4)) || 
             guessText.includes(answerText.substring(0, 4))) {
           partialMatchFeedback = "You're on the right track! Part of your answer matches.";
+          console.log("Found generic partial match without specific word");
         }
       }
       

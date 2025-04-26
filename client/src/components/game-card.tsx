@@ -29,8 +29,11 @@ import {
 } from "@/components/ui/dialog";
 
 // Helper function to highlight the matching part of the guess - enhanced for production compatibility
-const highlightPartialMatch = (guess: string, feedback: string, matchedWord?: string | null): React.ReactNode => {
-  console.log('Highlighting partial match (enhanced version):', { guess, feedback, matchedWord });
+const highlightPartialMatch = (guess: string, feedback: string, matchedWord?: string | null, currentGuessIndex?: number): React.ReactNode => {
+  console.log('Highlighting partial match (enhanced version):', { guess, feedback, matchedWord, currentGuessIndex });
+  
+  // Get access to the game store within this function
+  const gameStore = useGameStore.getState();
   
   try {
     // PRIORITY 1: Use server-provided matched word if available
@@ -144,37 +147,68 @@ const highlightPartialMatch = (guess: string, feedback: string, matchedWord?: st
     const words = guess.split(' ');
     
     // Try to scan puzzle answer if available
-    if (puzzle?.answer) {
-      console.log(`Using puzzle answer to find potential matches: "${puzzle.answer}"`);
-      const answerWords = puzzle.answer.toLowerCase().split(/\s+/);
+    if (gameStore?.puzzle?.answer) {
+      const puzzleAnswer = gameStore.puzzle.answer;
+      const currentDifficultyMode = gameStore.difficultyMode;
       
-      // Check each word in the guess to see if it matches any word in the answer
+      console.log(`Using puzzle answer to find potential matches: "${puzzleAnswer}"`);
+      const answerWords = puzzleAnswer.toLowerCase().split(/\s+/);
+      
+      // Prioritize primary words in the answer (longer words)
+      const primaryWords = answerWords.filter(w => w.length >= 4);
+      console.log(`Primary answer words:`, primaryWords);
+      
+      // First check for matches against primary words
       for (const word of words) {
         const normalizedWord = word.toLowerCase().trim();
         if (normalizedWord.length >= 3) {
-          if (answerWords.includes(normalizedWord)) {
-            console.log(`Answer contains word "${normalizedWord}" - using as match`);
+          if (primaryWords.includes(normalizedWord)) {
+            console.log(`Found primary word match: "${normalizedWord}"`);
             const i = words.indexOf(word);
             
             // Highlight this exact match word
             const before = i > 0 ? words.slice(0, i).join(' ') + ' ' : '';
             const after = i < words.length - 1 ? ' ' + words.slice(i + 1).join(' ') : '';
             
-            // Save this match for future reference
+            // Save this match for future reference if we have index
             try {
-              const matchedWordsKey = `fusdle_matched_words_${puzzle?.id}_${difficultyMode}`;
-              const storedMatchedWords = localStorage.getItem(matchedWordsKey) || '{}';
-              const matchedWords = JSON.parse(storedMatchedWords);
-              
-              // Use consistent index representation across the application
-              if (originalIndex !== undefined) {
-                matchedWords[originalIndex.toString()] = normalizedWord;
+              if (typeof currentGuessIndex === 'number') {
+                const matchedWordsKey = `fusdle_matched_words_${gameStore.puzzle?.id}_${currentDifficultyMode}`;
+                const storedMatchedWords = localStorage.getItem(matchedWordsKey) || '{}';
+                const matchedWords = JSON.parse(storedMatchedWords);
+                
+                matchedWords[currentGuessIndex.toString()] = normalizedWord;
                 localStorage.setItem(matchedWordsKey, JSON.stringify(matchedWords));
-                console.log(`Saved matched word "${normalizedWord}" for guess index ${originalIndex}`);
+                console.log(`Saved primary matched word "${normalizedWord}" for guess index ${currentGuessIndex}`);
               }
             } catch (e) {
               console.error('Error saving matched word to localStorage:', e);
             }
+            
+            return (
+              <span>
+                {before}
+                <span className="text-green-600 bg-green-100 font-semibold px-1 rounded">
+                  {word}
+                </span>
+                {after}
+              </span>
+            );
+          }
+        }
+      }
+      
+      // If no primary word match, check for any exact word match
+      for (const word of words) {
+        const normalizedWord = word.toLowerCase().trim();
+        if (normalizedWord.length >= 3) {
+          if (answerWords.includes(normalizedWord)) {
+            console.log(`Found regular word match: "${normalizedWord}"`);
+            const i = words.indexOf(word);
+            
+            // Highlight this exact match word
+            const before = i > 0 ? words.slice(0, i).join(' ') + ' ' : '';
+            const after = i < words.length - 1 ? ' ' + words.slice(i + 1).join(' ') : '';
             
             return (
               <span>
@@ -939,7 +973,8 @@ const GameCard: React.FC = () => {
                                 ? highlightPartialMatch(
                                     guess, 
                                     partialMatchFeedback || "You're on the right track!", 
-                                    effectiveMatchedWord
+                                    effectiveMatchedWord, 
+                                    originalIndex
                                   )
                                 : guess}
                               <div className="text-xs text-green-600 mt-1">
