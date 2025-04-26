@@ -143,6 +143,53 @@ const highlightPartialMatch = (guess: string, feedback: string, matchedWord?: st
     // This handles the production case where the server might not provide the matchedWord
     const words = guess.split(' ');
     
+    // Try to scan puzzle answer if available
+    if (puzzle?.answer) {
+      console.log(`Using puzzle answer to find potential matches: "${puzzle.answer}"`);
+      const answerWords = puzzle.answer.toLowerCase().split(/\s+/);
+      
+      // Check each word in the guess to see if it matches any word in the answer
+      for (const word of words) {
+        const normalizedWord = word.toLowerCase().trim();
+        if (normalizedWord.length >= 3) {
+          if (answerWords.includes(normalizedWord)) {
+            console.log(`Answer contains word "${normalizedWord}" - using as match`);
+            const i = words.indexOf(word);
+            
+            // Highlight this exact match word
+            const before = i > 0 ? words.slice(0, i).join(' ') + ' ' : '';
+            const after = i < words.length - 1 ? ' ' + words.slice(i + 1).join(' ') : '';
+            
+            // Save this match for future reference
+            try {
+              const matchedWordsKey = `fusdle_matched_words_${puzzle?.id}_${difficultyMode}`;
+              const storedMatchedWords = localStorage.getItem(matchedWordsKey) || '{}';
+              const matchedWords = JSON.parse(storedMatchedWords);
+              
+              // Use consistent index representation across the application
+              if (originalIndex !== undefined) {
+                matchedWords[originalIndex.toString()] = normalizedWord;
+                localStorage.setItem(matchedWordsKey, JSON.stringify(matchedWords));
+                console.log(`Saved matched word "${normalizedWord}" for guess index ${originalIndex}`);
+              }
+            } catch (e) {
+              console.error('Error saving matched word to localStorage:', e);
+            }
+            
+            return (
+              <span>
+                {before}
+                <span className="text-green-600 bg-green-100 font-semibold px-1 rounded">
+                  {word}
+                </span>
+                {after}
+              </span>
+            );
+          }
+        }
+      }
+    }
+    
     // Sort words by length (prioritize longer words as they're more likely to be significant)
     const significantWords = [...words]
       .filter(word => word.length >= 3)
@@ -151,6 +198,7 @@ const highlightPartialMatch = (guess: string, feedback: string, matchedWord?: st
     if (significantWords.length > 0) {
       const bestGuessWord = significantWords[0];
       const i = words.indexOf(bestGuessWord);
+      console.log(`No exact match found, using best guess: "${bestGuessWord}"`);
       
       // Highlight this word as our best guess for what matched
       const before = i > 0 ? words.slice(0, i).join(' ') + ' ' : '';
