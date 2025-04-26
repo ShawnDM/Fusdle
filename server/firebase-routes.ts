@@ -172,12 +172,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Improved matching algorithm - only proceed if we haven't found words in wrong order
-      
       // Step 1: Find exact word matches first (preferred)
       // We prioritize matching the primary words in the answer if possible
       const primaryWords = answerWords.filter(w => w.length >= 4); // Primary words are longer
       
-      // First check for primary word matches (like "escape" or "artist")
+      // Only look for partial matches if we haven't found a wrong order match
+      if (!hasCorrectWordsWrongOrder) {
+        // First check for primary word matches (like "escape" or "artist")
       for (const guessWord of guessWords) {
         if (guessWord.length >= 4 && primaryWords.includes(guessWord)) {
           matchedWord = guessWord;
@@ -239,6 +240,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log("Found generic partial match without specific word");
         }
       }
+      } // Close the hasCorrectWordsWrongOrder if block
       
       // If incorrect, return the result with partial match feedback and matched word
       return res.json({ 
