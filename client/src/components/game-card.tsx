@@ -36,8 +36,8 @@ const highlightPartialMatch = (guess: string, feedback: string, matchedWord?: st
     // PRIORITY 1: Use server-provided matched word if available
     if (matchedWord) {
       console.log(`Using matched word from server: "${matchedWord}"`);
-      // Type safety - ensure matchedWord is actually a string
-      const matchWordRaw = matchedWord.toString();
+      // Ensure matchedWord is actually a string and normalize it
+      const matchWordRaw = matchedWord.toString().trim();
       const matchWord = matchWordRaw.toLowerCase();
       
       // Split the guess into words for word-level matching
@@ -800,11 +800,31 @@ const GameCard: React.FC = () => {
                           const storedMatchedWords = localStorage.getItem(matchedWordsKey);
                           if (storedMatchedWords) {
                             const matchedWords = JSON.parse(storedMatchedWords);
-                            // Use string key for safer access since localStorage saves as strings
-                            console.log(`Looking for matched word for guess ${originalIndex} in:`, matchedWords);
-                            if (matchedWords && matchedWords[originalIndex.toString()]) {
-                              savedMatchedWord = matchedWords[originalIndex.toString()];
+                            // Convert index to string for safer access
+                            const indexKey = originalIndex.toString();
+                            console.log(`Looking for matched word for guess ${originalIndex} (key="${indexKey}") in:`, matchedWords);
+                            
+                            // First try direct index access
+                            if (matchedWords && matchedWords[indexKey]) {
+                              savedMatchedWord = matchedWords[indexKey];
                               console.log(`Found saved matched word for guess ${originalIndex}: "${savedMatchedWord}"`);
+                            } 
+                            // If nothing found, try to extract from the feedback message
+                            else if (partialMatchFeedback) {
+                              // Try to extract the word from the feedback message
+                              const quotedPattern = /"([^"]+)"/i;
+                              const quotedMatch = partialMatchFeedback.match(quotedPattern);
+                              
+                              if (quotedMatch && quotedMatch[1]) {
+                                savedMatchedWord = quotedMatch[1];
+                                console.log(`Extracted matched word from feedback: "${savedMatchedWord}"`);
+                                
+                                // Also save this match for future reference
+                                matchedWords[indexKey] = savedMatchedWord;
+                                localStorage.setItem(matchedWordsKey, JSON.stringify(matchedWords));
+                              } else {
+                                console.log(`No saved matched word found for guess ${originalIndex}`);
+                              }
                             } else {
                               console.log(`No saved matched word found for guess ${originalIndex}`);
                             }
