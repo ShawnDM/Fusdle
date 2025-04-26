@@ -139,6 +139,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let partialMatchFeedback = null;
       let matchedWord = null; // Explicit matched word for client highlighting
       let matchType = 'none';
+      let hasCorrectWordsWrongOrder = false; // New flag for tracking words in wrong order
       
       // Split answer into words and check if any match
       const answerWords = puzzle.answer.toLowerCase().split(/\s+/);
@@ -146,7 +147,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log('Checking for matches between:', { answer: puzzle.answer, guess });
       
-      // Improved matching algorithm
+      // First, check if the guess has all the right words but in the wrong order
+      // This is a special case we want to detect and handle differently
+      if (answerWords.length > 1 && guessWords.length === answerWords.length) {
+        // This only makes sense for multi-word phrases
+        const sortedAnswerWords = [...answerWords].sort();
+        const sortedGuessWords = [...guessWords].sort();
+        
+        // Check if the sorted arrays match (same words, different order)
+        let allWordsMatch = true;
+        for (let i = 0; i < sortedAnswerWords.length; i++) {
+          if (sortedAnswerWords[i] !== sortedGuessWords[i]) {
+            allWordsMatch = false;
+            break;
+          }
+        }
+        
+        if (allWordsMatch && !isCorrect) {
+          hasCorrectWordsWrongOrder = true;
+          console.log("Found all correct words but in wrong order!");
+          partialMatchFeedback = "So close! You have all the right words, but in the wrong order.";
+          matchType = 'wrong-order';
+        }
+      }
+      
+      // Improved matching algorithm - only proceed if we haven't found words in wrong order
       
       // Step 1: Find exact word matches first (preferred)
       // We prioritize matching the primary words in the answer if possible
@@ -219,7 +244,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.json({ 
         isCorrect, 
         partialMatchFeedback,
-        matchedWord // Send the matched word to the client for better highlighting
+        matchedWord, // Send the matched word to the client for better highlighting
+        matchType,   // Include match type so client knows if it's a 'wrong-order' match
+        hasCorrectWordsWrongOrder  // Flag to indicate if we have correct words in wrong order
       });
     } catch (error) {
       console.error('Error processing guess:', error);
