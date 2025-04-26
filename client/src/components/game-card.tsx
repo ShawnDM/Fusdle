@@ -34,8 +34,32 @@ const highlightPartialMatch = (guess: string, feedback: string, matchedWord?: st
   
   // Get access to the game store within this function
   const gameStore = useGameStore.getState();
+  const matchType = gameStore.matchType;
+  const hasCorrectWordsWrongOrder = gameStore.hasCorrectWordsWrongOrder;
   
   try {
+    // SPECIAL CASE: Correct words but in wrong order
+    if (hasCorrectWordsWrongOrder && matchType === 'wrong-order') {
+      // In this case, highlight all words in yellow to indicate they're correct but in wrong order
+      const words = guess.split(' ');
+      
+      return (
+        <div>
+          {words.map((word, idx) => (
+            <React.Fragment key={idx}>
+              <span className="text-amber-600 bg-amber-100 font-semibold px-1 rounded">
+                {word}
+              </span>
+              {idx < words.length - 1 && <span> </span>}
+            </React.Fragment>
+          ))}
+          <div className="text-xs text-amber-600 mt-1">
+            Correct words but wrong order!
+          </div>
+        </div>
+      );
+    }
+    
     // PRIORITY 1: Use server-provided matched word if available
     if (matchedWord) {
       console.log(`Using matched word from server: "${matchedWord}"`);
@@ -284,6 +308,8 @@ const GameCard: React.FC = () => {
     toggleDifficultyMode,
     partialMatchFeedback,
     matchedWord,
+    matchType,
+    hasCorrectWordsWrongOrder,
     showNormalModeTutorial,
     showHardModeTutorial,
     dismissTutorial
@@ -970,18 +996,30 @@ const GameCard: React.FC = () => {
                       
                       console.log(`Guess ${originalIndex}: Using matched word "${effectiveMatchedWord}" (reversedIndex=${reversedIndex}, matchedWord=${matchedWord}, savedMatchedWord=${savedMatchedWord})`);
                       
+                      // Check if this guess has correct words in wrong order
+                      // This typically will only apply to the most recent guess (reversedIndex === 0)
+                      const isWrongOrderMatch = reversedIndex === 0 && hasCorrectWordsWrongOrder && matchType === 'wrong-order';
+                      
+                      // Determine CSS classes based on match type
+                      let bgColorClass = 'bg-gray-50'; // default
+                      let borderColorClass = '';
+                      
+                      if (isWrongOrderMatch) {
+                        bgColorClass = 'bg-amber-50';
+                        borderColorClass = 'border border-amber-200';
+                      } else if (isPartialMatch) {
+                        bgColorClass = 'bg-green-50';
+                        borderColorClass = 'border border-green-100';
+                      }
+                      
                       return (
                         <div 
                           key={`${guess}-${originalIndex}`} 
-                          className={`p-2 rounded text-sm flex justify-between items-center ${
-                            isPartialMatch 
-                              ? 'bg-green-50 border border-green-100' 
-                              : 'bg-gray-50'
-                          }`}
+                          className={`p-2 rounded text-sm flex justify-between items-center ${bgColorClass} ${borderColorClass}`}
                         >
-                          {isPartialMatch ? (
+                          {isPartialMatch || isWrongOrderMatch ? (
                             <div className="font-medium text-gray-700">
-                              {shouldHighlight
+                              {shouldHighlight || isWrongOrderMatch
                                 ? highlightPartialMatch(
                                     guess, 
                                     partialMatchFeedback || "You're on the right track!", 
@@ -989,8 +1027,11 @@ const GameCard: React.FC = () => {
                                     originalIndex
                                   )
                                 : guess}
-                              <div className="text-xs text-green-600 mt-1">
-                                Contains a partial match
+                              <div className={`text-xs mt-1 ${isWrongOrderMatch ? 'text-amber-600' : 'text-green-600'}`}>
+                                {isWrongOrderMatch
+                                  ? 'Correct words but wrong order!'
+                                  : 'Contains a partial match'
+                                }
                               </div>
                             </div>
                           ) : (
@@ -1006,11 +1047,15 @@ const GameCard: React.FC = () => {
             </div>
           )}
           
-          {/* Partial match feedback */}
+          {/* Feedback messages */}
           {partialMatchFeedback && (
-            <div className="mt-2 mb-4 p-3 bg-purple-50 rounded-lg border border-purple-200 text-purple-800">
+            <div className={`mt-2 mb-4 p-3 rounded-lg border ${
+              hasCorrectWordsWrongOrder && matchType === 'wrong-order'
+                ? 'bg-amber-50 border-amber-200 text-amber-800'
+                : 'bg-purple-50 border-purple-200 text-purple-800'
+            }`}>
               <div className="flex items-center">
-                <span className="mr-2">✨</span>
+                <span className="mr-2">{hasCorrectWordsWrongOrder && matchType === 'wrong-order' ? '⚠️' : '✨'}</span>
                 <p className="text-sm font-medium">{partialMatchFeedback}</p>
               </div>
             </div>
