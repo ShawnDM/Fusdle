@@ -147,15 +147,16 @@ const highlightPartialMatch = (guess: string, feedback: string, matchedWord?: st
     const words = guess.split(' ');
     
     // Try to scan puzzle answer if available
-    if (gameStore?.puzzle?.answer) {
-      const puzzleAnswer = gameStore.puzzle.answer;
-      const currentDifficultyMode = gameStore.difficultyMode;
+    const currentState = useGameStore.getState();
+    if (currentState?.puzzle?.answer) {
+      const puzzleAnswer = currentState.puzzle.answer;
+      const currentDifficultyMode = currentState.difficultyMode;
       
       console.log(`Using puzzle answer to find potential matches: "${puzzleAnswer}"`);
       const answerWords = puzzleAnswer.toLowerCase().split(/\s+/);
       
       // Prioritize primary words in the answer (longer words)
-      const primaryWords = answerWords.filter(w => w.length >= 4);
+      const primaryWords = answerWords.filter((w: string) => w.length >= 4);
       console.log(`Primary answer words:`, primaryWords);
       
       // First check for matches against primary words
@@ -172,14 +173,15 @@ const highlightPartialMatch = (guess: string, feedback: string, matchedWord?: st
             
             // Save this match for future reference if we have index
             try {
-              if (typeof currentGuessIndex === 'number') {
-                const matchedWordsKey = `fusdle_matched_words_${gameStore.puzzle?.id}_${currentDifficultyMode}`;
+              const currentIndex = currentGuessIndex;
+              if (typeof currentIndex === 'number') {
+                const matchedWordsKey = `fusdle_matched_words_${currentState.puzzle?.id}_${currentDifficultyMode}`;
                 const storedMatchedWords = localStorage.getItem(matchedWordsKey) || '{}';
                 const matchedWords = JSON.parse(storedMatchedWords);
                 
-                matchedWords[currentGuessIndex.toString()] = normalizedWord;
+                matchedWords[currentIndex.toString()] = normalizedWord;
                 localStorage.setItem(matchedWordsKey, JSON.stringify(matchedWords));
-                console.log(`Saved primary matched word "${normalizedWord}" for guess index ${currentGuessIndex}`);
+                console.log(`Saved primary matched word "${normalizedWord}" for guess index ${currentIndex}`);
               }
             } catch (e) {
               console.error('Error saving matched word to localStorage:', e);
@@ -293,6 +295,16 @@ const GameCard: React.FC = () => {
   const [currentTwistType, setCurrentTwistType] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast(); // Initialize toast hook at component top level
+  
+  // Helper function to reset flawless streak in localStorage
+  const resetFlawlessStreak = () => {
+    try {
+      localStorage.setItem('fusdle_flawless_streak', '0');
+      console.log('Flawless streak has been reset to 0');
+    } catch (e) {
+      console.error('Error resetting flawless streak:', e);
+    }
+  }
   
   // Function to show the fusion twist explanation popup
   const showFusionPopup = (twistType: string | undefined | null) => {
