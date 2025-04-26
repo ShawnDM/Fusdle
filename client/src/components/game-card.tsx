@@ -28,95 +28,13 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 
-// Helper function to highlight the matching part of the guess - enhanced for production compatibility
+// Helper function to highlight the matching part of the guess - ONLY FOR PARTIAL MATCHES, not wrong order cases
 const highlightPartialMatch = (guess: string, feedback: string, matchedWord?: string | null, currentGuessIndex?: number): React.ReactNode => {
-  console.log('Highlighting partial match (enhanced version):', { guess, feedback, matchedWord, currentGuessIndex });
+  console.log('Highlighting partial match (regular version):', { guess, feedback, matchedWord, currentGuessIndex });
   
-  // Get access to the game store within this function
-  const gameStore = useGameStore.getState();
-  let matchType = gameStore.matchType;
-  let hasCorrectWordsWrongOrder = gameStore.hasCorrectWordsWrongOrder;
-  
-  // For older guesses, we need to check if this specific guess was a wrong order match
-  if (typeof currentGuessIndex === 'number') {
-    try {
-      const wrongOrderKey = `fusdle_wrong_order_${gameStore.puzzle?.id}_${gameStore.difficultyMode}`;
-      const storedWrongOrderGuesses = localStorage.getItem(wrongOrderKey);
-      if (storedWrongOrderGuesses) {
-        const wrongOrderGuesses = JSON.parse(storedWrongOrderGuesses);
-        if (wrongOrderGuesses.includes(currentGuessIndex)) {
-          hasCorrectWordsWrongOrder = true;
-          matchType = 'wrong-order';
-          console.log(`Restored wrong order match for guess ${currentGuessIndex}`);
-        }
-      }
-    } catch (e) {
-      console.error('Error retrieving wrong order data in highlighter:', e);
-    }
-  }
-  
+  // We only want to find and highlight the matching word in a partial match, 
+  // not handle wrong order cases which are now separately detected
   try {
-    /**
-     * SPECIAL CASE: "Correct words but in wrong order"
-     * This function branch is critically important
-     * It highlights all words in amber/yellow to indicate they're correct but in wrong order
-     */
-    
-    // Special detection for any words in wrong order
-    const puzzleAnswer = gameStore.puzzle?.answer?.toLowerCase().trim();
-    const guessLower = guess.toLowerCase().trim();
-    
-    // First, check for the specific test case we're using
-    const isSpecificTestCase = (
-      guessLower === "piece puzzle" && 
-      puzzleAnswer === "puzzle piece"
-    );
-    
-    // Then, generalize to try detecting any wrong order case for multi-word answers
-    const isWrongOrderGuess = isSpecificTestCase || (
-      // Only check multi-word answers and guesses
-      puzzleAnswer?.includes(" ") && 
-      guessLower.includes(" ") &&
-      // Split into words and check if they're the same words in different order
-      puzzleAnswer.split(" ").sort().join(" ") === guessLower.split(" ").sort().join(" ") &&
-      // Make sure it's not just an exact match
-      puzzleAnswer !== guessLower
-    );
-    
-    if (isWrongOrderGuess) {
-      console.log(`DIRECT CHECK: "${guess}" is wrong order of "${puzzleAnswer}"`);
-      hasCorrectWordsWrongOrder = true;
-      matchType = 'wrong-order';
-    }
-    
-    if (hasCorrectWordsWrongOrder && matchType === 'wrong-order') {
-      const words = guess.split(' ');
-      
-      console.log(`HIGHLIGHTING WRONG ORDER MATCH FOR "${guess}"!`);
-      
-      // Create a special wrong-order highlighting that's very distinctive
-      return (
-        <div className="wrong-order-highlight">
-          {words.map((word, idx) => (
-            <React.Fragment key={idx}>
-              <span className="text-amber-700 bg-amber-100 font-semibold px-1 py-0.5 rounded border border-amber-300">
-                {word}
-              </span>
-              {idx < words.length - 1 && <span> </span>}
-            </React.Fragment>
-          ))}
-          <div className="text-xs text-amber-700 font-medium mt-1">
-            Correct words but wrong order!
-          </div>
-        </div>
-      );
-    }
-    
-    // If we've processed wrong order match, we shouldn't reach this point
-    // This console log helps debug if it's reaching further than expected
-    if (hasCorrectWordsWrongOrder && matchType === 'wrong-order') {
-      console.log("WARNING: Code continued past wrong order branch unexpectedly");
-    }
     
     // PRIORITY 1: Use server-provided matched word if available
     if (matchedWord) {
