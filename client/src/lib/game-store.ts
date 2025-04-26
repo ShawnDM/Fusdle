@@ -1050,6 +1050,8 @@ export const useGameStore = create<GameState>((set, get) => ({
         currentGuess: '',
         partialMatchFeedback: null,
         matchedWord: null,
+        matchType: null,
+        hasCorrectWordsWrongOrder: false,
         hasGuessedOnce: false,
         showNormalModeTutorial: true,
         showHardModeTutorial: true,
@@ -1065,6 +1067,8 @@ export const useGameStore = create<GameState>((set, get) => ({
         currentGuess: '',
         partialMatchFeedback: null,
         matchedWord: null,
+        matchType: null,
+        hasCorrectWordsWrongOrder: false,
         hasGuessedOnce: false,
         error: null
       });
@@ -1109,6 +1113,8 @@ export const useGameStore = create<GameState>((set, get) => ({
         hasCompleted: false,
         partialMatchFeedback: null,
         matchedWord: null,
+        matchType: null,
+        hasCorrectWordsWrongOrder: false,
         hasGuessedOnce: false,
         error: null
       });
@@ -1222,6 +1228,8 @@ export const useGameStore = create<GameState>((set, get) => ({
         hasCompleted: false,
         partialMatchFeedback: null,
         matchedWord: null,
+        matchType: null,
+        hasCorrectWordsWrongOrder: false,
         hasGuessedOnce: false,
         // Update difficulty mode based on puzzle difficulty
         difficultyMode: randomPuzzle.difficulty as 'normal' | 'hard',
