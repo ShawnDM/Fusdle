@@ -1063,7 +1063,7 @@ const GameCard: React.FC = () => {
                               console.log(`Found but REJECTED saved wrong order match for index ${originalIndex} - doesn't pass strict test`);
                               
                               // Remove this index from wrong order guesses and save back to storage
-                              const cleanedWrongOrderGuesses = wrongOrderGuesses.filter(idx => idx !== originalIndex);
+                              const cleanedWrongOrderGuesses = wrongOrderGuesses.filter((idx: number) => idx !== originalIndex);
                               localStorage.setItem(wrongOrderKey, JSON.stringify(cleanedWrongOrderGuesses));
                             }
                           }

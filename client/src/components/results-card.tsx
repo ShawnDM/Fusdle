@@ -298,18 +298,39 @@ const ResultsCard: React.FC = () => {
                   <AccordionContent>
                     <div className="p-3 bg-gray-50 rounded-lg mt-2 max-h-52 overflow-y-auto">
                       <ul className="space-y-1.5 divide-y divide-gray-100">
-                        {previousGuesses.map((guess, index) => (
-                          <li 
-                            key={`${guess}-${index}`} 
-                            className="py-1.5 px-1 text-sm flex justify-between items-center"
-                          >
-                            <span className="font-medium text-gray-700">{guess}</span>
-                            <span className="text-xs text-gray-500">#{index + 1}</span>
-                          </li>
-                        ))}
-                        {isWin && (
+                        {previousGuesses.map((guess, index) => {
+                          // Check if this is the winning guess (for the last guess only)
+                          const isWinningGuess = isWin && 
+                            index === previousGuesses.length - 1 && 
+                            guess.toLowerCase() === puzzle?.answer?.toLowerCase();
+                            
+                          return (
+                            <li 
+                              key={`${guess}-${index}`} 
+                              className={`py-1.5 px-1 text-sm flex justify-between items-center ${
+                                isWinningGuess ? 'bg-green-50 rounded' : ''
+                              }`}
+                            >
+                              <span className={`font-medium ${isWinningGuess ? 'text-green-700' : 'text-gray-700'}`}>
+                                {guess}
+                              </span>
+                              <div className="flex items-center">
+                                {isWinningGuess && <span className="ml-1 text-green-600">✓</span>}
+                                <span className={`${isWinningGuess ? 'ml-1' : ''} text-xs text-gray-500`}>
+                                  #{index + 1}
+                                </span>
+                              </div>
+                            </li>
+                          );
+                        })}
+                        
+                        {/* Only show the answer separately if the last guess wasn't correct */}
+                        {isWin && 
+                         previousGuesses.length > 0 && 
+                         puzzle?.answer &&
+                         previousGuesses[previousGuesses.length - 1].toLowerCase() !== puzzle?.answer?.toLowerCase() && (
                           <li className="py-1.5 px-1 text-sm flex justify-between items-center bg-green-50 rounded mt-2">
-                            <span className="font-medium text-green-700">{puzzle.answer}</span>
+                            <span className="font-medium text-green-700">{puzzle?.answer}</span>
                             <div className="flex items-center">
                               <span className="ml-1 text-green-600">✓</span>
                               <span className="ml-1 text-xs text-gray-500">#{previousGuesses.length + 1}</span>
