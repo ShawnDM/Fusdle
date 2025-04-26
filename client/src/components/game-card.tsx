@@ -834,6 +834,35 @@ const GameCard: React.FC = () => {
                         }
                       }
                       
+                      // If we have a partial match but no saved matched word, try to intelligently extract it
+                      if (isPartialMatch && !savedMatchedWord && puzzle?.answer) {
+                        // Try to find matching words from the answer
+                        const answerWords = puzzle.answer.toLowerCase().split(/\s+/);
+                        const guessWords = guess.toLowerCase().split(/\s+/);
+                        
+                        // Find any words that appear in both the answer and the guess
+                        for (const guessWord of guessWords) {
+                          if (guessWord.length >= 3) { // Only consider meaningful words
+                            if (answerWords.includes(guessWord)) {
+                              savedMatchedWord = guessWord;
+                              console.log(`Found matching word "${savedMatchedWord}" by comparing with answer`);
+                              
+                              // Save this match for future reference
+                              try {
+                                const matchedWordsKey = `fusdle_matched_words_${puzzle?.id}_${difficultyMode}`;
+                                const storedMatchedWords = localStorage.getItem(matchedWordsKey);
+                                const matchedWords = storedMatchedWords ? JSON.parse(storedMatchedWords) : {};
+                                matchedWords[originalIndex.toString()] = savedMatchedWord;
+                                localStorage.setItem(matchedWordsKey, JSON.stringify(matchedWords));
+                              } catch (e) {
+                                console.error('Error saving inferred matched word:', e);
+                              }
+                              break;
+                            }
+                          }
+                        }
+                      }
+                      
                       // Any partial match should show the highlighting if feedback is available or we have a saved matched word
                       const shouldHighlight = isPartialMatch && (partialMatchFeedback !== null || savedMatchedWord !== null);
                       
