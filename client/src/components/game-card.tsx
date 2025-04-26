@@ -34,8 +34,26 @@ const highlightPartialMatch = (guess: string, feedback: string, matchedWord?: st
   
   // Get access to the game store within this function
   const gameStore = useGameStore.getState();
-  const matchType = gameStore.matchType;
-  const hasCorrectWordsWrongOrder = gameStore.hasCorrectWordsWrongOrder;
+  let matchType = gameStore.matchType;
+  let hasCorrectWordsWrongOrder = gameStore.hasCorrectWordsWrongOrder;
+  
+  // For older guesses, we need to check if this specific guess was a wrong order match
+  if (typeof currentGuessIndex === 'number') {
+    try {
+      const wrongOrderKey = `fusdle_wrong_order_${gameStore.puzzle?.id}_${gameStore.difficultyMode}`;
+      const storedWrongOrderGuesses = localStorage.getItem(wrongOrderKey);
+      if (storedWrongOrderGuesses) {
+        const wrongOrderGuesses = JSON.parse(storedWrongOrderGuesses);
+        if (wrongOrderGuesses.includes(currentGuessIndex)) {
+          hasCorrectWordsWrongOrder = true;
+          matchType = 'wrong-order';
+          console.log(`Restored wrong order match for guess ${currentGuessIndex}`);
+        }
+      }
+    } catch (e) {
+      console.error('Error retrieving wrong order data in highlighter:', e);
+    }
+  }
   
   try {
     // SPECIAL CASE: Correct words but in wrong order
@@ -997,8 +1015,25 @@ const GameCard: React.FC = () => {
                       console.log(`Guess ${originalIndex}: Using matched word "${effectiveMatchedWord}" (reversedIndex=${reversedIndex}, matchedWord=${matchedWord}, savedMatchedWord=${savedMatchedWord})`);
                       
                       // Check if this guess has correct words in wrong order
-                      // This typically will only apply to the most recent guess (reversedIndex === 0)
-                      const isWrongOrderMatch = reversedIndex === 0 && hasCorrectWordsWrongOrder && matchType === 'wrong-order';
+                      // Get the wrong order state from localStorage for older guesses
+                      let isWrongOrderMatch = false;
+                      
+                      if (reversedIndex === 0) {
+                        // For the most recent guess, use the state
+                        isWrongOrderMatch = hasCorrectWordsWrongOrder && matchType === 'wrong-order';
+                      } else {
+                        // For older guesses, try to get from localStorage
+                        try {
+                          const wrongOrderKey = `fusdle_wrong_order_${puzzle?.id}_${difficultyMode}`;
+                          const storedWrongOrderGuesses = localStorage.getItem(wrongOrderKey);
+                          if (storedWrongOrderGuesses) {
+                            const wrongOrderGuesses = JSON.parse(storedWrongOrderGuesses);
+                            isWrongOrderMatch = wrongOrderGuesses.includes(originalIndex);
+                          }
+                        } catch (e) {
+                          console.error('Error retrieving wrong order data:', e);
+                        }
+                      }
                       
                       // Determine CSS classes based on match type
                       let bgColorClass = 'bg-gray-50'; // default

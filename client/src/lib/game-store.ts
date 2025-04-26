@@ -506,6 +506,27 @@ export const useGameStore = create<GameState>((set, get) => ({
           hasCorrectWordsWrongOrder: data.hasCorrectWordsWrongOrder || false  // Store wrong order flag
         });
         
+        // If we have a wrong order match, save it to localStorage
+        if (data.hasCorrectWordsWrongOrder && data.matchType === 'wrong-order') {
+          try {
+            const wrongOrderKey = `fusdle_wrong_order_${puzzle.id}_${difficultyMode}`;
+            let wrongOrderGuesses: number[] = [];
+            const storedWrongOrderGuesses = localStorage.getItem(wrongOrderKey);
+            
+            if (storedWrongOrderGuesses) {
+              wrongOrderGuesses = JSON.parse(storedWrongOrderGuesses);
+            }
+            
+            if (!wrongOrderGuesses.includes(attempts)) {
+              wrongOrderGuesses.push(attempts);
+              localStorage.setItem(wrongOrderKey, JSON.stringify(wrongOrderGuesses));
+              console.log(`Saved wrong order match for attempt ${attempts}`);
+            }
+          } catch (e) {
+            console.error('Error storing wrong order data:', e);
+          }
+        }
+        
         // Save this attempt as having a partial match
         try {
           // Use the storageKey defined above
