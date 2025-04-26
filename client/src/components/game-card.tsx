@@ -1047,14 +1047,24 @@ const GameCard: React.FC = () => {
                           }
                         } else {
                           // For older guesses, check if it's specifically in the wrong order list
+                          // but ONLY if it passes our strict test too - this is essential for consistency
                           const wrongOrderKey = `fusdle_wrong_order_${puzzle?.id}_${difficultyMode}`;
                           const storedWrongOrderGuesses = localStorage.getItem(wrongOrderKey);
                           
                           if (storedWrongOrderGuesses) {
                             const wrongOrderGuesses = JSON.parse(storedWrongOrderGuesses);
-                            if (wrongOrderGuesses.includes(originalIndex)) {
+                            
+                            // Only show it as wrong order if it ALSO passes our strict test
+                            if (wrongOrderGuesses.includes(originalIndex) && (isTrulyWrongOrder || isExactTestCase)) {
                               isWrongOrderMatch = true;
-                              console.log(`Found saved wrong order match for index ${originalIndex}`);
+                              console.log(`Found and VERIFIED saved wrong order match for index ${originalIndex}`);
+                            } else if (wrongOrderGuesses.includes(originalIndex)) {
+                              // If it was saved as wrong order but doesn't pass test, remove it
+                              console.log(`Found but REJECTED saved wrong order match for index ${originalIndex} - doesn't pass strict test`);
+                              
+                              // Remove this index from wrong order guesses and save back to storage
+                              const cleanedWrongOrderGuesses = wrongOrderGuesses.filter(idx => idx !== originalIndex);
+                              localStorage.setItem(wrongOrderKey, JSON.stringify(cleanedWrongOrderGuesses));
                             }
                           }
                         }
