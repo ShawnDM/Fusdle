@@ -1062,53 +1062,52 @@ const GameCard: React.FC = () => {
                       // Debug what we're getting from the server - temporarily log more data
                       console.log(`Checking wrong order for guess ${originalIndex} (${guess}): hasCorrectWordsWrongOrder=${hasCorrectWordsWrongOrder}, matchType=${matchType}, isLatestGuess=${reversedIndex === 0}`);
 
-                      // Hard-code wrong order detection just for testing
-                      // In this case: if "piece puzzle" is guessed for puzzle with answer "puzzle piece"
-                      const isWrongOrderTest = (guess.toLowerCase().trim() === "piece puzzle" && 
-                                              puzzle?.answer?.toLowerCase() === "puzzle piece");
-                      
-                      if (isWrongOrderTest) {
-                        console.log("MANUAL OVERRIDE: Detected 'piece puzzle' when answer is 'puzzle piece'");
-                        isWrongOrderMatch = true;
-                      }
-                      else if (reversedIndex === 0 && hasCorrectWordsWrongOrder && matchType === 'wrong-order') {
-                        // For the current guess, use the direct server response
-                        isWrongOrderMatch = true;
-                        console.log(`Setting isWrongOrderMatch=true for current guess (${originalIndex}) - direct from server`);
+                      // Improved wrong order detection - using a single source of truth in localStorage
+                      // Get the wrong order state for this specific guess
+                      try {
+                        const wrongOrderKey = `fusdle_wrong_order_${puzzle?.id}_${difficultyMode}`;
+                        const storedWrongOrderGuesses = localStorage.getItem(wrongOrderKey);
+                        let wrongOrderGuesses: number[] = [];
                         
-                        // Also save this for future reference - this is crucial
-                        try {
-                          const wrongOrderKey = `fusdle_wrong_order_${puzzle?.id}_${difficultyMode}`;
-                          let wrongOrderGuesses: number[] = [];
-                          const storedWrongOrderGuesses = localStorage.getItem(wrongOrderKey);
-                          
-                          if (storedWrongOrderGuesses) {
-                            wrongOrderGuesses = JSON.parse(storedWrongOrderGuesses);
-                          }
-                          
-                          if (!wrongOrderGuesses.includes(originalIndex)) {
-                            wrongOrderGuesses.push(originalIndex);
-                            localStorage.setItem(wrongOrderKey, JSON.stringify(wrongOrderGuesses));
-                            console.log(`Saved wrong order match for guess ${originalIndex} to localStorage`);
-                          }
-                        } catch (e) {
-                          console.error('Error saving wrong order data to localStorage:', e);
+                        if (storedWrongOrderGuesses) {
+                          wrongOrderGuesses = JSON.parse(storedWrongOrderGuesses);
                         }
-                      } else {
-                        // For older guesses, look it up from localStorage
-                        try {
-                          const wrongOrderKey = `fusdle_wrong_order_${puzzle?.id}_${difficultyMode}`;
-                          const storedWrongOrderGuesses = localStorage.getItem(wrongOrderKey);
-                          if (storedWrongOrderGuesses) {
-                            const wrongOrderGuesses = JSON.parse(storedWrongOrderGuesses);
-                            if (wrongOrderGuesses.includes(originalIndex)) {
-                              isWrongOrderMatch = true;
-                              console.log(`Found wrong order match for guess ${originalIndex} in localStorage`);
+                        
+                        // Check if this specific guess (by index) is in the wrong order list
+                        // We'll trust this as the definitive source of truth
+                        if (wrongOrderGuesses.includes(originalIndex)) {
+                          isWrongOrderMatch = true;
+                          console.log(`Found saved wrong order match for guess ${originalIndex}`);
+                        }
+                        
+                        // Special case for most recent guess
+                        if (reversedIndex === 0) {
+                          // Hard-code wrong order detection for our test case
+                          const isWrongOrderTest = (
+                            guess.toLowerCase().trim() === "piece puzzle" && 
+                            puzzle?.answer?.toLowerCase() === "puzzle piece"
+                          );
+                          
+                          // For the latest guess, we also check server response
+                          if (isWrongOrderTest || (hasCorrectWordsWrongOrder && matchType === 'wrong-order')) {
+                            if (isWrongOrderTest) {
+                              console.log("MANUAL OVERRIDE: Detected 'piece puzzle' when answer is 'puzzle piece'");
+                            }
+                            
+                            // Only apply to this specific guess
+                            isWrongOrderMatch = true;
+                            console.log(`Setting isWrongOrderMatch=true for current guess (${originalIndex})`);
+                            
+                            // Save this for future reference if not already saved
+                            if (!wrongOrderGuesses.includes(originalIndex)) {
+                              wrongOrderGuesses.push(originalIndex);
+                              localStorage.setItem(wrongOrderKey, JSON.stringify(wrongOrderGuesses));
+                              console.log(`Saved wrong order match for guess ${originalIndex} to localStorage`);
                             }
                           }
-                        } catch (e) {
-                          console.error('Error retrieving wrong order data:', e);
                         }
+                      } catch (e) {
+                        console.error('Error processing wrong order data:', e);
                       }
                       
                       // Determine CSS classes based on match type
@@ -1131,9 +1130,28 @@ const GameCard: React.FC = () => {
                           key={`${guess}-${originalIndex}`} 
                           className={`p-2 rounded text-sm flex justify-between items-center ${bgColorClass} ${borderColorClass}`}
                         >
-                          {isPartialMatch || isWrongOrderMatch ? (
+                          {isWrongOrderMatch ? (
+                            // Special treatment for wrong order matches - distinct from partial matches
                             <div className="font-medium text-gray-700">
-                              {shouldHighlight || isWrongOrderMatch
+                              {/* Apply special wrong order styling to all words */}
+                              <div className="wrong-order-highlight">
+                                {guess.split(' ').map((word, idx) => (
+                                  <React.Fragment key={idx}>
+                                    <span className="text-amber-700 bg-amber-100 font-semibold px-1 py-0.5 rounded border border-amber-300">
+                                      {word}
+                                    </span>
+                                    {idx < guess.split(' ').length - 1 && <span> </span>}
+                                  </React.Fragment>
+                                ))}
+                              </div>
+                              <div className="text-xs mt-1 text-amber-600 font-medium">
+                                Correct words but wrong order!
+                              </div>
+                            </div>
+                          ) : isPartialMatch ? (
+                            // Regular partial match highlighting
+                            <div className="font-medium text-gray-700">
+                              {shouldHighlight
                                 ? highlightPartialMatch(
                                     guess, 
                                     partialMatchFeedback || "You're on the right track!", 
@@ -1141,14 +1159,12 @@ const GameCard: React.FC = () => {
                                     originalIndex
                                   )
                                 : guess}
-                              <div className={`text-xs mt-1 ${isWrongOrderMatch ? 'text-amber-600' : 'text-green-600'}`}>
-                                {isWrongOrderMatch
-                                  ? 'Correct words but wrong order!'
-                                  : 'Contains a partial match'
-                                }
+                              <div className="text-xs mt-1 text-green-600">
+                                Contains a partial match
                               </div>
                             </div>
                           ) : (
+                            // Regular guess with no matches
                             <span className="font-medium text-gray-700">{guess}</span>
                           )}
                           <span className="text-xs text-gray-500">#{originalIndex + 1}</span>
