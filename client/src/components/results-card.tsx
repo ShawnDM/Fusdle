@@ -31,31 +31,29 @@ const ResultsCard: React.FC = () => {
   });
 
   useEffect(() => {
-    // Calculate time until midnight (12 AM) EST
+    // Calculate time until midnight (12 AM) EST for all users regardless of their timezone
     const calculateTimeUntilNextPuzzle = () => {
+      // Get current time
       const now = new Date();
       
-      // Get current date at midnight EST
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      // This function uses a simple approach to calculate time until midnight ET
+      // Find the current ET time to calculate when the next puzzle will be available
+      const etTimeStr = now.toLocaleString('en-US', { timeZone: 'America/New_York' });
+      const currentET = new Date(etTimeStr);
       
-      // Convert to EST
-      const options = { timeZone: 'America/New_York' };
-      let estMidnight = new Date(today.toLocaleString('en-US', options));
+      // Create a new date for midnight tonight in ET
+      const midnightET = new Date(etTimeStr);
+      midnightET.setHours(24, 0, 0, 0); // Next midnight
       
-      // If it's already past midnight EST, use next day at midnight
-      if (now >= estMidnight) {
-        today.setDate(today.getDate() + 1);
-        estMidnight = new Date(today.toLocaleString('en-US', options));
-      }
+      // Convert both dates to milliseconds for calculation
+      const msSinceMidnight = currentET.getTime() - new Date(etTimeStr).setHours(0, 0, 0, 0);
+      const msInDay = 24 * 60 * 60 * 1000;
+      const msUntilMidnight = msInDay - msSinceMidnight;
       
-      // Calculate time difference in milliseconds
-      const diffMs = estMidnight.getTime() - now.getTime();
-      
-      // Convert to hours, minutes, seconds
-      const hours = Math.floor(diffMs / (1000 * 60 * 60));
-      const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+      // Convert ms to hours, minutes, seconds
+      const hours = Math.floor(msUntilMidnight / (1000 * 60 * 60));
+      const minutes = Math.floor((msUntilMidnight % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((msUntilMidnight % (1000 * 60)) / 1000);
       
       // Format time string
       return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
@@ -349,7 +347,8 @@ const ResultsCard: React.FC = () => {
           <div className="mt-6 p-4 bg-neutral/50 rounded-lg">
             <p className="text-sm font-medium mb-1">Next puzzle in:</p>
             <p className="text-xl font-bold text-primary">{timeUntilNextPuzzle}</p>
-            <p className="text-xs text-gray-500 mt-1">New puzzles at midnight EST</p>
+            <p className="text-xs text-gray-500 mt-1">New puzzles at midnight Eastern Time (EST/EDT)</p>
+            <p className="text-xs text-gray-400 mt-1">Same time for all players worldwide</p>
             
             {/* Development-only reset button - will be hidden in production */}
             {import.meta.env.DEV && (
