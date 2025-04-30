@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "vite build",
+  "buildCommand": "./vercel-build.sh",
   "outputDirectory": "dist/public",
   "framework": "vite",
   "functions": {
@@ -10,6 +10,10 @@
     }
   },
   "routes": [
+    {
+      "src": "/api/static",
+      "dest": "/api/static.js"
+    },
     {
       "src": "/api/(.*)",
       "headers": {
@@ -38,6 +42,26 @@
       "src": "^/robots.txt$",
       "dest": "/robots.txt",
       "headers": { "content-type": "text/plain", "cache-control": "public, max-age=3600" }
+    },
+    {
+      "src": "^/favicon.ico$",
+      "dest": "/api/static.js?path=favicon.ico",
+      "status": 404
+    },
+    {
+      "src": "^/preview.png$",
+      "dest": "/api/static.js?path=preview.png",
+      "status": 404
+    },
+    {
+      "src": "^/sitemap.xml$",
+      "dest": "/api/static.js?path=sitemap.xml",
+      "status": 404
+    },
+    {
+      "src": "^/robots.txt$",
+      "dest": "/api/static.js?path=robots.txt",
+      "status": 404
     },
     {
       "src": "^/(.+)\\.(png|jpg|jpeg|gif|ico|xml|txt|svg)$",
