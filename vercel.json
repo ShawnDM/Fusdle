@@ -1,36 +1,9 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
+  "buildCommand": "vite build",
   "outputDirectory": "dist/public",
   "framework": "vite",
-  "functions": {
-    "api/*.js": {
-      "memory": 1024,
-      "maxDuration": 10
-    }
-  },
   "routes": [
-    {
-      "src": "/api/copy-statics",
-      "dest": "/api/copy-statics.js"
-    },
-    {
-      "src": "/api/status",
-      "dest": "/api/status.js"
-    },
-    {
-      "src": "/api/static",
-      "dest": "/api/static.js"
-    },
-    {
-      "src": "/api/(.*)",
-      "headers": {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-        "Access-Control-Allow-Headers": "X-Requested-With, Content-Type, Accept, Authorization"
-      },
-      "dest": "/api/index.js"
-    },
     {
       "src": "^/favicon.ico$",
       "dest": "/favicon.ico",
@@ -50,26 +23,6 @@
       "src": "^/robots.txt$",
       "dest": "/robots.txt",
       "headers": { "content-type": "text/plain", "cache-control": "public, max-age=3600" }
-    },
-    {
-      "src": "^/favicon.ico$",
-      "dest": "/api/static.js?path=favicon.ico",
-      "status": 404
-    },
-    {
-      "src": "^/preview.png$",
-      "dest": "/api/static.js?path=preview.png",
-      "status": 404
-    },
-    {
-      "src": "^/sitemap.xml$",
-      "dest": "/api/static.js?path=sitemap.xml",
-      "status": 404
-    },
-    {
-      "src": "^/robots.txt$",
-      "dest": "/api/static.js?path=robots.txt",
-      "status": 404
     },
     {
       "src": "^/(.+)\\.(png|jpg|jpeg|gif|ico|xml|txt|svg)$",
