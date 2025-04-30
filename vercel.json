@@ -20,6 +20,31 @@
       "dest": "/api/index.js"
     },
     {
+      "src": "^/favicon.ico$",
+      "dest": "/favicon.ico",
+      "headers": { "cache-control": "public, max-age=86400" }
+    },
+    {
+      "src": "^/preview.png$",
+      "dest": "/preview.png",
+      "headers": { "cache-control": "public, max-age=86400" }
+    },
+    {
+      "src": "^/sitemap.xml$",
+      "dest": "/sitemap.xml",
+      "headers": { "content-type": "application/xml", "cache-control": "public, max-age=3600" }
+    },
+    {
+      "src": "^/robots.txt$",
+      "dest": "/robots.txt",
+      "headers": { "content-type": "text/plain", "cache-control": "public, max-age=3600" }
+    },
+    {
+      "src": "^/(.+)\\.(png|jpg|jpeg|gif|ico|xml|txt|svg)$",
+      "dest": "/$1.$2",
+      "headers": { "cache-control": "public, max-age=86400" }
+    },
+    {
       "handle": "filesystem"
     },
     {
