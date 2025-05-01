@@ -3,13 +3,16 @@
   "buildCommand": "vite build && mkdir -p dist/public && cp -f public/favicon.ico public/favicon.png public/preview.png public/sitemap.xml public/robots.txt dist/public/ || true",
   "outputDirectory": "dist/public",
   "framework": "vite",
-  "rewrites": [
-    { "source": "/api", "destination": "/api" },
-    { "source": "/api/puzzles/today", "destination": "/api/puzzles/today" },
-    { "source": "/api/puzzles/archive", "destination": "/api/puzzles/archive" },
-    { "source": "/api/puzzles/:id/guess", "destination": "/api/puzzles/[id]/guess" },
-    { "source": "/api/puzzles/:id/hints/:index", "destination": "/api/puzzles/[id]/hints/[index]" },
-    { "source": "/api/puzzles/:id/answer", "destination": "/api/puzzles/[id]/answer" }
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Credentials", "value": "true" },
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET,OPTIONS,PATCH,DELETE,POST,PUT" },
+        { "key": "Access-Control-Allow-Headers", "value": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version" }
+      ]
+    }
   ],
   "routes": [
     {
@@ -32,27 +35,12 @@
       "dest": "/robots.txt",
       "headers": { "content-type": "text/plain", "cache-control": "public, max-age=3600" }
     },
-    {
-      "src": "^/(.+)\\.(png|jpg|jpeg|gif|ico|xml|txt|svg)$",
-      "dest": "/$1.$2",
-      "headers": { "cache-control": "public, max-age=86400" }
-    },
-    {
-      "src": "^/api/.*",
-      "dest": "/index.html",
-      "methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-      "headers": {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization"
-      }
-    },
-    {
+    { 
       "handle": "filesystem"
     },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
+    { 
+      "src": "/(.*)", 
+      "dest": "/index.html" 
     }
   ]
 }
