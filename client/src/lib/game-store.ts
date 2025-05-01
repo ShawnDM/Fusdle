@@ -479,69 +479,22 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (!puzzle) {
       return false;
     }
-    
-    // Check for client-side exact match (case insensitive) before API call
-    const isExactMatch = puzzle.answer && 
-      guess.toLowerCase().trim() === puzzle.answer.toLowerCase().trim();
 
     try {
-      let data;
+      // Create URL with parameters
+      let apiUrl = `${getApiBaseUrl()}/api/puzzles/${puzzle.id}/guess?difficulty=${difficultyMode}`;
+      
+      // Add puzzleType parameter for fusion twist puzzles
+      if (puzzle.isFusionTwist) {
+        apiUrl += '&puzzleType=fusion';
+      }
+      
+      // We need to keep partial matches across guesses, so we're no longer clearing them here
+      // Define the storage key to use below
       const storageKey = `fusdle_partial_${puzzle.id}_${difficultyMode}`;
       
-      // If we detected an exact match client-side and have the answer, we can handle it without API
-      if (isExactMatch && puzzle.answer) {
-        console.log('Client-side exact match detected:', guess, '=', puzzle.answer);
-        // Create a synthetic response without making an API call
-        data = {
-          isCorrect: true,
-          answer: puzzle.answer,
-          partialMatchFeedback: null,
-          matchedWord: null,
-          matchType: 'perfect',
-          hasCorrectWordsWrongOrder: false
-        };
-      } else {
-        // Create URL with parameters for API call
-        let apiUrl = `${getApiBaseUrl()}/api/puzzles/${puzzle.id}/guess?difficulty=${difficultyMode}`;
-        
-        // Add puzzleType parameter for fusion twist puzzles
-        if (puzzle.isFusionTwist) {
-          apiUrl += '&puzzleType=fusion';
-        }
-        
-        try {
-          // Make API call to check the guess
-          const response = await apiRequest('POST', apiUrl, { guess });
-          
-          if (!response.ok) {
-            console.error('API response not ok:', response.status);
-            throw new Error('API response error');
-          }
-          
-          data = await response.json();
-          
-          // Ensure data has the expected properties
-          if (!data) {
-            throw new Error('Empty response from API');
-          }
-          
-          // Add missing properties if they don't exist
-          if (data.hasCorrectWordsWrongOrder === undefined) {
-            data.hasCorrectWordsWrongOrder = false;
-          }
-          
-        } catch (apiError) {
-          console.error('API error:', apiError);
-          // Use fallback data response if API fails
-          data = {
-            isCorrect: false,
-            partialMatchFeedback: null,
-            matchedWord: null,
-            matchType: 'none',
-            hasCorrectWordsWrongOrder: false
-          };
-        }
-      }
+      const response = await apiRequest('POST', apiUrl, { guess });
+      const data = await response.json();
       
       // Update partial match feedback if it exists
       if (data.partialMatchFeedback) {

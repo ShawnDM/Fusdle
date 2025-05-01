@@ -27,59 +27,15 @@ export async function apiRequest(
   // Normalize the URL with the correct base for the current environment
   const apiUrl = url.startsWith('http') ? url : `${getApiBaseUrl()}${url}`;
   
-  try {
-    const res = await fetch(apiUrl, {
-      method,
-      headers: data ? { "Content-Type": "application/json" } : {},
-      body: data ? JSON.stringify(data) : undefined,
-      credentials: "include",
-    });
-    
-    // If there's an error status but API is available
-    if (!res.ok) {
-      console.warn(`API request failed with status ${res.status}: ${apiUrl}`);
-      // For guesses, return a default response for deployment fallback
-      if (url.includes('/guess') && method === 'POST') {
-        console.log('Creating fallback response for guess endpoint');
-        // Create a synthetic response for guess endpoint
-        const mockResponse = new Response(JSON.stringify({
-          isCorrect: false,
-          partialMatchFeedback: null,
-          matchedWord: null,
-          matchType: 'none',
-          hasCorrectWordsWrongOrder: false
-        }), {
-          status: 200,
-          headers: {'Content-Type': 'application/json'}
-        });
-        return mockResponse;
-      }
-    }
+  const res = await fetch(apiUrl, {
+    method,
+    headers: data ? { "Content-Type": "application/json" } : {},
+    body: data ? JSON.stringify(data) : undefined,
+    credentials: "include",
+  });
 
-    await throwIfResNotOk(res);
-    return res;
-  } catch (error) {
-    console.error('API request error:', error);
-    
-    // Special case for deployment - provide fallback response for guess endpoint
-    if (url.includes('/guess') && method === 'POST') {
-      console.log('Creating fallback response for failed guess request');
-      // Create a synthetic response
-      const mockResponse = new Response(JSON.stringify({
-        isCorrect: false,
-        partialMatchFeedback: null,
-        matchedWord: null,
-        matchType: 'none',
-        hasCorrectWordsWrongOrder: false
-      }), {
-        status: 200,
-        headers: {'Content-Type': 'application/json'}
-      });
-      return mockResponse;
-    }
-    
-    throw error;
-  }
+  await throwIfResNotOk(res);
+  return res;
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
