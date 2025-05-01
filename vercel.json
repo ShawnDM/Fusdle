@@ -3,6 +3,14 @@
   "buildCommand": "vite build && mkdir -p dist/public && cp -f public/favicon.ico public/favicon.png public/preview.png public/sitemap.xml public/robots.txt dist/public/ || true",
   "outputDirectory": "dist/public",
   "framework": "vite",
+  "rewrites": [
+    { "source": "/api", "destination": "/api" },
+    { "source": "/api/puzzles/today", "destination": "/api/puzzles/today" },
+    { "source": "/api/puzzles/archive", "destination": "/api/puzzles/archive" },
+    { "source": "/api/puzzles/:id/guess", "destination": "/api/puzzles/[id]/guess" },
+    { "source": "/api/puzzles/:id/hints/:index", "destination": "/api/puzzles/[id]/hints/[index]" },
+    { "source": "/api/puzzles/:id/answer", "destination": "/api/puzzles/[id]/answer" }
+  ],
   "routes": [
     {
       "src": "^/favicon.ico$",
