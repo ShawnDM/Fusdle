@@ -28,39 +28,63 @@ try {
 // Helper function to check for partial matches
 function findPartialMatch(guess, answer) {
   // Convert both to lowercase for case-insensitive matching
-  const guessLower = guess.toLowerCase();
-  const answerLower = answer.toLowerCase();
+  const guessLower = guess.toLowerCase().trim();
+  const answerLower = answer.toLowerCase().trim();
   
   // Split by spaces to get individual words
-  const guessWords = guessLower.split(/\s+/);
-  const answerWords = answerLower.split(/\s+/);
+  const guessWords = guessLower.split(/\s+/).filter(word => word.length > 0);
+  const answerWords = answerLower.split(/\s+/).filter(word => word.length > 0);
+  
+  console.log('Checking for matches between:', { answer, guess });
   
   // Check for exact match first
   if (guessLower === answerLower) {
+    console.log('Perfect match found!');
     return {
       isCorrect: true,
-      answer: answer
+      answer: answer,
+      partialMatchFeedback: null,
+      matchedWord: null,
+      matchType: 'perfect',
+      hasCorrectWordsWrongOrder: false
     };
   }
   
   // Check for partial word matches
   const partialMatches = [];
+  let primaryMatch = null;
+  
   for (let i = 0; i < guessWords.length; i++) {
-    if (answerWords.includes(guessWords[i])) {
+    const word = guessWords[i];
+    if (answerWords.includes(word)) {
       partialMatches.push(i);
+      // Save the first matched word as primary
+      if (primaryMatch === null) {
+        primaryMatch = word;
+        console.log('Found primary word match:', JSON.stringify(primaryMatch));
+      }
     }
   }
   
   // Check for correct words in wrong order
-  const hasAllWords = guessWords.length === answerWords.length && 
+  const hasAllWords = 
+    guessWords.length === answerWords.length && 
     guessWords.every(word => answerWords.includes(word));
+  
+  if (hasAllWords) {
+    console.log('Found all words in wrong order');
+  }
+  
+  if (partialMatches.length > 0) {
+    console.log(`Found partial match (${primaryMatch ? 'primary' : 'generic'}):`, primaryMatch || 'no primary word');
+  }
   
   // Return results
   return {
     isCorrect: false,
     partialMatchFeedback: partialMatches.length > 0 ? partialMatches : null,
-    matchedWord: null,
-    matchType: partialMatches.length > 0 ? 'partial' : 'none',
+    matchedWord: primaryMatch,
+    matchType: primaryMatch ? 'primary' : (partialMatches.length > 0 ? 'partial' : 'none'),
     hasCorrectWordsWrongOrder: hasAllWords
   };
 }
@@ -109,10 +133,34 @@ module.exports = async (req, res) => {
       if (puzzleDoc) {
         const puzzleData = puzzleDoc.data();
         
-        // Check if the guess is correct
-        const result = findPartialMatch(guess, puzzleData.answer);
-        
-        return res.status(200).json(result);
+        try {
+          // Check if the guess is correct
+          const result = findPartialMatch(guess, puzzleData.answer);
+          
+          // Special handling for correct answers
+          if (result.isCorrect) {
+            console.log('Correct answer found:', guess, 'matches', puzzleData.answer);
+            return res.status(200).json({
+              isCorrect: true,
+              answer: puzzleData.answer,
+              partialMatchFeedback: null,
+              matchedWord: null,
+              matchType: 'perfect'
+            });
+          }
+          
+          return res.status(200).json(result);
+        } catch (err) {
+          console.error('Error in match logic:', err);
+          // Fallback response if matching fails
+          return res.status(200).json({
+            isCorrect: false,
+            partialMatchFeedback: null,
+            matchedWord: null,
+            matchType: 'error',
+            error: err.message
+          });
+        }
       }
     }
     
