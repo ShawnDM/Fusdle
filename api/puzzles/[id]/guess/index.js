@@ -145,7 +145,8 @@ module.exports = async (req, res) => {
               answer: puzzleData.answer,
               partialMatchFeedback: null,
               matchedWord: null,
-              matchType: 'perfect'
+              matchType: 'perfect',
+              hasCorrectWordsWrongOrder: false
             });
           }
           
@@ -158,6 +159,7 @@ module.exports = async (req, res) => {
             partialMatchFeedback: null,
             matchedWord: null,
             matchType: 'error',
+            hasCorrectWordsWrongOrder: false,
             error: err.message
           });
         }
