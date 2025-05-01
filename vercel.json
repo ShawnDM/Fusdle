@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "vite build",
+  "buildCommand": "node vercel.js",
   "outputDirectory": "dist/public",
   "framework": "vite",
   "functions": {
