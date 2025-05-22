@@ -7,8 +7,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Edit, Trash2, Calendar, Tag } from "lucide-react";
+import { Plus, Edit, Trash2, Calendar, Tag, LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, User } from "firebase/auth";
+import { app } from "@/firebase/config";
 
 interface PatchNote {
   id: string;
@@ -21,9 +23,8 @@ interface PatchNote {
 
 const PatchNotes: React.FC = () => {
   const [patchNotes, setPatchNotes] = useState<PatchNote[]>([]);
+  const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [adminPassword, setAdminPassword] = useState("");
-  const [showAdminDialog, setShowAdminDialog] = useState(false);
   const [editingNote, setEditingNote] = useState<PatchNote | null>(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const { toast } = useToast();
@@ -33,6 +34,42 @@ const PatchNotes: React.FC = () => {
   const [content, setContent] = useState("");
   const [version, setVersion] = useState("");
   const [type, setType] = useState<PatchNote['type']>('feature');
+
+  // List of admin email addresses (you can modify this list)
+  const adminEmails = [
+    // Add your Gmail address here
+    import.meta.env.VITE_ADMIN_EMAIL || "your-email@gmail.com"
+  ];
+
+  // Listen for authentication state changes
+  useEffect(() => {
+    const auth = getAuth(app);
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      if (currentUser) {
+        // Check if user email is in admin list
+        const isUserAdmin = adminEmails.includes(currentUser.email || "");
+        setIsAdmin(isUserAdmin);
+        
+        if (isUserAdmin) {
+          toast({
+            title: "Admin access granted",
+            description: `Welcome back, ${currentUser.displayName || currentUser.email}!`,
+          });
+        } else {
+          toast({
+            title: "Access restricted",
+            description: "You don't have admin privileges for patch notes.",
+            variant: "destructive",
+          });
+        }
+      } else {
+        setIsAdmin(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [adminEmails, toast]);
 
   // Load patch notes from localStorage
   useEffect(() => {
@@ -82,24 +119,33 @@ const PatchNotes: React.FC = () => {
     setPatchNotes(notes);
   };
 
-  // Admin authentication
-  const handleAdminLogin = () => {
-    // Get admin password from environment variable (set this in your deployment settings)
-    const correctPassword = import.meta.env.VITE_ADMIN_PASSWORD || 'fusdle2025';
-    if (adminPassword === correctPassword) {
-      setIsAdmin(true);
-      setShowAdminDialog(false);
-      setAdminPassword("");
+  // Google OAuth sign in
+  const handleSignIn = async () => {
+    try {
+      const auth = getAuth(app);
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      console.error("Sign in error:", error);
       toast({
-        title: "Admin access granted",
-        description: "You can now add, edit, and delete patch notes.",
-      });
-    } else {
-      toast({
-        title: "Access denied",
-        description: "Incorrect password.",
+        title: "Sign in failed",
+        description: "There was an error signing in with Google.",
         variant: "destructive",
       });
+    }
+  };
+
+  // Sign out
+  const handleSignOut = async () => {
+    try {
+      const auth = getAuth(app);
+      await signOut(auth);
+      toast({
+        title: "Signed out",
+        description: "You have been signed out successfully.",
+      });
+    } catch (error) {
+      console.error("Sign out error:", error);
     }
   };
 
@@ -222,40 +268,33 @@ const PatchNotes: React.FC = () => {
             <p className="text-gray-600 mt-1">Latest updates and improvements to Fusdle</p>
           </div>
           
-          {!isAdmin ? (
-            <Dialog open={showAdminDialog} onOpenChange={setShowAdminDialog}>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="sm">
-                  Admin Access
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Admin Authentication</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <Input
-                    type="password"
-                    placeholder="Enter admin password"
-                    value={adminPassword}
-                    onChange={(e) => setAdminPassword(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleAdminLogin()}
-                  />
-                  <Button onClick={handleAdminLogin} className="w-full">
-                    Login
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+          {!user ? (
+            <Button variant="outline" size="sm" onClick={handleSignIn}>
+              Sign in with Google
+            </Button>
+          ) : !isAdmin ? (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">
+                Welcome, {user.displayName || user.email}
+              </span>
+              <Button variant="outline" size="sm" onClick={handleSignOut}>
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </div>
           ) : (
             <div className="flex gap-2">
-              <Button 
-                onClick={() => setIsAdmin(false)}
-                variant="outline" 
-                size="sm"
-              >
-                Logout
-              </Button>
+              <div className="flex items-center gap-2 mr-2">
+                <span className="text-sm text-gray-600">
+                  Admin: {user.displayName || user.email}
+                </span>
+                <Button 
+                  onClick={handleSignOut}
+                  variant="outline" 
+                  size="sm"
+                >
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </div>
               <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
                 <DialogTrigger asChild>
                   <Button size="sm">
