@@ -17,6 +17,7 @@ interface ArchivePuzzle {
   date: string;
   emojis: string[];
   answer: string;
+  theme: string;
   difficulty: string;
   isFusionTwist: number;
   twistType: string | null;
@@ -339,6 +340,14 @@ const PuzzleCard: React.FC<{ puzzle: ArchivePuzzle }> = ({ puzzle }) => {
       </div>
 
       <div className="text-3xl mb-3">{puzzle.emojis.join(" ")}</div>
+      
+      {/* Theme display */}
+      <div className="flex items-center justify-center mb-3">
+        <div className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium">
+          <span className="mr-1">🎯</span>
+          {puzzle.theme || 'General'}
+        </div>
+      </div>
       
       <div className="p-3 bg-gray-50 rounded-md">
         <div className="text-sm text-gray-500 mb-1">Answer:</div>
