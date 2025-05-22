@@ -31,7 +31,10 @@ export const puzzles = pgTable("puzzles", {
   twistType: text("twist_type")
 });
 
-export const insertPuzzleSchema = createInsertSchema(puzzles).omit(["id"]);
+export const insertPuzzleSchema = createInsertSchema(puzzles, {
+  emojis: z.array(z.string()),
+  hints: z.array(z.string())
+}).omit(["id"]);
 
 export type InsertPuzzle = z.infer<typeof insertPuzzleSchema>;
 // Extended Puzzle type to include wordCount which is calculated at runtime
