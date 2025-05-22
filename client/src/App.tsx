@@ -7,6 +7,7 @@ import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import Archive from "@/pages/archive";
 import About from "@/pages/about";
+import PatchNotes from "@/pages/patch-notes";
 import NavTabs from "@/components/nav-tabs";
 import SocialButtons from "@/components/social-buttons";
 import { navigationState, updateNavigationState, queryClient } from "@/lib/queryClient";
@@ -346,6 +347,7 @@ function App() {
           <Switch>
             <Route path="/" component={Home} />
             <Route path="/archive" component={Archive} />
+            <Route path="/patch-notes" component={PatchNotes} />
             <Route path="/about" component={About} />
             <Route component={NotFound} />
           </Switch>

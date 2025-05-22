@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { Archive, Home, Info } from "lucide-react";
+import { Archive, Home, Info, FileText } from "lucide-react";
 
 interface NavTabsProps {
   currentPath: string;
@@ -37,6 +37,18 @@ const NavTabs: React.FC<NavTabsProps> = ({ currentPath }) => {
           >
             <Archive className="w-4 h-4" />
             <span>Archive</span>
+          </a>
+        </Link>
+        <Link href="/patch-notes">
+          <a
+            className={`px-4 py-2.5 rounded-lg font-medium flex items-center gap-1.5 transition-all duration-200 ${
+              currentPath === "/patch-notes"
+                ? "text-white bg-secondary shadow-md"
+                : "text-white/90 hover:bg-white/20 hover:text-white"
+            }`}
+          >
+            <FileText className="w-4 h-4" />
+            <span>Updates</span>
           </a>
         </Link>
         <Link href="/about">
