@@ -19,8 +19,8 @@ export function calculateFusdleNumber(dateStr: string | undefined | null, fallba
   }
   
   try {
-    // Game starts on April 21, 2025 (Fusdle #1)
-    const baseDate = new Date('2025-04-20');
+    // Game starts on May 22, 2025 (Fusdle #1)
+    const baseDate = new Date('2025-05-21'); // One day before May 22
     const puzzleDate = new Date(dateStr);
     
     // Calculate days between dates
