@@ -84,8 +84,9 @@ const PatchNotes: React.FC = () => {
 
   // Admin authentication
   const handleAdminLogin = () => {
-    // Simple password check - you can change this password
-    if (adminPassword === 'fusdle2025') {
+    // Get admin password from environment variable (set this in your deployment settings)
+    const correctPassword = import.meta.env.VITE_ADMIN_PASSWORD || 'fusdle2025';
+    if (adminPassword === correctPassword) {
       setIsAdmin(true);
       setShowAdminDialog(false);
       setAdminPassword("");

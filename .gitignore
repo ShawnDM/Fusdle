@@ -3,6 +3,12 @@ dist
 .DS_Store
 server/public
 vite.config.ts.*
-*.tar.gzserviceAccountKey.json
-puzzles.json
+*.tar.gz
 serviceAccountKey.json
+puzzles.json
+
+# Environment files
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
