@@ -73,6 +73,7 @@ const puzzleFromFirestore = (doc: any): Puzzle => {
       difficulty: data.difficulty || "normal",
       emojis: data.emojis || [],
       answer: data.answer || "",
+      theme: data.theme || "General",
       hints: data.hints || [],
       isFusionTwist: data.isFusionTwist || 0,
       twistType: data.twistType || null,

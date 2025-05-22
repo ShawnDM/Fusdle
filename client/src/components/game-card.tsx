@@ -10,6 +10,7 @@ import { confirmAlert } from 'react-confirm-alert';
 import { useToast } from "@/hooks/use-toast";
 import { calculateFusdleNumber } from "@/lib/utils";
 import { resetFlawlessStreak } from "@/lib/streak";
+import { generateLetterPlaceholders } from "@/lib/letter-placeholders";
 import 'react-confirm-alert/src/react-confirm-alert.css';
 import '@/components/confirm-dialog.css';
 import {
@@ -724,6 +725,23 @@ const GameCard: React.FC = () => {
       </div>
 
       <EmojiDisplay emojis={puzzle.emojis} />
+
+      {/* Theme display */}
+      <div className="flex items-center justify-center my-3 px-4">
+        <div className="bg-purple-100 text-purple-800 px-3 py-1.5 rounded-full text-sm font-medium">
+          <span className="mr-1">🎯</span>
+          Theme: {puzzle.theme}
+        </div>
+      </div>
+
+      {/* Letter placeholders */}
+      <div className="flex items-center justify-center my-3 px-4">
+        <div className="bg-gray-50 border-2 border-dashed border-gray-300 px-4 py-2 rounded-lg">
+          <div className="text-center text-gray-600 text-sm font-mono tracking-wider">
+            {generateLetterPlaceholders(puzzle.answer)}
+          </div>
+        </div>
+      </div>
 
       {/* Word count hint */}
       {puzzle.wordCount && (
