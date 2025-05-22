@@ -641,8 +641,8 @@ const GameCard: React.FC = () => {
       )}
       <div className="flex justify-between items-center mb-4">
         <div className="text-sm text-gray-500">
-          {/* Using puzzle's date for Fusdle number, not today's date */}
-          <span>Fusdle #{calculateFusdleNumber(puzzle.date, puzzle.puzzleNumber)}</span>
+          {/* Using today's date for current Fusdle number */}
+          <span>Fusdle #{calculateFusdleNumber(new Date().toISOString().split('T')[0])}</span>
         </div>
         <div className="flex items-center space-x-2">
           <div className="flex items-center bg-secondary/10 rounded-full px-3 py-1">
