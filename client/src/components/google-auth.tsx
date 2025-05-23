@@ -78,7 +78,7 @@ export const GoogleAuth: React.FC<GoogleAuthProps> = ({ showBenefits = true, com
 
     return (
       <Card className="border-green-200 bg-green-50">
-        <CardHeader className="pb-3">
+        <CardContent className="pt-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white text-sm font-bold">
@@ -93,7 +93,7 @@ export const GoogleAuth: React.FC<GoogleAuthProps> = ({ showBenefits = true, com
               <LogOut className="h-4 w-4" />
             </Button>
           </div>
-        </CardHeader>
+        </CardContent>
       </Card>
     );
   }
@@ -118,16 +118,16 @@ export const GoogleAuth: React.FC<GoogleAuthProps> = ({ showBenefits = true, com
       transition={{ duration: 0.5 }}
     >
       <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-purple-50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Shield className="h-5 w-5 text-blue-600" />
-            Sign in with Google
-          </CardTitle>
-          <p className="text-gray-600">
-            Keep your progress safe and unlock extra features!
-          </p>
-        </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="pt-6 space-y-4">
+          <div className="text-center">
+            <h3 className="flex items-center justify-center gap-2 text-lg font-semibold mb-2">
+              <Shield className="h-5 w-5 text-blue-600" />
+              Sign in with Google
+            </h3>
+            <p className="text-gray-600">
+              Keep your progress safe and unlock extra features!
+            </p>
+          </div>
           {showBenefits && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="flex items-center gap-2 text-sm">
