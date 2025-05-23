@@ -534,10 +534,41 @@ export class FirestoreService {
   async createPatchNote(patchNote: Omit<PatchNote, 'id'>): Promise<PatchNote> {
     try {
       const docRef = await addDoc(patchNotesCollection, patchNote);
-      return {
+      const createdPatchNote = {
         id: docRef.id,
         ...patchNote
       };
+
+      // Send webhook notification to n8n workflow
+      try {
+        const webhookUrl = 'https://n8n.shawnlabs.com/webhook/3900525d-7568-4590-8acd-8ee7f2a7f438';
+        const webhookPayload = {
+          id: createdPatchNote.id,
+          title: createdPatchNote.title,
+          content: createdPatchNote.content,
+          version: createdPatchNote.version,
+          date: createdPatchNote.date,
+          type: createdPatchNote.type,
+          url: `${window.location.origin}/patch-notes`,
+          gameUrl: window.location.origin,
+          timestamp: new Date().toISOString()
+        };
+
+        await fetch(webhookUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(webhookPayload)
+        });
+
+        console.log('Webhook notification sent successfully');
+      } catch (webhookError) {
+        console.error('Failed to send webhook notification:', webhookError);
+        // Don't throw here - patch note creation should still succeed even if webhook fails
+      }
+
+      return createdPatchNote;
     } catch (error) {
       console.error('Error creating patch note:', error);
       throw error;
