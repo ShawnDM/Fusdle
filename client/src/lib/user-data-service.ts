@@ -217,7 +217,7 @@ class UserDataService {
 
   private getLocalGameHistory(): GameSession[] {
     try {
-      const history = localStorage.getItem(this.GAME_HISTORY_KEY);
+      const history = localStorage.getItem('fusdle_game_history');
       return history ? JSON.parse(history) : [];
     } catch (error) {
       console.error('Error loading game history:', error);
@@ -249,9 +249,9 @@ class UserDataService {
 
     // Count puzzles by difficulty and type (each session = 1 attempt/day)
     for (const session of gameHistory) {
-      const difficulty = session.difficulty || 'normal';
-      const isFusion = session.isFusion || false;
-      const totalGuesses = session.totalGuesses || session.attempts?.length || 1;
+      const difficulty = (session as any).difficulty || 'normal';
+      const isFusion = (session as any).isFusion || false;
+      const totalGuesses = (session as any).totalGuesses || session.attempts?.length || 1;
 
       if (isFusion) {
         stats.fusion.attempted++;
