@@ -51,7 +51,8 @@ const PatchNotes: React.FC = () => {
         const isUserAdmin = adminEmails.includes(currentUser.email || "");
         setIsAdmin(isUserAdmin);
         
-        if (isUserAdmin) {
+        // Only show toast once when first becoming admin
+        if (isUserAdmin && !isAdmin) {
           const firstName = currentUser.displayName?.split(' ')[0] || currentUser.email?.split('@')[0] || 'Admin';
           toast({
             title: "Admin access granted",
@@ -64,7 +65,7 @@ const PatchNotes: React.FC = () => {
     });
 
     return () => unsubscribe();
-  }, [adminEmails, toast]);
+  }, []); // Remove dependencies to prevent loops
 
   // Load patch notes from localStorage
   useEffect(() => {
