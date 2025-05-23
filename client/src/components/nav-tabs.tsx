@@ -22,9 +22,9 @@ const NavTabs: React.FC<NavTabsProps> = ({ currentPath }) => {
   ];
 
   return (
-    <div className="mb-6">
+    <div className="mb-2">
       {/* Header with hamburger menu */}
-      <div className="flex justify-start items-center mb-4">
+      <div className="flex justify-start items-center mb-2">
         {/* Hamburger Menu Button */}
         <Button
           variant="ghost"

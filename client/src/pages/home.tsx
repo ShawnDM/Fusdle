@@ -77,7 +77,7 @@ const Home: React.FC = () => {
   return (
     <>
       {/* Google Sign-in Component */}
-      <div className="mb-6">
+      <div className="mb-4">
         <GoogleAuth />
       </div>
       
