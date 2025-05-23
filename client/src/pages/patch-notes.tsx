@@ -7,10 +7,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Edit, Trash2, Calendar, Tag, LogOut } from "lucide-react";
+import { Plus, Edit, Trash2, Calendar, Tag, LogOut, Eye, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getAuth, onAuthStateChanged, User } from "firebase/auth";
 import GoogleAuth from "@/components/google-auth";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface PatchNote {
   id: string;
@@ -34,6 +36,7 @@ const PatchNotes: React.FC = () => {
   const [content, setContent] = useState("");
   const [version, setVersion] = useState("");
   const [type, setType] = useState<PatchNote['type']>('feature');
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
 
   // List of admin email addresses (you can modify this list)
   const adminEmails = [
@@ -291,13 +294,61 @@ const PatchNotes: React.FC = () => {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1">Content</label>
-                      <Textarea
-                        value={content}
-                        onChange={(e) => setContent(e.target.value)}
-                        placeholder="Describe the changes..."
-                        rows={4}
-                      />
+                      <div className="flex justify-between items-center mb-2">
+                        <label className="block text-sm font-medium">Content (Markdown Supported)</label>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant={!isPreviewMode ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setIsPreviewMode(false)}
+                          >
+                            <FileText className="h-3 w-3 mr-1" />
+                            Edit
+                          </Button>
+                          <Button
+                            type="button"
+                            variant={isPreviewMode ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setIsPreviewMode(true)}
+                          >
+                            <Eye className="h-3 w-3 mr-1" />
+                            Preview
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      {!isPreviewMode ? (
+                        <Textarea
+                          value={content}
+                          onChange={(e) => setContent(e.target.value)}
+                          placeholder="Describe the changes using markdown...
+
+Examples:
+# Main heading
+## Sub heading
+**Bold text**
+*Italic text*
+- Bullet points
+1. Numbered lists
+[Link text](https://example.com)
+`code`"
+                          rows={8}
+                          className="font-mono text-sm"
+                        />
+                      ) : (
+                        <div className="border rounded-md p-3 min-h-32 bg-gray-50">
+                          {content ? (
+                            <div className="prose prose-sm max-w-none">
+                              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                {content}
+                              </ReactMarkdown>
+                            </div>
+                          ) : (
+                            <p className="text-gray-500 italic">Preview will appear here...</p>
+                          )}
+                        </div>
+                      )}
                     </div>
                     <div className="flex justify-end gap-2">
                       <Button 
@@ -382,7 +433,11 @@ const PatchNotes: React.FC = () => {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-gray-700 leading-relaxed">{note.content}</p>
+                  <div className="text-gray-700 leading-relaxed prose prose-sm max-w-none prose-headings:text-gray-800 prose-strong:text-gray-900 prose-code:bg-gray-100 prose-code:px-1 prose-code:rounded">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {note.content}
+                    </ReactMarkdown>
+                  </div>
                 </CardContent>
               </Card>
             ))
