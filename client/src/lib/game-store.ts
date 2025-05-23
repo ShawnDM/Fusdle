@@ -4,6 +4,7 @@ import { updateStreak, getStreak, getFlawlessStreak, markHintsUsed } from './str
 import { firestoreService } from '../firebase/firestore';
 import { getGlobalDateString, shouldShowNewPuzzle } from './global-time';
 import { calculateFusdleNumber } from './utils';
+import { userDataService } from './user-data-service';
 
 // Helper functions to manage completed puzzles in localStorage
 const COMPLETED_PUZZLES_KEY = 'fusdle_completed_puzzles';
@@ -41,6 +42,27 @@ export async function saveCompletedPuzzle(puzzleId: number, attemptsCount: numbe
     
     // Mark puzzle as completed for this specific difficulty
     localStorage.setItem(`fusdle_${puzzleId}_${difficulty}_completed`, 'true');
+    
+    // Track puzzle completion with user data service
+    const gameStore = useGameStore.getState();
+    const hintsUsed = gameStore.revealedHints.length > 0;
+    
+    const gameSession = {
+      puzzleId: puzzleId.toString(),
+      attempts: attemptsCount,
+      solved: status === 'won',
+      usedHints: hintsUsed,
+      solvedAt: status === 'won' ? new Date().toISOString() : undefined
+    };
+    
+    console.log('Saving puzzle completion to user data service:', gameSession);
+    
+    try {
+      await userDataService.updateStatsAfterPuzzle(gameSession);
+      console.log('Successfully saved puzzle completion to user data service');
+    } catch (error) {
+      console.error('Error saving puzzle completion to user data service:', error);
+    }
     
     // If normal puzzle is completed, unlock hard mode
     if (difficulty === 'normal') {
