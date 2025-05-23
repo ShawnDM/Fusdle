@@ -200,8 +200,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // If still no match, try substring matches with significant words
-      // But only for partial matches within answer words, NOT guess words containing answer words
+      // If still no match, try word-boundary substring matches with significant words
+      // Only match if a guess word is a true substring of an answer word (like "coff" in "coffee")
       if (!matchedWord) {
         for (const guessWord of guessWords) {
           // Skip very short words (2 chars or less) as they often give false positives
@@ -211,13 +211,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Only consider meaningful answer words
             if (answerWord.length < 4) continue;
             
-            // FIXED: Only match if the answer word contains the guess word as a complete substring
-            // AND the guess word is shorter than the answer word (preventing false positives)
-            // This prevents "coffees" from matching "coffee" or "theatres" from matching "theatre"
-            if (answerWord.includes(guessWord) && guessWord !== answerWord && guessWord.length < answerWord.length) {
+            // FIXED: Only match if the answer word starts with the guess word (true prefix match)
+            // This allows "coff" to match "coffee" but prevents "coffees" from matching "coffee"
+            if (answerWord.toLowerCase().startsWith(guessWord.toLowerCase()) && guessWord !== answerWord) {
               matchedWord = guessWord;
               matchType = 'substring';
-              console.log(`Found substring match: "${matchedWord}" within "${answerWord}"`);
+              console.log(`Found prefix match: "${matchedWord}" at start of "${answerWord}"`);
               break;
             }
           }
