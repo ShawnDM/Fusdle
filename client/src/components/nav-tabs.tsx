@@ -176,10 +176,17 @@ const NavTabs: React.FC<NavTabsProps> = ({ currentPath }) => {
             )}
           </Button>
           
-          {/* Fusdle Title */}
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-200 to-pink-200 bg-clip-text text-transparent">
-            Fusdle
-          </h1>
+          {/* Logo and Fusdle Title */}
+          <div className="flex items-center gap-2">
+            <img 
+              src="/logo-placeholder.svg" 
+              alt="Fusdle Logo" 
+              className="w-8 h-8 rounded-lg"
+            />
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-200 to-pink-200 bg-clip-text text-transparent">
+              Fusdle
+            </h1>
+          </div>
         </div>
         
         {/* Right side buttons */}
