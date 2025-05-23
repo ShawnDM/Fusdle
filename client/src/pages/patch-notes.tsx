@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Edit, Trash2, Calendar, Tag, LogOut, Eye, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -408,73 +407,64 @@ Examples:
           )}
         </div>
 
-        <div>
+        <div className="space-y-4">
           {patchNotes.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-gray-500">No patch notes available.</p>
             </div>
           ) : (
-            <Accordion type="single" collapsible className="space-y-3">
-              {patchNotes.map((note) => (
-                <AccordionItem key={note.id} value={note.id} className="border rounded-lg bg-white shadow-sm">
-                  <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-gray-50 transition-colors">
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center w-full gap-3">
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                        <div className="flex items-center gap-3">
-                          <span className="font-semibold text-lg text-gray-800 text-left">{note.title}</span>
-                          <Badge variant={getBadgeVariant(note.type)}>
-                            {getBadgeLabel(note.type)}
-                          </Badge>
+            patchNotes.map((note) => (
+              <Card key={note.id} className="relative">
+                <CardHeader className="pb-3">
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <CardTitle className="text-lg">{note.title}</CardTitle>
+                        <Badge variant={getBadgeVariant(note.type)}>
+                          {getBadgeLabel(note.type)}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-4 text-sm text-gray-500">
+                        <div className="flex items-center gap-1">
+                          <Tag className="h-3 w-3" />
+                          {note.version}
                         </div>
-                        <div className="flex items-center gap-4 text-sm text-gray-500">
-                          <div className="flex items-center gap-1">
-                            <Tag className="h-4 w-4" />
-                            <span className="font-medium">v{note.version}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-4 w-4" />
-                            <span>{format(new Date(note.date), "MMM d, yyyy")}</span>
-                          </div>
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          {format(new Date(note.date), "MMM d, yyyy")}
                         </div>
                       </div>
-                      {isAdmin && (
-                        <div className="flex gap-2 ml-auto" onClick={(e) => e.stopPropagation()}>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              startEditing(note);
-                            }}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteNote(note.id);
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      )}
                     </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="px-4 pb-4">
-                    <div className="text-gray-700 leading-relaxed prose prose-sm max-w-none prose-headings:text-gray-800 prose-strong:text-gray-900 prose-code:bg-gray-100 prose-code:px-1 prose-code:rounded">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                        {note.content}
-                      </ReactMarkdown>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
+                    
+                    {isAdmin && (
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => startEditing(note)}
+                        >
+                          <Edit className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteNote(note.id)}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-gray-700 leading-relaxed prose prose-sm max-w-none prose-headings:text-gray-800 prose-strong:text-gray-900 prose-code:bg-gray-100 prose-code:px-1 prose-code:rounded">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {note.content}
+                    </ReactMarkdown>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
           )}
         </div>
       </div>
