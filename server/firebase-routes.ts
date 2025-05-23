@@ -230,17 +230,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         partialMatchFeedback = `You're on the right track! Your guess contains "${matchedWord}".`;
         console.log(`Found partial match (${matchType}): ${matchedWord}`);
       } else {
-        // Only use generic feedback if we're very confident there's some match we couldn't identify
-        // This is safer than potentially giving false feedback
-        const guessText = guess.toLowerCase();
-        const answerText = puzzle.answer.toLowerCase();
-        
-        // If there's some textual overlap, provide generic feedback
-        if (guessText.length > 3 && answerText.includes(guessText.substring(0, 4)) || 
-            guessText.includes(answerText.substring(0, 4))) {
-          partialMatchFeedback = "You're on the right track! Part of your answer matches.";
-          console.log("Found generic partial match without specific word");
-        }
+        // No valid matches found - don't provide any partial match feedback
+        console.log("No valid partial matches found");
       }
       } // Close the hasCorrectWordsWrongOrder if block
       
