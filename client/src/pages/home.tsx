@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useGameStore } from "@/lib/game-store";
 import GameCard from "@/components/game-card";
 import ResultsCard from "@/components/results-card";
+import GoogleAuth from "@/components/google-auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { navigationState } from "@/lib/queryClient";
 
@@ -75,6 +76,10 @@ const Home: React.FC = () => {
   
   return (
     <>
+      {/* Google Sign-in Component */}
+      <div className="mb-6">
+        <GoogleAuth />
+      </div>
       
       {/* Streak and fusion twist indicators */}
       <div className="flex flex-wrap justify-between items-center mb-4">

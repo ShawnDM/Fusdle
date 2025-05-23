@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { Archive, Home, Info, FileText } from "lucide-react";
+import UserMenu from "@/components/user-menu";
 
 interface NavTabsProps {
   currentPath: string;
@@ -9,12 +10,13 @@ interface NavTabsProps {
 const NavTabs: React.FC<NavTabsProps> = ({ currentPath }) => {
   return (
     <div className="flex justify-center mb-6">
-      <motion.nav 
-        className="inline-flex bg-white/30 rounded-xl p-1.5 backdrop-blur-md shadow-sm"
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ type: "spring", stiffness: 400, damping: 25 }}
-      >
+      <div className="flex justify-between items-center w-full max-w-4xl">
+        <motion.nav 
+          className="inline-flex bg-white/30 rounded-xl p-1.5 backdrop-blur-md shadow-sm"
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 400, damping: 25 }}
+        >
         <Link href="/">
           <a
             className={`px-4 py-2.5 rounded-lg font-medium flex items-center gap-1.5 transition-all duration-200 ${
@@ -63,7 +65,13 @@ const NavTabs: React.FC<NavTabsProps> = ({ currentPath }) => {
             <span>About</span>
           </a>
         </Link>
-      </motion.nav>
+        </motion.nav>
+        
+        {/* User Menu */}
+        <div className="ml-4">
+          <UserMenu />
+        </div>
+      </div>
     </div>
   );
 };
