@@ -52,9 +52,10 @@ const PatchNotes: React.FC = () => {
         setIsAdmin(isUserAdmin);
         
         if (isUserAdmin) {
+          const firstName = currentUser.displayName?.split(' ')[0] || currentUser.email?.split('@')[0] || 'Admin';
           toast({
             title: "Admin access granted",
-            description: `Welcome back, ${currentUser.displayName || currentUser.email}!`,
+            description: `Welcome back, ${firstName}!`,
           });
         } else {
           toast({
@@ -275,7 +276,7 @@ const PatchNotes: React.FC = () => {
           ) : !isAdmin ? (
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600">
-                Welcome, {user.displayName || user.email}
+                Welcome, {user.displayName?.split(' ')[0] || user.email?.split('@')[0]}
               </span>
               <Button variant="outline" size="sm" onClick={handleSignOut}>
                 <LogOut className="h-4 w-4" />
@@ -285,7 +286,7 @@ const PatchNotes: React.FC = () => {
             <div className="flex gap-2">
               <div className="flex items-center gap-2 mr-2">
                 <span className="text-sm text-gray-600">
-                  Admin: {user.displayName || user.email}
+                  Admin: {user.displayName?.split(' ')[0] || user.email?.split('@')[0]}
                 </span>
                 <Button 
                   onClick={handleSignOut}
