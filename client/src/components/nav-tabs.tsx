@@ -177,7 +177,9 @@ const NavTabs: React.FC<NavTabsProps> = ({ currentPath }) => {
           </Button>
           
           {/* Fusdle Title */}
-          <h1 className="text-2xl font-bold text-white">Fusdle</h1>
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-200 to-pink-200 bg-clip-text text-transparent">
+            Fusdle
+          </h1>
         </div>
         
         {/* Right side buttons */}
