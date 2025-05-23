@@ -235,11 +235,8 @@ const PatchNotes: React.FC = () => {
             <p className="text-gray-600 mt-1">Latest updates and improvements to Fusdle</p>
           </div>
           
-          {!isAdmin ? (
-            <GoogleAuth compact showBenefits={false} />
-          ) : (
+          {isAdmin && (
             <div className="flex gap-2">
-              <GoogleAuth compact showBenefits={false} />
               <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
                 <DialogTrigger asChild>
                   <Button size="sm">
