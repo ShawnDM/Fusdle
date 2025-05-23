@@ -1,8 +1,9 @@
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { Archive, Home, Info, FileText, Menu, X } from "lucide-react";
+import { Archive, Home, Info, FileText, Menu, X, HelpCircle, BarChart3 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import UserMenu from "@/components/user-menu";
 
 interface NavTabsProps {
@@ -11,6 +12,8 @@ interface NavTabsProps {
 
 const NavTabs: React.FC<NavTabsProps> = ({ currentPath }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showHowToPlay, setShowHowToPlay] = useState(false);
+  const [showStatistics, setShowStatistics] = useState(false);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
@@ -42,6 +45,90 @@ const NavTabs: React.FC<NavTabsProps> = ({ currentPath }) => {
           
           {/* Fusdle Title */}
           <h1 className="text-2xl font-bold text-white">Fusdle</h1>
+        </div>
+        
+        {/* Right side buttons */}
+        <div className="flex items-center gap-2">
+          {/* How to Play Dialog */}
+          <Dialog open={showHowToPlay} onOpenChange={setShowHowToPlay}>
+            <DialogTrigger asChild>
+              <Button variant="ghost" size="sm" className="p-2 text-white hover:bg-white/20">
+                <HelpCircle className="h-5 w-5" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <HelpCircle className="h-5 w-5" />
+                  How to Play Fusdle
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-semibold mb-2">🎯 Goal</h3>
+                  <p className="text-sm text-gray-600">Guess the word, phrase, or concept behind the emojis!</p>
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-2">🎮 How to Play</h3>
+                  <ul className="text-sm text-gray-600 space-y-1">
+                    <li>• Look at the emojis and think about what they represent</li>
+                    <li>• Type your guess in the input field</li>
+                    <li>• Get hints if you're stuck (but lose your flawless streak)</li>
+                    <li>• Solve normal mode to unlock hard mode</li>
+                  </ul>
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-2">✨ Features</h3>
+                  <ul className="text-sm text-gray-600 space-y-1">
+                    <li>• Daily puzzles with normal & hard difficulty</li>
+                    <li>• Fusion twist puzzles twice a week</li>
+                    <li>• Streak tracking and multipliers</li>
+                    <li>• Share your results with friends</li>
+                  </ul>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* Statistics Dialog */}
+          <Dialog open={showStatistics} onOpenChange={setShowStatistics}>
+            <DialogTrigger asChild>
+              <Button variant="ghost" size="sm" className="p-2 text-white hover:bg-white/20">
+                <BarChart3 className="h-5 w-5" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  Your Statistics
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="text-center p-3 bg-gray-50 rounded-lg">
+                    <div className="text-2xl font-bold text-purple-600">0</div>
+                    <div className="text-sm text-gray-600">Puzzles Solved</div>
+                  </div>
+                  <div className="text-center p-3 bg-gray-50 rounded-lg">
+                    <div className="text-2xl font-bold text-green-600">0</div>
+                    <div className="text-sm text-gray-600">Current Streak</div>
+                  </div>
+                  <div className="text-center p-3 bg-gray-50 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-600">0</div>
+                    <div className="text-sm text-gray-600">Max Streak</div>
+                  </div>
+                  <div className="text-center p-3 bg-gray-50 rounded-lg">
+                    <div className="text-2xl font-bold text-orange-600">0%</div>
+                    <div className="text-sm text-gray-600">Win Rate</div>
+                  </div>
+                </div>
+                <div className="text-center text-sm text-gray-500">
+                  Sign in with Google to track your progress!
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
