@@ -14,27 +14,29 @@ interface NavTabsProps {
 }
 
 // Statistics component to display user data
-const StatisticsContent: React.FC = () => {
+const StatisticsContent: React.FC<{ onRefresh?: boolean }> = ({ onRefresh = false }) => {
   const [stats, setStats] = useState<UserStats | null>(null);
   const [detailedStats, setDetailedStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const loadStats = async () => {
-      try {
-        const userStats = await userDataService.getUserStats();
-        const detailed = await userDataService.getDetailedStats();
-        setStats(userStats);
-        setDetailedStats(detailed);
-      } catch (error) {
-        console.error("Error loading user stats:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const loadStats = async () => {
+    setLoading(true);
+    try {
+      const userStats = await userDataService.getUserStats();
+      const detailed = await userDataService.getDetailedStats();
+      setStats(userStats);
+      setDetailedStats(detailed);
+      console.log('Statistics loaded:', { userStats, detailed });
+    } catch (error) {
+      console.error("Error loading user stats:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     loadStats();
-  }, []);
+  }, [onRefresh]);
 
   if (loading) {
     return <div className="text-center">Loading statistics...</div>;
@@ -143,6 +145,7 @@ const NavTabs: React.FC<NavTabsProps> = ({ currentPath }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [showStatistics, setShowStatistics] = useState(false);
+  const [statsRefreshKey, setStatsRefreshKey] = useState(0);
   const [user] = useAuthState(getAuth());
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
@@ -234,7 +237,7 @@ const NavTabs: React.FC<NavTabsProps> = ({ currentPath }) => {
                   Your Statistics
                 </DialogTitle>
               </DialogHeader>
-              <StatisticsContent />
+              <StatisticsContent key={statsRefreshKey} onRefresh={statsRefreshKey > 0} />
               <div className="text-center text-sm text-gray-500 mt-4">
                 {!user ? "Sign in with Google to sync your progress across devices!" : "Your progress is automatically saved to your Google account"}
               </div>
