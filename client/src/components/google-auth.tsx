@@ -76,14 +76,7 @@ export const GoogleAuth: React.FC<GoogleAuthProps> = ({ showBenefits = true, com
       );
     }
 
-    return (
-      <div className="flex items-center gap-2 justify-end">
-        <span className="text-sm text-gray-600">Signed in as {firstName}</span>
-        <Button variant="ghost" size="sm" onClick={handleSignOut}>
-          <LogOut className="h-4 w-4" />
-        </Button>
-      </div>
-    );
+    return null;
   }
 
   if (compact) {
