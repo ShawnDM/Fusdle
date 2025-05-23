@@ -58,6 +58,23 @@ export async function saveCompletedPuzzle(puzzleId: number, attemptsCount: numbe
       isFusion: puzzle?.isFusionTwist === 1,
       totalGuesses: attemptsCount
     };
+
+    // Save to local storage first for immediate access
+    try {
+      const existingHistory = JSON.parse(localStorage.getItem('fusdle_game_history') || '[]');
+      const existingIndex = existingHistory.findIndex((h: any) => h.puzzleId === gameSession.puzzleId);
+      
+      if (existingIndex >= 0) {
+        existingHistory[existingIndex] = gameSession;
+      } else {
+        existingHistory.push(gameSession);
+      }
+      
+      localStorage.setItem('fusdle_game_history', JSON.stringify(existingHistory.slice(-100)));
+      console.log('Game session saved to local storage:', gameSession);
+    } catch (error) {
+      console.error('Error saving to local storage:', error);
+    }
     
     console.log('Saving puzzle completion to user data service:', gameSession);
     
