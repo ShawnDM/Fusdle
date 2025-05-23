@@ -211,9 +211,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Only consider meaningful answer words
             if (answerWord.length < 4) continue;
             
-            // FIXED: Only match if the answer word contains the guess word, 
-            // NOT if the guess word contains the answer word (which causes false positives)
-            if (answerWord.includes(guessWord) && guessWord !== answerWord) {
+            // FIXED: Only match if the answer word contains the guess word as a complete substring
+            // AND the guess word is shorter than the answer word (preventing false positives)
+            // This prevents "coffees" from matching "coffee" or "theatres" from matching "theatre"
+            if (answerWord.includes(guessWord) && guessWord !== answerWord && guessWord.length < answerWord.length) {
               matchedWord = guessWord;
               matchType = 'substring';
               console.log(`Found substring match: "${matchedWord}" within "${answerWord}"`);
