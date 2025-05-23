@@ -9,8 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Edit, Trash2, Calendar, Tag, LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, User } from "firebase/auth";
-import { app } from "@/firebase/config";
+import { getAuth, onAuthStateChanged, User } from "firebase/auth";
+import GoogleAuth from "@/components/google-auth";
 
 interface PatchNote {
   id: string;
@@ -43,7 +43,7 @@ const PatchNotes: React.FC = () => {
 
   // Listen for authentication state changes
   useEffect(() => {
-    const auth = getAuth(app);
+    const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
@@ -56,12 +56,6 @@ const PatchNotes: React.FC = () => {
           toast({
             title: "Admin access granted",
             description: `Welcome back, ${firstName}!`,
-          });
-        } else {
-          toast({
-            title: "Access restricted",
-            description: "You don't have admin privileges for patch notes.",
-            variant: "destructive",
           });
         }
       } else {
@@ -120,35 +114,7 @@ const PatchNotes: React.FC = () => {
     setPatchNotes(notes);
   };
 
-  // Google OAuth sign in
-  const handleSignIn = async () => {
-    try {
-      const auth = getAuth(app);
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-    } catch (error) {
-      console.error("Sign in error:", error);
-      toast({
-        title: "Sign in failed",
-        description: "There was an error signing in with Google.",
-        variant: "destructive",
-      });
-    }
-  };
 
-  // Sign out
-  const handleSignOut = async () => {
-    try {
-      const auth = getAuth(app);
-      await signOut(auth);
-      toast({
-        title: "Signed out",
-        description: "You have been signed out successfully.",
-      });
-    } catch (error) {
-      console.error("Sign out error:", error);
-    }
-  };
 
   // Add new patch note
   const handleAddNote = () => {
@@ -269,33 +235,11 @@ const PatchNotes: React.FC = () => {
             <p className="text-gray-600 mt-1">Latest updates and improvements to Fusdle</p>
           </div>
           
-          {!user ? (
-            <Button variant="outline" size="sm" onClick={handleSignIn}>
-              Sign in with Google
-            </Button>
-          ) : !isAdmin ? (
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">
-                Welcome, {user.displayName?.split(' ')[0] || user.email?.split('@')[0]}
-              </span>
-              <Button variant="outline" size="sm" onClick={handleSignOut}>
-                <LogOut className="h-4 w-4" />
-              </Button>
-            </div>
+          {!isAdmin ? (
+            <GoogleAuth compact showBenefits={false} />
           ) : (
             <div className="flex gap-2">
-              <div className="flex items-center gap-2 mr-2">
-                <span className="text-sm text-gray-600">
-                  Admin: {user.displayName?.split(' ')[0] || user.email?.split('@')[0]}
-                </span>
-                <Button 
-                  onClick={handleSignOut}
-                  variant="outline" 
-                  size="sm"
-                >
-                  <LogOut className="h-4 w-4" />
-                </Button>
-              </div>
+              <GoogleAuth compact showBenefits={false} />
               <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
                 <DialogTrigger asChild>
                   <Button size="sm">
