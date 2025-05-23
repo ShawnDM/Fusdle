@@ -1391,8 +1391,8 @@ export const useGameStore = create<GameState>((set, get) => ({
     // Build share text as an array of lines for better platform compatibility
     const resultLines = [];
     
-    // Use the puzzle's date for Fusdle numbering to stay consistent with the actual puzzle being played
-    const puzzleDay = calculateFusdleNumber(puzzle.date, puzzle.puzzleNumber);
+    // Use today's date for Fusdle numbering to stay consistent across all components
+    const puzzleDay = calculateFusdleNumber();
       
     let headerLine = `Fusdle #${puzzleDay}`;
     
