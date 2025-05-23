@@ -237,13 +237,22 @@ const PatchNotes: React.FC = () => {
           
           {isAdmin && (
             <div className="flex gap-2">
+              <Button 
+                size="sm"
+                onClick={() => {
+                  setEditingNote(null);
+                  setTitle("");
+                  setContent("");
+                  setVersion("");
+                  setType('feature');
+                  setShowEditDialog(true);
+                }}
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Add Note
+              </Button>
+              
               <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-                <DialogTrigger asChild>
-                  <Button size="sm">
-                    <Plus className="h-4 w-4 mr-1" />
-                    Add Note
-                  </Button>
-                </DialogTrigger>
                 <DialogContent className="max-w-2xl">
                   <DialogHeader>
                     <DialogTitle>
