@@ -514,6 +514,71 @@ export default async function handler(req, res) {
     }
   }
   
+  // Patch notes endpoints for Discord automation
+  if (path === '/api/patch-notes/latest') {
+    try {
+      // Get the latest patch note from Firestore
+      const patchNotesRef = collection(db, 'patchNotes');
+      const querySnapshot = await getDocs(patchNotesRef);
+      
+      if (querySnapshot.empty) {
+        return res.status(404).json({ error: 'No patch notes found' });
+      }
+      
+      // Convert to array and sort by date (most recent first)
+      const patchNotes = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })).sort((a, b) => new Date(b.date) - new Date(a.date));
+      
+      const latestNote = patchNotes[0];
+      
+      return res.status(200).json({
+        id: latestNote.id,
+        title: latestNote.title,
+        content: latestNote.content,
+        version: latestNote.version,
+        date: latestNote.date,
+        type: latestNote.type,
+        url: `${req.headers.host.includes('localhost') ? 'http' : 'https'}://${req.headers.host}/patch-notes`
+      });
+    } catch (error) {
+      console.error('Error fetching latest patch note:', error);
+      return res.status(500).json({
+        error: 'Failed to fetch latest patch note',
+        message: error.message
+      });
+    }
+  }
+  
+  if (path === '/api/patch-notes') {
+    try {
+      const limitCount = parseInt(params.limit || '10');
+      
+      // Get patch notes from Firestore
+      const patchNotesRef = collection(db, 'patchNotes');
+      const querySnapshot = await getDocs(patchNotesRef);
+      
+      // Convert to array and sort by date (most recent first)
+      const patchNotes = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })).sort((a, b) => new Date(b.date) - new Date(a.date));
+      
+      return res.status(200).json({
+        patchNotes: patchNotes.slice(0, limitCount),
+        total: patchNotes.length,
+        gameUrl: `${req.headers.host.includes('localhost') ? 'http' : 'https'}://${req.headers.host}`
+      });
+    } catch (error) {
+      console.error('Error fetching patch notes:', error);
+      return res.status(500).json({
+        error: 'Failed to fetch patch notes',
+        message: error.message
+      });
+    }
+  }
+  
   // Default: route not found
   return res.status(404).json({
     error: 'API endpoint not found',
