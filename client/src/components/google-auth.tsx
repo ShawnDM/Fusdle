@@ -77,24 +77,22 @@ export const GoogleAuth: React.FC<GoogleAuthProps> = ({ showBenefits = true, com
     }
 
     return (
-      <Card className="border-green-200 bg-green-50">
-        <CardContent className="pt-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white text-sm font-bold">
-                {firstName.charAt(0).toUpperCase()}
-              </div>
-              <div>
-                <p className="font-medium text-green-800">Welcome back, {firstName}!</p>
-                <p className="text-sm text-green-600">Your progress is being saved</p>
-              </div>
+      <div className="border border-green-200 bg-green-50 rounded-lg p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white text-sm font-bold">
+              {firstName.charAt(0).toUpperCase()}
             </div>
-            <Button variant="ghost" size="sm" onClick={handleSignOut}>
-              <LogOut className="h-4 w-4" />
-            </Button>
+            <div>
+              <p className="font-medium text-green-800">Welcome back, {firstName}!</p>
+              <p className="text-sm text-green-600">Your progress is being saved</p>
+            </div>
           </div>
-        </CardContent>
-      </Card>
+          <Button variant="ghost" size="sm" onClick={handleSignOut}>
+            <LogOut className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
     );
   }
 
@@ -117,17 +115,16 @@ export const GoogleAuth: React.FC<GoogleAuthProps> = ({ showBenefits = true, com
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-purple-50">
-        <CardContent className="pt-6 space-y-4">
-          <div className="text-center">
-            <h3 className="flex items-center justify-center gap-2 text-lg font-semibold mb-2">
-              <Shield className="h-5 w-5 text-blue-600" />
-              Sign in with Google
-            </h3>
-            <p className="text-gray-600">
-              Keep your progress safe and unlock extra features!
-            </p>
-          </div>
+      <div className="border border-blue-200 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-6 space-y-4">
+        <div className="text-center">
+          <h3 className="flex items-center justify-center gap-2 text-lg font-semibold mb-2">
+            <Shield className="h-5 w-5 text-blue-600" />
+            Sign in with Google
+          </h3>
+          <p className="text-gray-600">
+            Keep your progress safe and unlock extra features!
+          </p>
+        </div>
           {showBenefits && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="flex items-center gap-2 text-sm">
@@ -173,8 +170,7 @@ export const GoogleAuth: React.FC<GoogleAuthProps> = ({ showBenefits = true, com
             We only use your Google account to save your game progress. 
             No spam, no sharing of data.
           </p>
-        </CardContent>
-      </Card>
+        </div>
     </motion.div>
   );
 };
