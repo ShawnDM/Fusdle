@@ -50,12 +50,13 @@ export async function saveCompletedPuzzle(puzzleId: number, attemptsCount: numbe
     
     const gameSession = {
       puzzleId: puzzleId.toString(),
-      attempts: [], // We'll need to get actual attempts from the game state
+      attempts: gameStore.previousGuesses || [],
       solved: status === 'won',
       usedHints: hintsUsed,
       solvedAt: status === 'won' ? new Date().toISOString() : undefined,
       difficulty: difficulty as 'normal' | 'hard',
-      isFusion: puzzle?.isFusionTwist === 1
+      isFusion: puzzle?.isFusionTwist === 1,
+      totalGuesses: attemptsCount
     };
     
     console.log('Saving puzzle completion to user data service:', gameSession);

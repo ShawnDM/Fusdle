@@ -68,9 +68,10 @@ const StatisticsContent: React.FC = () => {
             </div>
             <div className="text-right">
               <div className="text-lg font-bold text-green-700">{detailedStats.normal.solved}</div>
-              <div className="text-xs text-green-600">
+              <div className="text-xs text-green-600">Puzzles Completed</div>
+              <div className="text-xs text-green-500">
                 {detailedStats.normal.attempted > 0 
-                  ? `${Math.round((detailedStats.normal.solved / detailedStats.normal.attempted) * 100)}% win rate`
+                  ? `${Math.round((detailedStats.normal.solved / detailedStats.normal.attempted) * 100)}% success • Avg ${detailedStats.normal.avgGuesses} guesses`
                   : 'No attempts yet'
                 }
               </div>
@@ -85,9 +86,10 @@ const StatisticsContent: React.FC = () => {
             </div>
             <div className="text-right">
               <div className="text-lg font-bold text-red-700">{detailedStats.hard.solved}</div>
-              <div className="text-xs text-red-600">
+              <div className="text-xs text-red-600">Puzzles Completed</div>
+              <div className="text-xs text-red-500">
                 {detailedStats.hard.attempted > 0 
-                  ? `${Math.round((detailedStats.hard.solved / detailedStats.hard.attempted) * 100)}% win rate`
+                  ? `${Math.round((detailedStats.hard.solved / detailedStats.hard.attempted) * 100)}% success • Avg ${detailedStats.hard.avgGuesses} guesses`
                   : 'No attempts yet'
                 }
               </div>
@@ -102,9 +104,10 @@ const StatisticsContent: React.FC = () => {
             </div>
             <div className="text-right">
               <div className="text-lg font-bold text-orange-700">{detailedStats.fusion.solved}</div>
-              <div className="text-xs text-orange-600">
+              <div className="text-xs text-orange-600">Puzzles Completed</div>
+              <div className="text-xs text-orange-500">
                 {detailedStats.fusion.attempted > 0 
-                  ? `${Math.round((detailedStats.fusion.solved / detailedStats.fusion.attempted) * 100)}% win rate`
+                  ? `${Math.round((detailedStats.fusion.solved / detailedStats.fusion.attempted) * 100)}% success • Avg ${detailedStats.fusion.avgGuesses} guesses`
                   : 'No attempts yet'
                 }
               </div>
