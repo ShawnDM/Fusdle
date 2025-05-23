@@ -46,13 +46,16 @@ export async function saveCompletedPuzzle(puzzleId: number, attemptsCount: numbe
     // Track puzzle completion with user data service
     const gameStore = useGameStore.getState();
     const hintsUsed = gameStore.revealedHints.length > 0;
+    const puzzle = gameStore.puzzle;
     
     const gameSession = {
       puzzleId: puzzleId.toString(),
       attempts: attemptsCount,
       solved: status === 'won',
       usedHints: hintsUsed,
-      solvedAt: status === 'won' ? new Date().toISOString() : undefined
+      solvedAt: status === 'won' ? new Date().toISOString() : undefined,
+      difficulty: difficulty as 'normal' | 'hard',
+      isFusion: puzzle?.isFusionTwist === 1
     };
     
     console.log('Saving puzzle completion to user data service:', gameSession);

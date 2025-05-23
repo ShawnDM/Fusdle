@@ -214,6 +214,49 @@ class UserDataService {
     if (stats.totalAttempts === 0) return 0;
     return Math.round((stats.puzzlesSolved / stats.totalAttempts) * 100);
   }
+
+  async getDetailedStats(): Promise<{
+    normal: { solved: number; attempted: number };
+    hard: { solved: number; attempted: number };
+    fusion: { solved: number; attempted: number };
+    overall: { winRate: number; totalSolved: number; totalAttempted: number };
+  }> {
+    const gameHistory = this.getLocalGameHistory();
+    
+    const stats = {
+      normal: { solved: 0, attempted: 0 },
+      hard: { solved: 0, attempted: 0 },
+      fusion: { solved: 0, attempted: 0 },
+      overall: { winRate: 0, totalSolved: 0, totalAttempted: 0 }
+    };
+
+    // Count puzzles by difficulty and type
+    for (const session of gameHistory) {
+      // Determine difficulty from puzzle ID or assume normal if not specified
+      const difficulty = session.difficulty || 'normal';
+      const isFusion = session.isFusion || false;
+
+      if (isFusion) {
+        stats.fusion.attempted++;
+        if (session.solved) stats.fusion.solved++;
+      } else if (difficulty === 'hard') {
+        stats.hard.attempted++;
+        if (session.solved) stats.hard.solved++;
+      } else {
+        stats.normal.attempted++;
+        if (session.solved) stats.normal.solved++;
+      }
+    }
+
+    // Calculate overall stats
+    stats.overall.totalSolved = stats.normal.solved + stats.hard.solved + stats.fusion.solved;
+    stats.overall.totalAttempted = stats.normal.attempted + stats.hard.attempted + stats.fusion.attempted;
+    stats.overall.winRate = stats.overall.totalAttempted > 0 
+      ? Math.round((stats.overall.totalSolved / stats.overall.totalAttempted) * 100)
+      : 0;
+
+    return stats;
+  }
 }
 
 export const userDataService = new UserDataService();

@@ -16,16 +16,16 @@ interface NavTabsProps {
 // Statistics component to display user data
 const StatisticsContent: React.FC = () => {
   const [stats, setStats] = useState<UserStats | null>(null);
-  const [winRate, setWinRate] = useState(0);
+  const [detailedStats, setDetailedStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadStats = async () => {
       try {
         const userStats = await userDataService.getUserStats();
-        const rate = await userDataService.getWinRate();
+        const detailed = await userDataService.getDetailedStats();
         setStats(userStats);
-        setWinRate(rate);
+        setDetailedStats(detailed);
       } catch (error) {
         console.error("Error loading user stats:", error);
       } finally {
@@ -40,30 +40,92 @@ const StatisticsContent: React.FC = () => {
     return <div className="text-center">Loading statistics...</div>;
   }
 
-  if (!stats) {
+  if (!stats || !detailedStats) {
     return <div className="text-center text-gray-500">Unable to load statistics</div>;
   }
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="text-center p-3 bg-gray-50 rounded-lg">
-          <div className="text-2xl font-bold text-purple-600">{stats.puzzlesSolved}</div>
-          <div className="text-sm text-gray-600">Puzzles Solved</div>
-        </div>
-        <div className="text-center p-3 bg-gray-50 rounded-lg">
-          <div className="text-2xl font-bold text-green-600">{stats.currentStreak}</div>
-          <div className="text-sm text-gray-600">Current Streak</div>
-        </div>
-        <div className="text-center p-3 bg-gray-50 rounded-lg">
-          <div className="text-2xl font-bold text-blue-600">{stats.maxStreak}</div>
-          <div className="text-sm text-gray-600">Max Streak</div>
-        </div>
-        <div className="text-center p-3 bg-gray-50 rounded-lg">
-          <div className="text-2xl font-bold text-orange-600">{winRate}%</div>
-          <div className="text-sm text-gray-600">Win Rate</div>
+    <div className="space-y-6">
+      {/* Overall Performance */}
+      <div className="text-center p-4 bg-gradient-to-r from-purple-100 to-blue-100 rounded-lg">
+        <div className="text-3xl font-bold text-purple-700">{detailedStats.overall.winRate}%</div>
+        <div className="text-sm text-purple-600 font-medium">Overall Win Rate</div>
+        <div className="text-xs text-purple-500 mt-1">
+          {detailedStats.overall.totalSolved} solved of {detailedStats.overall.totalAttempted} attempted
         </div>
       </div>
+
+      {/* Difficulty Breakdown */}
+      <div className="space-y-3">
+        <h4 className="text-sm font-semibold text-gray-700 text-center">Performance by Difficulty</h4>
+        
+        <div className="grid grid-cols-1 gap-3">
+          {/* Normal Mode */}
+          <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+              <span className="text-sm font-medium text-green-800">Normal</span>
+            </div>
+            <div className="text-right">
+              <div className="text-lg font-bold text-green-700">{detailedStats.normal.solved}</div>
+              <div className="text-xs text-green-600">
+                {detailedStats.normal.attempted > 0 
+                  ? `${Math.round((detailedStats.normal.solved / detailedStats.normal.attempted) * 100)}% win rate`
+                  : 'No attempts yet'
+                }
+              </div>
+            </div>
+          </div>
+
+          {/* Hard Mode */}
+          <div className="flex justify-between items-center p-3 bg-red-50 rounded-lg">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+              <span className="text-sm font-medium text-red-800">Hard</span>
+            </div>
+            <div className="text-right">
+              <div className="text-lg font-bold text-red-700">{detailedStats.hard.solved}</div>
+              <div className="text-xs text-red-600">
+                {detailedStats.hard.attempted > 0 
+                  ? `${Math.round((detailedStats.hard.solved / detailedStats.hard.attempted) * 100)}% win rate`
+                  : 'No attempts yet'
+                }
+              </div>
+            </div>
+          </div>
+
+          {/* Fusion Twists */}
+          <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+              <span className="text-sm font-medium text-orange-800">Fusion Twists</span>
+            </div>
+            <div className="text-right">
+              <div className="text-lg font-bold text-orange-700">{detailedStats.fusion.solved}</div>
+              <div className="text-xs text-orange-600">
+                {detailedStats.fusion.attempted > 0 
+                  ? `${Math.round((detailedStats.fusion.solved / detailedStats.fusion.attempted) * 100)}% win rate`
+                  : 'No attempts yet'
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Streaks */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="text-center p-3 bg-blue-50 rounded-lg">
+          <div className="text-xl font-bold text-blue-600">{stats.currentStreak}</div>
+          <div className="text-xs text-blue-600">Current Streak</div>
+        </div>
+        <div className="text-center p-3 bg-indigo-50 rounded-lg">
+          <div className="text-xl font-bold text-indigo-600">{stats.maxStreak}</div>
+          <div className="text-xs text-indigo-600">Best Streak</div>
+        </div>
+      </div>
+
+      {/* Flawless Streak */}
       {stats.flawlessStreak > 0 && (
         <div className="text-center p-3 bg-gradient-to-r from-yellow-100 to-orange-100 rounded-lg">
           <div className="text-xl font-bold text-yellow-700">🔥 {stats.flawlessStreak}</div>
