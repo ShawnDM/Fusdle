@@ -9,8 +9,17 @@ interface NavTabsProps {
 
 const NavTabs: React.FC<NavTabsProps> = ({ currentPath }) => {
   return (
-    <div className="flex justify-center mb-6">
-      <div className="flex justify-between items-center w-full max-w-4xl">
+    <div className="mb-6">
+      {/* Mobile-first layout with user menu at top right */}
+      <div className="flex justify-between items-center mb-4 sm:mb-0">
+        <div className="flex-1"></div>
+        <div className="sm:hidden">
+          <UserMenu />
+        </div>
+      </div>
+      
+      {/* Navigation and user menu container */}
+      <div className="flex flex-col sm:flex-row justify-center sm:justify-between items-center gap-4">
         <motion.nav 
           className="inline-flex bg-white/30 rounded-xl p-1.5 backdrop-blur-md shadow-sm"
           initial={{ y: -20, opacity: 0 }}
@@ -67,8 +76,8 @@ const NavTabs: React.FC<NavTabsProps> = ({ currentPath }) => {
         </Link>
         </motion.nav>
         
-        {/* User Menu */}
-        <div className="ml-4">
+        {/* User Menu - hidden on mobile, shown on desktop */}
+        <div className="hidden sm:block">
           <UserMenu />
         </div>
       </div>
