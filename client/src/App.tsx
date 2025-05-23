@@ -336,11 +336,6 @@ function App() {
   return (
     <TooltipProvider>
       <div className="max-w-md mx-auto p-4 min-h-screen flex flex-col">
-        <header className="mb-6 text-center">
-          <h1 className="text-3xl font-bold text-white mb-1">Fusdle</h1>
-          <p className="text-white/90 text-lg">🔮🧠 Guess the fusion behind the emojis!</p>
-        </header>
-        
         <NavTabs currentPath={location} />
         
         <div className="flex-grow flex flex-col">
