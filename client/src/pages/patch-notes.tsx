@@ -291,8 +291,10 @@ const PatchNotes: React.FC = () => {
                     </div>
                     <div className="flex justify-end gap-2">
                       <Button 
+                        type="button"
                         variant="outline" 
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.preventDefault();
                           setShowEditDialog(false);
                           setEditingNote(null);
                           setTitle("");
@@ -303,7 +305,13 @@ const PatchNotes: React.FC = () => {
                       >
                         Cancel
                       </Button>
-                      <Button onClick={editingNote ? handleEditNote : handleAddNote}>
+                      <Button 
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          editingNote ? handleEditNote() : handleAddNote();
+                        }}
+                      >
                         {editingNote ? 'Update' : 'Add'} Note
                       </Button>
                     </div>
