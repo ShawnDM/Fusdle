@@ -156,40 +156,65 @@ Stay tuned for more exciting features coming soon!`,
   };
 
   // Edit patch note
-  const handleEditNote = () => {
+  const handleEditNote = async () => {
     if (!editingNote || !title || !content || !version) return;
 
-    const updatedNotes = patchNotes.map(note =>
-      note.id === editingNote.id
-        ? { ...note, title, content, version, type }
-        : note
-    );
+    try {
+      await firestoreService.updatePatchNote(editingNote.id, {
+        title,
+        content,
+        version,
+        type
+      });
 
-    savePatchNotes(updatedNotes);
-    setEditingNote(null);
-    setShowEditDialog(false);
+      setPatchNotes(prev => prev.map(note =>
+        note.id === editingNote.id
+          ? { ...note, title, content, version, type }
+          : note
+      ));
 
-    // Reset form
-    setTitle("");
-    setContent("");
-    setVersion("");
-    setType('feature');
+      setEditingNote(null);
+      setShowEditDialog(false);
 
-    toast({
-      title: "Patch note updated",
-      description: "Changes have been saved.",
-    });
+      // Reset form
+      setTitle("");
+      setContent("");
+      setVersion("");
+      setType('feature');
+      setIsPreviewMode(false);
+
+      toast({
+        title: "Patch note updated",
+        description: "Changes have been saved globally.",
+      });
+    } catch (error) {
+      console.error('Error updating patch note:', error);
+      toast({
+        title: "Error updating patch note",
+        description: "Failed to save changes. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Delete patch note
-  const handleDeleteNote = (id: string) => {
-    const updatedNotes = patchNotes.filter(note => note.id !== id);
-    savePatchNotes(updatedNotes);
+  const handleDeleteNote = async (id: string) => {
+    try {
+      await firestoreService.deletePatchNote(id);
+      setPatchNotes(prev => prev.filter(note => note.id !== id));
 
-    toast({
-      title: "Patch note deleted",
-      description: "The patch note has been removed.",
-    });
+      toast({
+        title: "Patch note deleted",
+        description: "The patch note has been removed globally.",
+      });
+    } catch (error) {
+      console.error('Error deleting patch note:', error);
+      toast({
+        title: "Error deleting patch note",
+        description: "Failed to delete patch note. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Start editing
