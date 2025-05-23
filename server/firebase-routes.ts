@@ -307,6 +307,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // API endpoint to get latest patch note for Discord automation
+  app.get('/api/patch-notes/latest', async (req: Request, res: Response) => {
+    try {
+      const patchNotes = await firestoreService.getPatchNotes();
+      const latestNote = patchNotes[0]; // First item is most recent
+      
+      if (!latestNote) {
+        return res.status(404).json({ error: 'No patch notes found' });
+      }
+      
+      res.json({
+        id: latestNote.id,
+        title: latestNote.title,
+        content: latestNote.content,
+        version: latestNote.version,
+        date: latestNote.date,
+        type: latestNote.type,
+        url: `${req.protocol}://${req.get('host')}/patch-notes`
+      });
+    } catch (error) {
+      console.error('Error fetching latest patch note:', error);
+      res.status(500).json({ error: 'Failed to fetch latest patch note' });
+    }
+  });
+
+  // API endpoint to get all patch notes for external integrations
+  app.get('/api/patch-notes', async (req: Request, res: Response) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 10;
+      const patchNotes = await firestoreService.getPatchNotes();
+      
+      res.json({
+        patchNotes: patchNotes.slice(0, limit),
+        total: patchNotes.length,
+        gameUrl: `${req.protocol}://${req.get('host')}`
+      });
+    } catch (error) {
+      console.error('Error fetching patch notes:', error);
+      res.status(500).json({ error: 'Failed to fetch patch notes' });
+    }
+  });
+
   // Error handling middleware
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     console.error('Unhandled error:', err);
