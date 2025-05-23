@@ -92,12 +92,7 @@ const Home: React.FC = () => {
             </div>
           )}
           
-          {flawlessStreak >= 3 && (
-            <div className="bg-indigo-600 text-white px-3 py-1 rounded-full text-sm font-medium flex items-center space-x-1">
-              <span>✨</span>
-              <span>Flawless Streak: {flawlessStreak}</span>
-            </div>
-          )}
+
         </div>
         
         {/* Right side - Streak display (kept the same) */}
