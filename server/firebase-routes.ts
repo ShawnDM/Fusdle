@@ -201,6 +201,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // If still no match, try substring matches with significant words
+      // But only for partial matches within answer words, NOT guess words containing answer words
       if (!matchedWord) {
         for (const guessWord of guessWords) {
           // Skip very short words (2 chars or less) as they often give false positives
@@ -210,8 +211,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Only consider meaningful answer words
             if (answerWord.length < 4) continue;
             
-            // Check if the guess word is contained in the answer word, or vice versa
-            if (answerWord.includes(guessWord) || guessWord.includes(answerWord)) {
+            // FIXED: Only match if the answer word contains the guess word, 
+            // NOT if the guess word contains the answer word (which causes false positives)
+            if (answerWord.includes(guessWord) && guessWord !== answerWord) {
               matchedWord = guessWord;
               matchType = 'substring';
               console.log(`Found substring match: "${matchedWord}" within "${answerWord}"`);
