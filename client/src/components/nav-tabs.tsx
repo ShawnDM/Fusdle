@@ -1,19 +1,77 @@
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { Archive, Home, Info, FileText, Menu, X, HelpCircle, BarChart3 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { getAuth } from "firebase/auth";
+import { userDataService, type UserStats } from "@/lib/user-data-service";
 import UserMenu from "@/components/user-menu";
 
 interface NavTabsProps {
   currentPath: string;
 }
 
+// Statistics component to display user data
+const StatisticsContent: React.FC = () => {
+  const [stats, setStats] = useState<UserStats | null>(null);
+  const [winRate, setWinRate] = useState(0);
+
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const userStats = await userDataService.getUserStats();
+        const rate = await userDataService.getWinRate();
+        setStats(userStats);
+        setWinRate(rate);
+      } catch (error) {
+        console.error("Error loading user stats:", error);
+      }
+    };
+
+    loadStats();
+  }, []);
+
+  if (!stats) {
+    return <div className="text-center">Loading statistics...</div>;
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="text-center p-3 bg-gray-50 rounded-lg">
+          <div className="text-2xl font-bold text-purple-600">{stats.puzzlesSolved}</div>
+          <div className="text-sm text-gray-600">Puzzles Solved</div>
+        </div>
+        <div className="text-center p-3 bg-gray-50 rounded-lg">
+          <div className="text-2xl font-bold text-green-600">{stats.currentStreak}</div>
+          <div className="text-sm text-gray-600">Current Streak</div>
+        </div>
+        <div className="text-center p-3 bg-gray-50 rounded-lg">
+          <div className="text-2xl font-bold text-blue-600">{stats.maxStreak}</div>
+          <div className="text-sm text-gray-600">Max Streak</div>
+        </div>
+        <div className="text-center p-3 bg-gray-50 rounded-lg">
+          <div className="text-2xl font-bold text-orange-600">{winRate}%</div>
+          <div className="text-sm text-gray-600">Win Rate</div>
+        </div>
+      </div>
+      {stats.flawlessStreak > 0 && (
+        <div className="text-center p-3 bg-gradient-to-r from-yellow-100 to-orange-100 rounded-lg">
+          <div className="text-xl font-bold text-yellow-700">🔥 {stats.flawlessStreak}</div>
+          <div className="text-sm text-yellow-600">Flawless Streak</div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const NavTabs: React.FC<NavTabsProps> = ({ currentPath }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [showStatistics, setShowStatistics] = useState(false);
+  const [user] = useAuthState(getAuth());
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
@@ -124,7 +182,7 @@ const NavTabs: React.FC<NavTabsProps> = ({ currentPath }) => {
                   </div>
                 </div>
                 <div className="text-center text-sm text-gray-500">
-                  Sign in with Google to track your progress!
+                  {!user ? "Sign in with Google to sync your progress across devices!" : "Your progress is automatically saved to your Google account"}
                 </div>
               </div>
             </DialogContent>
