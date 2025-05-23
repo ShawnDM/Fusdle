@@ -338,6 +338,7 @@ function App() {
     <TooltipProvider>
       <div className="max-w-md mx-auto px-4 pt-2 pb-4 min-h-screen flex flex-col">
         <NavTabs currentPath={location} />
+        <WelcomePopup />
         
         <div className="flex-grow flex flex-col -mt-1">
           <Switch>
