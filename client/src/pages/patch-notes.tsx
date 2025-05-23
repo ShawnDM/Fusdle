@@ -414,53 +414,55 @@ Examples:
               <p className="text-gray-500">No patch notes available.</p>
             </div>
           ) : (
-            <Accordion type="single" collapsible className="space-y-2">
+            <Accordion type="single" collapsible className="space-y-3">
               {patchNotes.map((note) => (
-                <AccordionItem key={note.id} value={note.id} className="border rounded-lg">
-                  <AccordionTrigger className="px-4 py-3 hover:no-underline">
-                    <div className="flex justify-between items-center w-full">
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-left">{note.title}</span>
+                <AccordionItem key={note.id} value={note.id} className="border rounded-lg bg-white shadow-sm">
+                  <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-gray-50 transition-colors">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center w-full gap-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                        <div className="flex items-center gap-3">
+                          <span className="font-semibold text-lg text-gray-800 text-left">{note.title}</span>
                           <Badge variant={getBadgeVariant(note.type)}>
                             {getBadgeLabel(note.type)}
                           </Badge>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
-                        <div className="flex items-center gap-1">
-                          <Tag className="h-3 w-3" />
-                          {note.version}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          {format(new Date(note.date), "MMM d, yyyy")}
-                        </div>
-                        {isAdmin && (
-                          <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                startEditing(note);
-                              }}
-                            >
-                              <Edit className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteNote(note.id);
-                              }}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
+                        <div className="flex items-center gap-4 text-sm text-gray-500">
+                          <div className="flex items-center gap-1">
+                            <Tag className="h-4 w-4" />
+                            <span className="font-medium">v{note.version}</span>
                           </div>
-                        )}
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-4 w-4" />
+                            <span>{format(new Date(note.date), "MMM d, yyyy")}</span>
+                          </div>
+                        </div>
                       </div>
+                      {isAdmin && (
+                        <div className="flex gap-2 ml-auto" onClick={(e) => e.stopPropagation()}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              startEditing(note);
+                            }}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteNote(note.id);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-4 pb-4">
