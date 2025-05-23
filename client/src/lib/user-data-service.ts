@@ -215,6 +215,16 @@ class UserDataService {
     return Math.round((stats.puzzlesSolved / stats.totalAttempts) * 100);
   }
 
+  private getLocalGameHistory(): GameSession[] {
+    try {
+      const history = localStorage.getItem(this.GAME_HISTORY_KEY);
+      return history ? JSON.parse(history) : [];
+    } catch (error) {
+      console.error('Error loading game history:', error);
+      return [];
+    }
+  }
+
   async getDetailedStats(): Promise<{
     normal: { solved: number; attempted: number };
     hard: { solved: number; attempted: number };
