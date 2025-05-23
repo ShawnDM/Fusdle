@@ -176,20 +176,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // We prioritize matching the primary words in the answer if possible
       const primaryWords = answerWords.filter(w => w.length >= 4); // Primary words are longer
       
-      // Only look for partial matches if we haven't found a wrong order match
+      // Only look for EXACT word matches - no partial matching allowed
       if (!hasCorrectWordsWrongOrder) {
-        // First check for primary word matches (like "escape" or "artist")
-      for (const guessWord of guessWords) {
-        if (guessWord.length >= 4 && primaryWords.includes(guessWord)) {
-          matchedWord = guessWord;
-          matchType = 'primary';
-          console.log(`Found primary word match: "${matchedWord}"`);
-          break;
-        }
-      }
-      
-      // If no primary match, look for any exact word match
-      if (!matchedWord) {
+        // Only check for exact word matches
         for (const guessWord of guessWords) {
           if (guessWord.length >= 3 && answerWords.includes(guessWord)) {
             matchedWord = guessWord;
@@ -198,41 +187,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
             break;
           }
         }
-      }
       
-      // If still no match, try word-boundary substring matches with significant words
-      // Only match if a guess word is a true substring of an answer word (like "coff" in "coffee")
-      if (!matchedWord) {
-        for (const guessWord of guessWords) {
-          // Skip very short words (2 chars or less) as they often give false positives
-          if (guessWord.length < 3) continue;
-          
-          for (const answerWord of answerWords) {
-            // Only consider meaningful answer words
-            if (answerWord.length < 4) continue;
-            
-            // FIXED: Only match if the answer word starts with the guess word (true prefix match)
-            // This allows "coff" to match "coffee" but prevents "coffees" from matching "coffee"
-            if (answerWord.toLowerCase().startsWith(guessWord.toLowerCase()) && guessWord !== answerWord) {
-              matchedWord = guessWord;
-              matchType = 'substring';
-              console.log(`Found prefix match: "${matchedWord}" at start of "${answerWord}"`);
-              break;
-            }
-          }
-          if (matchedWord) break; // Exit once we find a match
+        // Generate feedback only for exact matches
+        if (matchedWord) {
+          partialMatchFeedback = `You're on the right track! Your guess contains "${matchedWord}".`;
+          console.log(`Found exact match: ${matchedWord}`);
+        } else {
+          // No matches found - no partial match feedback
+          console.log("No exact word matches found");
         }
-      }
-      
-      // Generate appropriate feedback based on the match found
-      if (matchedWord) {
-        // Include the matched word in the feedback with quotes for consistency
-        partialMatchFeedback = `You're on the right track! Your guess contains "${matchedWord}".`;
-        console.log(`Found partial match (${matchType}): ${matchedWord}`);
-      } else {
-        // No valid matches found - don't provide any partial match feedback
-        console.log("No valid partial matches found");
-      }
       } // Close the hasCorrectWordsWrongOrder if block
       
       // If incorrect, return the result with partial match feedback and matched word
