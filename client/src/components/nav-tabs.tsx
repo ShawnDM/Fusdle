@@ -23,21 +23,26 @@ const NavTabs: React.FC<NavTabsProps> = ({ currentPath }) => {
 
   return (
     <div className="mb-2">
-      {/* Header with hamburger menu */}
-      <div className="flex justify-start items-center mb-2">
-        {/* Hamburger Menu Button */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={toggleMenu}
-          className="p-2 text-white hover:bg-white/20"
-        >
-          {isMenuOpen ? (
-            <X className="h-6 w-6" />
-          ) : (
-            <Menu className="h-6 w-6" />
-          )}
-        </Button>
+      {/* Header with hamburger menu and title */}
+      <div className="flex justify-between items-center mb-2">
+        <div className="flex items-center gap-3">
+          {/* Hamburger Menu Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleMenu}
+            className="p-2 text-white hover:bg-white/20"
+          >
+            {isMenuOpen ? (
+              <X className="h-6 w-6" />
+            ) : (
+              <Menu className="h-6 w-6" />
+            )}
+          </Button>
+          
+          {/* Fusdle Title */}
+          <h1 className="text-2xl font-bold text-white">Fusdle</h1>
+        </div>
       </div>
 
       {/* Mobile Menu Overlay */}
