@@ -8,14 +8,27 @@ import {
   orderBy, 
   limit,
   addDoc,
+  updateDoc,
+  deleteDoc,
   Timestamp
 } from 'firebase/firestore';
 import { db } from './config';
 import type { Puzzle, InsertPuzzle } from '@shared/schema';
 import { getGlobalDateString } from '../lib/global-time';
 
+// Patch note interface
+export interface PatchNote {
+  id: string;
+  title: string;
+  content: string;
+  version: string;
+  date: string;
+  type: 'feature' | 'fix' | 'improvement' | 'change';
+}
+
 // Collection references
 const puzzlesCollection = collection(db, 'puzzles');
+const patchNotesCollection = collection(db, 'patchNotes');
 
 // Helper function to convert Firestore timestamp to ISO date string
 const timestampToDate = (timestamp: Timestamp): string => {
@@ -500,6 +513,55 @@ export class FirestoreService {
     }
     
     return results;
+  }
+
+  // Patch Notes methods
+  async getPatchNotes(): Promise<PatchNote[]> {
+    try {
+      const q = query(patchNotesCollection, orderBy('date', 'desc'));
+      const querySnapshot = await getDocs(q);
+      
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as PatchNote));
+    } catch (error) {
+      console.error('Error fetching patch notes:', error);
+      return [];
+    }
+  }
+
+  async createPatchNote(patchNote: Omit<PatchNote, 'id'>): Promise<PatchNote> {
+    try {
+      const docRef = await addDoc(patchNotesCollection, patchNote);
+      return {
+        id: docRef.id,
+        ...patchNote
+      };
+    } catch (error) {
+      console.error('Error creating patch note:', error);
+      throw error;
+    }
+  }
+
+  async updatePatchNote(id: string, updates: Partial<Omit<PatchNote, 'id'>>): Promise<void> {
+    try {
+      const docRef = doc(patchNotesCollection, id);
+      await updateDoc(docRef, updates);
+    } catch (error) {
+      console.error('Error updating patch note:', error);
+      throw error;
+    }
+  }
+
+  async deletePatchNote(id: string): Promise<void> {
+    try {
+      const docRef = doc(patchNotesCollection, id);
+      await deleteDoc(docRef);
+    } catch (error) {
+      console.error('Error deleting patch note:', error);
+      throw error;
+    }
   }
 }
 

@@ -13,15 +13,7 @@ import { getAuth, onAuthStateChanged, User } from "firebase/auth";
 import GoogleAuth from "@/components/google-auth";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-
-interface PatchNote {
-  id: string;
-  title: string;
-  content: string;
-  version: string;
-  date: string;
-  type: 'feature' | 'fix' | 'improvement' | 'change';
-}
+import { firestoreService, type PatchNote } from "@/firebase/firestore";
 
 const PatchNotes: React.FC = () => {
   const [patchNotes, setPatchNotes] = useState<PatchNote[]>([]);
@@ -70,58 +62,57 @@ const PatchNotes: React.FC = () => {
     return () => unsubscribe();
   }, []); // Remove dependencies to prevent loops
 
-  // Load patch notes from localStorage
+  // Load patch notes from Firebase
   useEffect(() => {
-    const stored = localStorage.getItem('fusdle_patch_notes');
-    if (stored) {
+    const loadPatchNotes = async () => {
       try {
-        setPatchNotes(JSON.parse(stored));
-      } catch (e) {
-        console.error('Error loading patch notes:', e);
-      }
-    } else {
-      // Initialize with some default patch notes
-      const defaultNotes: PatchNote[] = [
-        {
-          id: '1',
-          title: 'Theme Display & Letter Placeholders',
-          content: 'Added theme display to show puzzle categories and letter placeholders to reveal word structure. Each word now shows in separate boxes with underscores for letters.',
-          version: 'v1.2.0',
-          date: new Date().toISOString(),
-          type: 'feature'
-        },
-        {
-          id: '2',
-          title: 'Archive Filtering Fix',
-          content: 'Fixed archive filtering to correctly display the full range of normal difficulty puzzles. Archive now shows complete puzzle history.',
-          version: 'v1.1.1',
-          date: new Date(Date.now() - 86400000).toISOString(), // Yesterday
-          type: 'fix'
-        },
-        {
-          id: '3',
-          title: 'Fusdle Numbering Update',
-          content: 'Updated Fusdle numbering system so that May 22, 2025 is now Fusdle #1. All puzzle numbers now align with the current date system.',
-          version: 'v1.1.0',
-          date: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
-          type: 'change'
+        const notes = await firestoreService.getPatchNotes();
+        setPatchNotes(notes);
+        
+        // If no notes exist, create some initial ones
+        if (notes.length === 0) {
+          const defaultNotes = [
+            {
+              title: 'Welcome to Fusdle Patch Notes',
+              content: `# Welcome to Fusdle! 🎮
+
+We're excited to bring you **regular updates** and improvements to make your daily puzzle experience even better.
+
+## What's New:
+- **Rich text support** - Patch notes now support markdown formatting
+- **Real-time updates** - All updates are now saved globally
+- **Better organization** - Clear categorization of features, fixes, and improvements
+
+Stay tuned for more exciting features coming soon!`,
+              version: 'v1.0.0',
+              date: new Date().toISOString(),
+              type: 'feature' as const
+            }
+          ];
+          
+          for (const note of defaultNotes) {
+            await firestoreService.createPatchNote(note);
+          }
+          
+          // Reload notes after creating defaults
+          const updatedNotes = await firestoreService.getPatchNotes();
+          setPatchNotes(updatedNotes);
         }
-      ];
-      setPatchNotes(defaultNotes);
-      localStorage.setItem('fusdle_patch_notes', JSON.stringify(defaultNotes));
-    }
-  }, []);
-
-  // Save patch notes to localStorage
-  const savePatchNotes = (notes: PatchNote[]) => {
-    localStorage.setItem('fusdle_patch_notes', JSON.stringify(notes));
-    setPatchNotes(notes);
-  };
-
-
+      } catch (error) {
+        console.error('Error loading patch notes:', error);
+        toast({
+          title: "Error loading patch notes",
+          description: "Failed to load patch notes from server.",
+          variant: "destructive",
+        });
+      }
+    };
+    
+    loadPatchNotes();
+  }, [toast]);
 
   // Add new patch note
-  const handleAddNote = () => {
+  const handleAddNote = async () => {
     if (!title || !content || !version) {
       toast({
         title: "Missing fields",
@@ -131,29 +122,37 @@ const PatchNotes: React.FC = () => {
       return;
     }
 
-    const newNote: PatchNote = {
-      id: Date.now().toString(),
-      title,
-      content,
-      version,
-      date: new Date().toISOString(),
-      type
-    };
+    try {
+      const newNote = await firestoreService.createPatchNote({
+        title,
+        content,
+        version,
+        date: new Date().toISOString(),
+        type
+      });
 
-    const updatedNotes = [newNote, ...patchNotes];
-    savePatchNotes(updatedNotes);
+      setPatchNotes(prev => [newNote, ...prev]);
 
-    // Reset form
-    setTitle("");
-    setContent("");
-    setVersion("");
-    setType('feature');
-    setShowEditDialog(false);
+      // Reset form
+      setTitle("");
+      setContent("");
+      setVersion("");
+      setType('feature');
+      setIsPreviewMode(false);
+      setShowEditDialog(false);
 
-    toast({
-      title: "Patch note added",
-      description: "New patch note has been published.",
-    });
+      toast({
+        title: "Patch note added",
+        description: "New patch note has been published globally.",
+      });
+    } catch (error) {
+      console.error('Error adding patch note:', error);
+      toast({
+        title: "Error adding patch note",
+        description: "Failed to save patch note. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Edit patch note
