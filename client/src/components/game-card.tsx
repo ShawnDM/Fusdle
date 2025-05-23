@@ -473,6 +473,19 @@ const GameCard: React.FC = () => {
     e.preventDefault();
     if (!currentGuess.trim() || isSubmitting) return;
 
+    // Validate word count - prevent users from entering more words than the answer
+    const guessWords = currentGuess.trim().split(/\s+/);
+    const maxWords = puzzle?.wordCount || puzzle?.answer?.split(/\s+/).length || 3;
+    
+    if (guessWords.length > maxWords) {
+      toast({
+        title: "Too many words",
+        description: `This puzzle answer has ${maxWords} word${maxWords === 1 ? '' : 's'}. Please limit your guess to ${maxWords} word${maxWords === 1 ? '' : 's'} maximum.`,
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       await submitGuess(currentGuess.trim());
