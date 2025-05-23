@@ -77,21 +77,11 @@ export const GoogleAuth: React.FC<GoogleAuthProps> = ({ showBenefits = true, com
     }
 
     return (
-      <div className="border border-green-200 bg-green-50 rounded-lg p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white text-sm font-bold">
-              {firstName.charAt(0).toUpperCase()}
-            </div>
-            <div>
-              <p className="font-medium text-green-800">Welcome back, {firstName}!</p>
-              <p className="text-sm text-green-600">Your progress is being saved</p>
-            </div>
-          </div>
-          <Button variant="ghost" size="sm" onClick={handleSignOut}>
-            <LogOut className="h-4 w-4" />
-          </Button>
-        </div>
+      <div className="flex items-center gap-2 justify-end">
+        <span className="text-sm text-gray-600">Signed in as {firstName}</span>
+        <Button variant="ghost" size="sm" onClick={handleSignOut}>
+          <LogOut className="h-4 w-4" />
+        </Button>
       </div>
     );
   }
