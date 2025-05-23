@@ -1,7 +1,16 @@
 # www.robotstxt.org/
+# Fusdle - Daily Emoji Puzzle Game
 # Allow crawling of all content
 User-agent: *
 Allow: /
+
+# Explicitly allow important pages
+Allow: /archive
+Allow: /about
+Allow: /patch-notes
+
+# No restrictions - encourage crawling of all content
+Crawl-delay: 1
 
 # Sitemap location
 Sitemap: https://fusdle.com/sitemap.xml
