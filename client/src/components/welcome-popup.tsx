@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { GoogleAuth } from "./google-auth";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { getAuth, onAuthStateChanged, User } from "firebase/auth";
 import { app } from "@/firebase/config";
 
 export const WelcomePopup = () => {
   const [showWelcomePopup, setShowWelcomePopup] = useState(false);
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     const auth = getAuth(app);

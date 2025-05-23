@@ -10,6 +10,7 @@ import About from "@/pages/about";
 import PatchNotes from "@/pages/patch-notes";
 import NavTabs from "@/components/nav-tabs";
 import SocialButtons from "@/components/social-buttons";
+import { WelcomePopup } from "@/components/welcome-popup";
 import { navigationState, updateNavigationState, queryClient } from "@/lib/queryClient";
 import { firestoreService } from "@/firebase/firestore";
 import { getApiBaseUrl } from "@/lib/queryClient";
