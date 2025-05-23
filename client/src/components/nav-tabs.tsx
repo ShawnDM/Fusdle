@@ -23,21 +23,14 @@ const NavTabs: React.FC<NavTabsProps> = ({ currentPath }) => {
 
   return (
     <div className="mb-6">
-      {/* Header with logo and hamburger menu */}
-      <div className="flex justify-between items-center mb-4">
-        {/* Logo/Brand */}
-        <div className="flex items-center">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-            Fusdle
-          </h1>
-        </div>
-        
+      {/* Header with hamburger menu */}
+      <div className="flex justify-start items-center mb-4">
         {/* Hamburger Menu Button */}
         <Button
           variant="ghost"
           size="sm"
           onClick={toggleMenu}
-          className="p-2"
+          className="p-2 text-white hover:bg-white/20"
         >
           {isMenuOpen ? (
             <X className="h-6 w-6" />
@@ -50,13 +43,16 @@ const NavTabs: React.FC<NavTabsProps> = ({ currentPath }) => {
       {/* Mobile Menu Overlay */}
       {isMenuOpen && (
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          className="absolute top-0 left-0 right-0 bg-white/95 backdrop-blur-md shadow-lg rounded-b-2xl z-50 p-6 border-b"
+          initial={{ opacity: 0, x: -300 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -300 }}
+          transition={{ type: "spring", stiffness: 400, damping: 25 }}
+          className="fixed top-0 left-0 h-full w-80 bg-white/95 backdrop-blur-md shadow-lg z-50 p-6"
         >
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold">Menu</h2>
+            <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+              Fusdle
+            </h2>
             <Button variant="ghost" size="sm" onClick={toggleMenu}>
               <X className="h-5 w-5" />
             </Button>
