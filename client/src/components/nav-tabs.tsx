@@ -17,6 +17,7 @@ interface NavTabsProps {
 const StatisticsContent: React.FC = () => {
   const [stats, setStats] = useState<UserStats | null>(null);
   const [winRate, setWinRate] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadStats = async () => {
@@ -27,14 +28,20 @@ const StatisticsContent: React.FC = () => {
         setWinRate(rate);
       } catch (error) {
         console.error("Error loading user stats:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
     loadStats();
   }, []);
 
-  if (!stats) {
+  if (loading) {
     return <div className="text-center">Loading statistics...</div>;
+  }
+
+  if (!stats) {
+    return <div className="text-center text-gray-500">Unable to load statistics</div>;
   }
 
   return (
@@ -162,28 +169,9 @@ const NavTabs: React.FC<NavTabsProps> = ({ currentPath }) => {
                   Your Statistics
                 </DialogTitle>
               </DialogHeader>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="text-center p-3 bg-gray-50 rounded-lg">
-                    <div className="text-2xl font-bold text-purple-600">0</div>
-                    <div className="text-sm text-gray-600">Puzzles Solved</div>
-                  </div>
-                  <div className="text-center p-3 bg-gray-50 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">0</div>
-                    <div className="text-sm text-gray-600">Current Streak</div>
-                  </div>
-                  <div className="text-center p-3 bg-gray-50 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-600">0</div>
-                    <div className="text-sm text-gray-600">Max Streak</div>
-                  </div>
-                  <div className="text-center p-3 bg-gray-50 rounded-lg">
-                    <div className="text-2xl font-bold text-orange-600">0%</div>
-                    <div className="text-sm text-gray-600">Win Rate</div>
-                  </div>
-                </div>
-                <div className="text-center text-sm text-gray-500">
-                  {!user ? "Sign in with Google to sync your progress across devices!" : "Your progress is automatically saved to your Google account"}
-                </div>
+              <StatisticsContent />
+              <div className="text-center text-sm text-gray-500 mt-4">
+                {!user ? "Sign in with Google to sync your progress across devices!" : "Your progress is automatically saved to your Google account"}
               </div>
             </DialogContent>
           </Dialog>
