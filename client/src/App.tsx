@@ -335,10 +335,10 @@ function App() {
 
   return (
     <TooltipProvider>
-      <div className="max-w-md mx-auto p-4 min-h-screen flex flex-col">
+      <div className="max-w-md mx-auto px-4 pt-2 pb-4 min-h-screen flex flex-col">
         <NavTabs currentPath={location} />
         
-        <div className="flex-grow flex flex-col">
+        <div className="flex-grow flex flex-col -mt-1">
           <Switch>
             <Route path="/" component={Home} />
             <Route path="/archive" component={Archive} />
