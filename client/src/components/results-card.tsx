@@ -144,7 +144,7 @@ const ResultsCard: React.FC = () => {
             {isWin ? "Congratulations!" : "Nice Try!"}
           </h2>
           <p className="text-lg font-medium text-gray-700 mb-2">
-            Fusdle #{puzzle.puzzleNumber}
+            Fusdle #{calculateFusdleNumber(puzzle.date)}
           </p>
           
           {/* Difficulty badge */}

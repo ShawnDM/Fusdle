@@ -642,7 +642,7 @@ const GameCard: React.FC = () => {
       <div className="flex justify-between items-center mb-4">
         <div className="text-sm text-gray-500">
           {/* Using today's date for current Fusdle number */}
-          <span>Fusdle #{puzzle?.puzzleNumber || 1}</span>
+          <span>Fusdle #{calculateFusdleNumber(puzzle?.date)}</span>
         </div>
         <div className="flex items-center space-x-2">
           <div className="flex items-center bg-secondary/10 rounded-full px-3 py-1">
