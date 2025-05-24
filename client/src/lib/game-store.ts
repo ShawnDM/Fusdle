@@ -376,8 +376,8 @@ export const useGameStore = create<GameState>((set, get) => ({
         console.log('Found saved game state, attempting to restore...');
         const parsedState = JSON.parse(savedGameState);
         
-        // Only restore if we have valid data
-        if (parsedState && typeof parsedState === 'object') {
+        // Only restore if we have valid data AND the saved state indicates completion
+        if (parsedState && typeof parsedState === 'object' && parsedState.hasCompleted === true) {
           set({
             attempts: parsedState.attempts || 0,
             revealedHints: parsedState.revealedHints || [],
@@ -389,10 +389,10 @@ export const useGameStore = create<GameState>((set, get) => ({
             partialMatchFeedback: parsedState.partialMatchFeedback || null,
           });
           
-          console.log('Successfully restored game state from localStorage');
+          console.log('Successfully restored completed game state from localStorage');
           
-          // If the game is already completed in the saved state, also load the answer
-          if (parsedState.hasCompleted && parsedState.gameStatus === 'won') {
+          // If the game is completed, load the answer
+          if (parsedState.gameStatus === 'won') {
             // Try to get cached answer
             const cachedAnswerKey = `fusdle_answer_${puzzle.id}_${difficultyMode}`;
             const cachedAnswer = localStorage.getItem(cachedAnswerKey);
@@ -404,24 +404,36 @@ export const useGameStore = create<GameState>((set, get) => ({
             }
           }
           
-          // After loading saved state, check if we need to continue with regular completion check
-          if (parsedState.hasCompleted) {
-            return; // We've already restored a completed game state
-          }
+          return; // We've restored a completed game state, no need to continue
+        } else if (parsedState && typeof parsedState === 'object') {
+          // Restore partial progress but don't mark as completed
+          set({
+            attempts: parsedState.attempts || 0,
+            revealedHints: parsedState.revealedHints || [],
+            hintsUsedAtAttempts: parsedState.hintsUsedAtAttempts || [],
+            previousGuesses: parsedState.previousGuesses || [],
+            gameStatus: parsedState.gameStatus || 'playing',
+            hasCompleted: false, // Force to false for incomplete games
+            hasGuessedOnce: parsedState.hasGuessedOnce || false,
+            partialMatchFeedback: parsedState.partialMatchFeedback || null,
+          });
+          
+          console.log('Successfully restored partial game state from localStorage');
+          return;
         }
       }
     } catch (error) {
       console.error('Error loading saved game state:', error);
     }
     
-    // If we get here, either there was no saved state, or it wasn't a completed state
-    // Continue with the normal completed status check
-    const savedPuzzleData = getPuzzleData(puzzle.id, difficultyMode);
+    // If we get here, there was no valid saved state
+    // Check if puzzle was previously completed using the completion key
     const completedKey = `fusdle_${puzzle.id}_${difficultyMode}_completed`;
     const isPuzzleCompletedForDifficulty = localStorage.getItem(completedKey) === 'true';
     
     if (isPuzzleCompletedForDifficulty) {
-      // Use cached answer if available to reduce API calls  
+      // This puzzle was previously completed - load completion state
+      const savedPuzzleData = getPuzzleData(puzzle.id, difficultyMode);
       const cachedAnswerKey = `fusdle_answer_${puzzle.id}_${difficultyMode}`;
       const cachedAnswer = localStorage.getItem(cachedAnswerKey);
       
@@ -451,7 +463,7 @@ export const useGameStore = create<GameState>((set, get) => ({
           .catch(error => console.error('Error fetching answer for completed puzzle:', error));
       }
     } else {
-      // If not completed for this difficulty, mark as not completed
+      // Fresh puzzle - ensure it's not marked as completed
       set({ hasCompleted: false });
     }
   },
