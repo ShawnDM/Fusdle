@@ -1243,8 +1243,8 @@ export const useGameStore = create<GameState>((set, get) => ({
       hasCorrectWordsWrongOrder: false,
       hasGuessedOnce: false,
       error: null,
-      cachedGameStates: {},
-      cachedPuzzles: {}
+      cachedGameStates: { normal: null, hard: null },
+      cachedPuzzles: { normal: null, hard: null }
     });
     
     console.log('Global reset: Today\'s puzzle cleared for all users');

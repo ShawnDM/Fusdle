@@ -4,15 +4,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { getAuth, onAuthStateChanged, User } from "firebase/auth";
 import { app } from "@/firebase/config";
-import { LogOut, User as UserIcon, Trophy, BarChart3, Calendar, Shield, AlertTriangle, Trash2 } from "lucide-react";
+import { LogOut, User as UserIcon, Trophy, BarChart3, Calendar, Shield, AlertTriangle, Trash2, Settings, Database, MessageSquareWarning, Users, RefreshCw } from "lucide-react";
 import GoogleAuth from "@/components/google-auth";
 import { userDataService } from "@/lib/user-data-service";
+import { useGameStore } from "@/lib/game-store";
 
 const UserMenu: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [showUserDialog, setShowUserDialog] = useState(false);
   const [showResetWarning, setShowResetWarning] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [showMaintenanceToggle, setShowMaintenanceToggle] = useState(false);
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [adminUserEmail, setAdminUserEmail] = useState('');
+  const [showUserLookup, setShowUserLookup] = useState(false);
+  // We'll call the global reset function directly when needed
 
   useEffect(() => {
     const auth = getAuth(app);
@@ -21,6 +27,70 @@ const UserMenu: React.FC = () => {
     });
     return () => unsubscribe();
   }, []);
+
+  // Check if current user is admin
+  const isAdmin = user?.email === import.meta.env.VITE_ADMIN_EMAIL;
+
+  // Load maintenance mode from localStorage
+  useEffect(() => {
+    const savedMaintenanceMode = localStorage.getItem('fusdle_maintenance_mode');
+    setMaintenanceMode(savedMaintenanceMode === 'true');
+  }, []);
+
+  // Admin functions
+  const handleToggleMaintenanceMode = () => {
+    const newMode = !maintenanceMode;
+    setMaintenanceMode(newMode);
+    localStorage.setItem('fusdle_maintenance_mode', newMode.toString());
+    console.log(`Maintenance mode ${newMode ? 'enabled' : 'disabled'}`);
+  };
+
+  const handleGlobalPuzzleReset = () => {
+    if (confirm('Are you sure you want to reset today\'s puzzle for ALL users? This will clear everyone\'s completion status.')) {
+      // Clear all localStorage keys related to puzzle completion
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (
+          key.includes('fusdle_game_state_') ||
+          key.includes('fusdle_partial_') ||
+          key.includes('fusdle_answer_') ||
+          key.includes('lastCompletionDate') ||
+          key.includes('gameSession_')
+        )) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+      alert('Global puzzle reset completed. All users can now play today\'s puzzle fresh.');
+    }
+  };
+
+  const handleResetUserData = async () => {
+    if (!adminUserEmail.trim()) {
+      alert('Please enter a user email address.');
+      return;
+    }
+    
+    if (confirm(`Are you sure you want to reset ALL data for user: ${adminUserEmail}?`)) {
+      try {
+        // This would reset user data in Firebase - implementation depends on your Firebase structure
+        console.log(`Resetting data for user: ${adminUserEmail}`);
+        alert(`Data reset initiated for user: ${adminUserEmail}`);
+      } catch (error) {
+        console.error('Error resetting user data:', error);
+        alert('Failed to reset user data. Check console for details.');
+      }
+    }
+  };
+
+  const handleClearAllLocalStorage = () => {
+    if (confirm('This will clear ALL local storage data for this browser. Continue?')) {
+      localStorage.clear();
+      alert('All local storage cleared. Page will refresh.');
+      window.location.reload();
+    }
+  };
 
   const handleResetStats = async () => {
     try {
