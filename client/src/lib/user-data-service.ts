@@ -11,6 +11,13 @@ interface UserStats {
   lastPlayedDate: string;
   flawlessStreak: number;
   hintsUsed: number;
+  // Difficulty-specific tracking
+  normalPuzzlesSolved: number;
+  hardPuzzlesSolved: number;
+  fusionPuzzlesSolved: number;
+  normalAttempts: number;
+  hardAttempts: number;
+  fusionAttempts: number;
 }
 
 interface GameSession {
@@ -94,7 +101,13 @@ class UserDataService {
               solvedPuzzles: [],
               lastPlayedDate: "",
               flawlessStreak: 0,
-              hintsUsed: 0
+              hintsUsed: 0,
+              normalPuzzlesSolved: 0,
+              hardPuzzlesSolved: 0,
+              fusionPuzzlesSolved: 0,
+              normalAttempts: 0,
+              hardAttempts: 0,
+              fusionAttempts: 0
             };
             await setDoc(userDocRef, defaultStats);
             return defaultStats;
@@ -131,15 +144,27 @@ class UserDataService {
   }
 
   // Update stats after completing a puzzle
-  async updateStatsAfterPuzzle(session: GameSession): Promise<void> {
+  async updateStatsAfterPuzzle(session: GameSession, difficulty: string = 'normal'): Promise<void> {
     const stats = await this.getUserStats();
     const today = new Date().toISOString().split('T')[0];
+    
+    // Determine if this is a fusion twist puzzle
+    const isFusionTwist = session.puzzleId.includes('fusion') || difficulty === 'fusion';
     
     if (session.solved) {
       // Only count if not already solved
       if (!stats.solvedPuzzles.includes(session.puzzleId)) {
         stats.puzzlesSolved++;
         stats.solvedPuzzles.push(session.puzzleId);
+        
+        // Update difficulty-specific stats
+        if (isFusionTwist) {
+          stats.fusionPuzzlesSolved++;
+        } else if (difficulty === 'hard') {
+          stats.hardPuzzlesSolved++;
+        } else {
+          stats.normalPuzzlesSolved++;
+        }
         
         // Update streak
         if (stats.lastPlayedDate === this.getPreviousDay(today)) {
@@ -167,6 +192,15 @@ class UserDataService {
       stats.flawlessStreak = 0;
     }
     
+    // Update attempt counts by difficulty
+    if (isFusionTwist) {
+      stats.fusionAttempts++;
+    } else if (difficulty === 'hard') {
+      stats.hardAttempts++;
+    } else {
+      stats.normalAttempts++;
+    }
+    
     stats.totalAttempts++;
     stats.lastPlayedDate = today;
     
@@ -191,7 +225,24 @@ class UserDataService {
   private getLocalStats(): UserStats {
     const saved = localStorage.getItem('userStats');
     if (saved) {
-      return JSON.parse(saved);
+      const stats = JSON.parse(saved);
+      // Ensure all new fields exist (for backward compatibility)
+      return {
+        puzzlesSolved: stats.puzzlesSolved || 0,
+        currentStreak: stats.currentStreak || 0,
+        maxStreak: stats.maxStreak || 0,
+        totalAttempts: stats.totalAttempts || 0,
+        solvedPuzzles: stats.solvedPuzzles || [],
+        lastPlayedDate: stats.lastPlayedDate || "",
+        flawlessStreak: stats.flawlessStreak || 0,
+        hintsUsed: stats.hintsUsed || 0,
+        normalPuzzlesSolved: stats.normalPuzzlesSolved || 0,
+        hardPuzzlesSolved: stats.hardPuzzlesSolved || 0,
+        fusionPuzzlesSolved: stats.fusionPuzzlesSolved || 0,
+        normalAttempts: stats.normalAttempts || 0,
+        hardAttempts: stats.hardAttempts || 0,
+        fusionAttempts: stats.fusionAttempts || 0
+      };
     }
     
     return {
@@ -202,7 +253,13 @@ class UserDataService {
       solvedPuzzles: [],
       lastPlayedDate: "",
       flawlessStreak: 0,
-      hintsUsed: 0
+      hintsUsed: 0,
+      normalPuzzlesSolved: 0,
+      hardPuzzlesSolved: 0,
+      fusionPuzzlesSolved: 0,
+      normalAttempts: 0,
+      hardAttempts: 0,
+      fusionAttempts: 0
     };
   }
 
@@ -240,18 +297,18 @@ class UserDataService {
         flawlessStreak: stats.flawlessStreak
       },
       normal: {
-        solved: Math.floor(stats.puzzlesSolved * 0.7), // Approximate distribution
-        attempted: Math.floor(stats.totalAttempts * 0.7),
+        solved: stats.normalPuzzlesSolved || 0,
+        attempted: stats.normalAttempts || 0,
         avgGuesses: 3.2
       },
       hard: {
-        solved: Math.floor(stats.puzzlesSolved * 0.25),
-        attempted: Math.floor(stats.totalAttempts * 0.25), 
+        solved: stats.hardPuzzlesSolved || 0,
+        attempted: stats.hardAttempts || 0,
         avgGuesses: 4.1
       },
       fusion: {
-        solved: Math.floor(stats.puzzlesSolved * 0.05),
-        attempted: Math.floor(stats.totalAttempts * 0.05),
+        solved: stats.fusionPuzzlesSolved || 0,
+        attempted: stats.fusionAttempts || 0,
         avgGuesses: 4.8
       }
     };
