@@ -1129,6 +1129,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         matchType: null,
         hasCorrectWordsWrongOrder: false,
         hasGuessedOnce: false,
+        hasCompleted: false, // CRITICAL: Reset completion status
         showNormalModeTutorial: true,
         showHardModeTutorial: true,
         error: null
@@ -1146,6 +1147,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         matchType: null,
         hasCorrectWordsWrongOrder: false,
         hasGuessedOnce: false,
+        hasCompleted: false, // CRITICAL: Reset completion status
         error: null
       });
     }
