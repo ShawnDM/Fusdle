@@ -187,6 +187,88 @@ const UserMenu: React.FC = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Admin Panel - Only show for admin users */}
+          {isAdmin && (
+            <Card className="border-purple-200 bg-purple-50">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm text-purple-800 flex items-center gap-2">
+                  <Settings className="h-4 w-4" />
+                  Admin Tools
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0 space-y-3">
+                {/* Maintenance Mode Toggle */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <MessageSquareWarning className="h-4 w-4 text-orange-500" />
+                    <span className="text-sm">Maintenance Mode</span>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant={maintenanceMode ? "destructive" : "outline"}
+                    onClick={handleToggleMaintenanceMode}
+                  >
+                    {maintenanceMode ? "Disable" : "Enable"}
+                  </Button>
+                </div>
+
+                {/* Global Puzzle Reset */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <RefreshCw className="h-4 w-4 text-blue-500" />
+                    <span className="text-sm">Reset Today's Puzzle</span>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleGlobalPuzzleReset}
+                  >
+                    Reset
+                  </Button>
+                </div>
+
+                {/* User Data Management */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-green-500" />
+                    <span className="text-sm">User Data Management</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      type="email"
+                      placeholder="User email..."
+                      value={adminUserEmail}
+                      onChange={(e) => setAdminUserEmail(e.target.value)}
+                      className="flex-1 px-2 py-1 text-xs border rounded"
+                    />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleResetUserData}
+                    >
+                      Reset
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Clear Local Storage */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Database className="h-4 w-4 text-red-500" />
+                    <span className="text-sm">Clear Browser Data</span>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={handleClearAllLocalStorage}
+                  >
+                    Clear All
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
           
           <div className="text-xs text-gray-500 text-center">
             Signed in as {user.email}
