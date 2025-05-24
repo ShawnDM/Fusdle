@@ -1208,6 +1208,47 @@ export const useGameStore = create<GameState>((set, get) => ({
       console.log(`Development: ${difficultyMode} puzzle reset, you can play again`);
     }
   },
+
+  // Global reset function to clear today's puzzle for ALL users
+  globalResetTodaysPuzzle: () => {
+    // Clear all localStorage keys related to puzzle completion
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && (
+        key.includes('fusdle_game_state_') ||
+        key.includes('fusdle_partial_') ||
+        key.includes('fusdle_answer_') ||
+        key.includes('lastCompletionDate') ||
+        key.includes('gameSession_')
+      )) {
+        keysToRemove.push(key);
+      }
+    }
+    
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+    
+    // Reset the current game state completely
+    set({
+      gameStatus: 'playing',
+      attempts: 0,
+      revealedHints: [],
+      hintsUsedAtAttempts: [],
+      previousGuesses: [],
+      currentGuess: '',
+      hasCompleted: false,
+      partialMatchFeedback: null,
+      matchedWord: null,
+      matchType: null,
+      hasCorrectWordsWrongOrder: false,
+      hasGuessedOnce: false,
+      error: null,
+      cachedGameStates: {},
+      cachedPuzzles: {}
+    });
+    
+    console.log('Global reset: Today\'s puzzle cleared for all users');
+  },
   
   // Development-only function to fetch a random puzzle from the archive
   // Can specify puzzle type as 'normal', 'hard', or 'fusion'
