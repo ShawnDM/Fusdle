@@ -1098,11 +1098,19 @@ export const useGameStore = create<GameState>((set, get) => ({
     const todayDate = new Date().toLocaleDateString('en-US', { timeZone: 'America/New_York' });
     const lastPlayedDate = localStorage.getItem('fusdle_last_played_date');
     
-    // Clear partial matches storage for the current puzzle
+    // Clear ALL game-related storage for the current puzzle to prevent completion status persistence
     if (puzzle) {
       // Remove partial match tracking from localStorage
       const storageKey = `fusdle_partial_${puzzle.id}_${difficultyMode}`;
       localStorage.removeItem(storageKey);
+      
+      // CRITICAL: Remove completed game state to prevent auto-completion bug
+      const gameStateKey = `fusdle_game_state_${puzzle.id}_${difficultyMode}`;
+      localStorage.removeItem(gameStateKey);
+      
+      // Remove cached answer
+      const cachedAnswerKey = `fusdle_answer_${puzzle.id}_${difficultyMode}`;
+      localStorage.removeItem(cachedAnswerKey);
       
       // Also clear fusion-specific key if needed
       if (puzzle.isFusionTwist) {
