@@ -153,24 +153,32 @@ class UserDataService {
           stats.maxStreak = stats.currentStreak;
         }
         
-        // Update flawless streak if no hints were used
+        // Update flawless streak
         if (!session.usedHints) {
           stats.flawlessStreak++;
         } else {
           stats.flawlessStreak = 0;
-          stats.hintsUsed++;
         }
+        
+        stats.lastPlayedDate = today;
       }
-    } else {
-      // Failed attempt
-      stats.currentStreak = 0;
-      stats.flawlessStreak = 0;
     }
     
-    stats.totalAttempts++;
-    stats.lastPlayedDate = today;
+    stats.totalAttempts += session.attempts.length;
+    if (session.usedHints) {
+      stats.hintsUsed++;
+    }
     
     await this.saveUserStats(stats);
+  }
+
+  // Get game session for a puzzle
+  getGameSession(puzzleId: string): GameSession | null {
+    const user = this.auth.currentUser;
+    const key = user ? `gameSession_${user.uid}_${puzzleId}` : `gameSession_${puzzleId}`;
+    
+    const saved = localStorage.getItem(key);
+    return saved ? JSON.parse(saved) : null;
   }
 
   // Save game session
@@ -185,6 +193,39 @@ class UserDataService {
   async isPuzzleCompleted(puzzleId: string): Promise<boolean> {
     const stats = await this.getUserStats();
     return stats.solvedPuzzles.includes(puzzleId);
+  }
+
+  // Migrate local data to Firebase when user logs in
+  async migrateLocalDataToFirebase(): Promise<void> {
+    const user = this.auth.currentUser;
+    if (!user) return;
+
+    // Get local stats
+    const localStats = this.getLocalStats();
+    
+    // Get Firebase stats
+    const userDocRef = doc(db, "userStats", user.uid);
+    const userDoc = await getDoc(userDocRef);
+    
+    if (!userDoc.exists()) {
+      // No Firebase data exists, migrate everything
+      await setDoc(userDocRef, localStats);
+    } else {
+      // Merge data (keep the higher values)
+      const firebaseStats = userDoc.data() as UserStats;
+      const mergedStats: UserStats = {
+        puzzlesSolved: Math.max(localStats.puzzlesSolved, firebaseStats.puzzlesSolved),
+        currentStreak: Math.max(localStats.currentStreak, firebaseStats.currentStreak),
+        maxStreak: Math.max(localStats.maxStreak, firebaseStats.maxStreak),
+        totalAttempts: localStats.totalAttempts + firebaseStats.totalAttempts,
+        solvedPuzzles: Array.from(new Set([...localStats.solvedPuzzles, ...firebaseStats.solvedPuzzles])),
+        lastPlayedDate: localStats.lastPlayedDate > firebaseStats.lastPlayedDate ? localStats.lastPlayedDate : firebaseStats.lastPlayedDate,
+        flawlessStreak: Math.max(localStats.flawlessStreak, firebaseStats.flawlessStreak),
+        hintsUsed: localStats.hintsUsed + firebaseStats.hintsUsed
+      };
+      
+      await setDoc(userDocRef, mergedStats);
+    }
   }
 
   // Private helper methods
@@ -221,6 +262,80 @@ class UserDataService {
     const stats = await this.getUserStats();
     if (stats.totalAttempts === 0) return 0;
     return Math.round((stats.puzzlesSolved / stats.totalAttempts) * 100);
+  }
+
+  private getLocalGameHistory(): GameSession[] {
+    try {
+      const history = localStorage.getItem('fusdle_game_history');
+      return history ? JSON.parse(history) : [];
+    } catch (error) {
+      console.error('Error loading game history:', error);
+      return [];
+    }
+  }
+
+  async getDetailedStats(): Promise<{
+    normal: { solved: number; attempted: number; avgGuesses: number };
+    hard: { solved: number; attempted: number; avgGuesses: number };
+    fusion: { solved: number; attempted: number; avgGuesses: number };
+    overall: { winRate: number; totalSolved: number; totalAttempted: number };
+  }> {
+    const gameHistory = this.getLocalGameHistory();
+    
+    const stats = {
+      normal: { solved: 0, attempted: 0, avgGuesses: 0 },
+      hard: { solved: 0, attempted: 0, avgGuesses: 0 },
+      fusion: { solved: 0, attempted: 0, avgGuesses: 0 },
+      overall: { winRate: 0, totalSolved: 0, totalAttempted: 0 }
+    };
+
+    // Track guesses for average calculation
+    const guesses = {
+      normal: [] as number[],
+      hard: [] as number[],
+      fusion: [] as number[]
+    };
+
+    // Count puzzles by difficulty and type (each session = 1 attempt/day)
+    for (const session of gameHistory) {
+      const difficulty = (session as any).difficulty || 'normal';
+      const isFusion = (session as any).isFusion || false;
+      const totalGuesses = (session as any).totalGuesses || session.attempts?.length || 1;
+
+      if (isFusion) {
+        stats.fusion.attempted++;
+        if (session.solved) stats.fusion.solved++;
+        guesses.fusion.push(totalGuesses);
+      } else if (difficulty === 'hard') {
+        stats.hard.attempted++;
+        if (session.solved) stats.hard.solved++;
+        guesses.hard.push(totalGuesses);
+      } else {
+        stats.normal.attempted++;
+        if (session.solved) stats.normal.solved++;
+        guesses.normal.push(totalGuesses);
+      }
+    }
+
+    // Calculate average guesses
+    stats.normal.avgGuesses = guesses.normal.length > 0 
+      ? Math.round((guesses.normal.reduce((a, b) => a + b, 0) / guesses.normal.length) * 10) / 10
+      : 0;
+    stats.hard.avgGuesses = guesses.hard.length > 0 
+      ? Math.round((guesses.hard.reduce((a, b) => a + b, 0) / guesses.hard.length) * 10) / 10
+      : 0;
+    stats.fusion.avgGuesses = guesses.fusion.length > 0 
+      ? Math.round((guesses.fusion.reduce((a, b) => a + b, 0) / guesses.fusion.length) * 10) / 10
+      : 0;
+
+    // Calculate overall stats
+    stats.overall.totalSolved = stats.normal.solved + stats.hard.solved + stats.fusion.solved;
+    stats.overall.totalAttempted = stats.normal.attempted + stats.hard.attempted + stats.fusion.attempted;
+    stats.overall.winRate = stats.overall.totalAttempted > 0 
+      ? Math.round((stats.overall.totalSolved / stats.overall.totalAttempted) * 100)
+      : 0;
+
+    return stats;
   }
 }
 
